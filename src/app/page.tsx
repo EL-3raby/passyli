@@ -30,9 +30,9 @@ export default function Home() {
               خدمة حجز الملاعب الفورية الأولى في دمنهور والبحيرة
             </div>
 
-            <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-normal leading-[1.45] sm:leading-[1.4] lg:leading-[1.35] mb-8">
+            <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-normal leading-[1.5] sm:leading-[1.45] lg:leading-[1.4] mb-8">
               احجز ملعبك في ثواني،
-              <span className="block mt-2 sm:mt-3 text-primary">
+              <span className="block mt-2.5 sm:mt-3.5 text-primary">
                 وكمّل ماتشك <span className="text-white">على طول.</span>
               </span>
             </h1>
@@ -336,7 +336,7 @@ export default function Home() {
             <span className="text-xs font-extrabold text-primary tracking-wider uppercase block mb-2">
               تجربة مستخدم بدون تعقيد
             </span>
-            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-[1.4] sm:leading-[1.35]">
+            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
               كيف يعمل باصيلي في 3 خطوات بسيطة؟
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base mt-3">
@@ -413,9 +413,9 @@ export default function Home() {
               خاصية كمّل ماتشك (Matchmaking)
             </div>
 
-            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.45] sm:leading-[1.4]">
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
               ناقصك لاعب لماتشك؟
-              <span className="block text-primary mt-2">
+              <span className="block text-primary mt-2.5">
                 أو عايز تنزل تلعب دلوقتي؟
               </span>
             </h2>
@@ -677,9 +677,9 @@ export default function Home() {
             <span>ليه باصيلي مش مجرد موقع حجز؟</span>
           </div>
 
-          <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.45] sm:leading-[1.4]">
+          <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
             إيه اللي بيميزنا؟
-            <span className="block text-primary mt-2">
+            <span className="block text-primary mt-2.5">
               عملنالك منصة تريّحك من وجع دماغ حجز الملاعب.
             </span>
           </h3>
@@ -764,14 +764,14 @@ export default function Home() {
                 <span>قريباً في التحديثات القادمة • قيد التطوير</span>
               </div>
 
-              <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.35]">
+              <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.55] sm:leading-[1.5]">
                 تطبيق باصيلي على موبايلك..
-                <span className="block text-primary mt-1">
+                <span className="block text-primary mt-3 sm:mt-4">
                   حجزك أسرع بكتير وإشعارات حية.
                 </span>
               </h3>
 
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-1">
                 شغالين حالياً على إطلاق التطبيق الرسمي على متجري App Store و Google Play، عشان تتابع حجوزاتك وماتشاتك وتطلب لعيبة بلمسة واحدة ومن غير ما تفتح المتصفح.
               </p>
             </div>
@@ -780,9 +780,9 @@ export default function Home() {
             <div className="flex flex-col sm:flex-row items-center gap-4">
 
               {/* App Store Badge */}
-              <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-background/80 px-5 py-3 text-right backdrop-blur-md opacity-90 hover:opacity-100 transition-opacity">
-                <svg className="h-7 w-7 text-white fill-current shrink-0" viewBox="0 0 24 24">
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 1.01-2.87-.96.04-2.13.64-2.79 1.41-.58.68-1.1 1.77-1.03 2.81 1.07.08 2.19-.57 2.81-1.35z" />
+              <div className="flex items-center gap-3.5 rounded-2xl border border-white/15 bg-card/90 px-5 py-3 text-right backdrop-blur-md hover:border-primary/40 transition-all shadow-sm">
+                <svg className="h-6 w-6 text-white fill-current shrink-0" viewBox="0 0 170 170">
+                  <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.58-7.74-11.64-14.1-6.19-9.77-10.9-20.91-14.15-33.43-3.24-12.51-4.87-24.13-4.87-34.86 0-15.01 3.86-27.42 11.58-37.22 7.72-9.8 17.37-14.86 28.94-15.18 4.79 0 10.15 1.25 16.08 3.75 5.93 2.5 9.77 3.86 11.52 4.08 2.06-.33 5.98-1.74 11.76-4.23 5.77-2.5 10.81-3.69 15.12-3.59 13.06.76 23.47 5.49 31.23 14.18-11.53 6.96-17.18 16.52-16.96 28.69.22 10.11 4.13 18.59 11.74 25.43 7.61 6.85 16.63 10.76 27.06 11.74-2.39 7.4-5.22 14.9-8.49 22.51zm-32.99-106.6c0-6.19 2.28-12.17 6.85-17.93 4.56-5.76 10.22-9.46 16.96-11.1 1.09 5.87.65 11.74-1.3 17.61-1.96 5.87-5.11 11.09-9.46 15.65-4.24 4.35-8.91 7.28-14.02 8.8-1.52-4.13-2.03-8.48-2.03-13.03z" />
                 </svg>
                 <div className="flex flex-col">
                   <span className="text-[10px] text-muted-foreground leading-tight">قريباً على</span>
@@ -790,10 +790,13 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Google Play Badge */}
-              <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-background/80 px-5 py-3 text-right backdrop-blur-md opacity-90 hover:opacity-100 transition-opacity">
-                <svg className="h-7 w-7 text-white fill-current shrink-0" viewBox="0 0 24 24">
-                  <path d="M3.609 1.814L13.793 12 3.61 22.186c-.309-.327-.492-.796-.492-1.346V3.16c0-.55.183-1.019.491-1.346zm11.238 11.239l2.13 2.13-11.455 6.613 9.325-8.743zm0-2.106L5.522 2.204l11.455 6.613-2.13 2.13zm1.488 1.488l2.915-1.683c.875-.505.875-1.334 0-1.84l-2.915-1.683-1.873 1.873 1.873 1.873z" />
+              {/* Google Play Badge (Official 4-color Vector Icon) */}
+              <div className="flex items-center gap-3.5 rounded-2xl border border-white/15 bg-card/90 px-5 py-3 text-right backdrop-blur-md hover:border-primary/40 transition-all shadow-sm">
+                <svg className="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none">
+                  <path d="M3.609 1.814L13.793 12 3.61 22.186c-.309-.327-.492-.796-.492-1.346V3.16c0-.55.183-1.019.491-1.346z" fill="#00D2FF" />
+                  <path d="M17.419 8.406L5.522 2.204 13.793 12l3.626-3.594z" fill="#FFD400" />
+                  <path d="M3.61 22.186l13.809-7.947-3.626-3.594L3.61 22.186z" fill="#FF3333" />
+                  <path d="M21.822 10.893l-4.403-2.487-3.626 3.594 3.626 3.594 4.403-2.487c1.196-.675 1.196-1.539 0-2.214z" fill="#00E676" />
                 </svg>
                 <div className="flex flex-col">
                   <span className="text-[10px] text-muted-foreground leading-tight">قريباً على</span>
