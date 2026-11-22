@@ -748,6 +748,64 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* 7. Mobile App Coming Soon Banner */}
+      <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-r from-surface via-card to-surface p-8 sm:p-12">
+          
+          {/* Subtle Ambient Glow */}
+          <div className="absolute top-1/2 left-1/4 -translate-y-1/2 h-64 w-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-right">
+            
+            <div className="max-w-xl flex flex-col items-center lg:items-start gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-xs font-bold text-primary">
+                <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                <span>قريباً في التحديثات القادمة • قيد التطوير</span>
+              </div>
+
+              <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.35]">
+                تطبيق باصيلي على موبايلك..
+                <span className="block text-primary mt-1">
+                  حجزك أسرع بكتير وإشعارات حية.
+                </span>
+              </h3>
+
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                شغالين حالياً على إطلاق التطبيق الرسمي على متجري App Store و Google Play، عشان تتابع حجوزاتك وماتشاتك وتطلب لعيبة بلمسة واحدة ومن غير ما تفتح المتصفح.
+              </p>
+            </div>
+
+            {/* App Store & Google Play Badges */}
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              
+              {/* App Store Badge */}
+              <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-background/80 px-5 py-3 text-right backdrop-blur-md opacity-90 hover:opacity-100 transition-opacity">
+                <svg className="h-7 w-7 text-white fill-current shrink-0" viewBox="0 0 24 24">
+                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 1.01-2.87-.96.04-2.13.64-2.79 1.41-.58.68-1.1 1.77-1.03 2.81 1.07.08 2.19-.57 2.81-1.35z"/>
+                </svg>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-muted-foreground leading-tight">قريباً على</span>
+                  <span className="font-latin text-sm font-bold text-white tracking-wide">App Store</span>
+                </div>
+              </div>
+
+              {/* Google Play Badge */}
+              <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-background/80 px-5 py-3 text-right backdrop-blur-md opacity-90 hover:opacity-100 transition-opacity">
+                <svg className="h-7 w-7 text-white fill-current shrink-0" viewBox="0 0 24 24">
+                  <path d="M3.609 1.814L13.793 12 3.61 22.186c-.309-.327-.492-.796-.492-1.346V3.16c0-.55.183-1.019.491-1.346zm11.238 11.239l2.13 2.13-11.455 6.613 9.325-8.743zm0-2.106L5.522 2.204l11.455 6.613-2.13 2.13zm1.488 1.488l2.915-1.683c.875-.505.875-1.334 0-1.84l-2.915-1.683-1.873 1.873 1.873 1.873z"/>
+                </svg>
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-muted-foreground leading-tight">قريباً على</span>
+                  <span className="font-latin text-sm font-bold text-white tracking-wide">Google Play</span>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
