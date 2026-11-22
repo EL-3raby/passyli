@@ -28,18 +28,18 @@ export default function Home() {
             {/* Live Indicator Status Badge (Linear / Vercel Glass Style) */}
             <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-zinc-200 backdrop-blur-md shadow-sm mb-6">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              <span>خدمة حجز الملاعب الفورية الأولى في دمنهور والبحيرة</span>
+              <span>حجز ملاعب فوري ومضمون • دمنهور</span>
             </div>
 
-            <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-normal leading-[1.5] sm:leading-[1.45] lg:leading-[1.4] mb-8">
+            <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-normal leading-[1.5] sm:leading-[1.45] lg:leading-[1.4] mb-6">
               احجز ملعبك في ثواني،
               <span className="block mt-2.5 sm:mt-3.5 text-primary">
                 وكمّل ماتشك <span className="text-white">على طول.</span>
               </span>
             </h1>
 
-            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl leading-relaxed mb-10">
-              قارن أسعار وساعات ملاعب كرة القدم الخماسي وملاعب البادل القريبة منك في دمنهور. احجز موعدك بضغطة زر، اقفل الميعاد فوراً، واستلم تذكرتك الرسمية على الواتساب.
+            <p className="text-muted-foreground text-sm sm:text-base max-w-xl leading-relaxed mb-8">
+              احجز ملعبك المفضل في دمنهور بضغطة زر، واقفل ميعادك فوراً بدون مكالمات.
             </p>
 
             {/* Quick Action & Filter Buttons */}
@@ -125,13 +125,13 @@ export default function Home() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md w-fit mb-3">
                 <Navigation className="h-3.5 w-3.5 text-emerald-400" strokeWidth={1.5} />
-                <span>نطاق البحث: دمنهور والمراكز المجاورة</span>
+                <span>ملاعب دمنهور المتاحة</span>
               </div>
               <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white">
-                أقرب الملاعب في دمنهور
+                أقرب الملاعب ليك
               </h2>
               <p className="text-muted-foreground text-sm mt-1">
-                مواعيد حية ومؤكدة مرتبة حسب المسافة التقديرية لموقعك الحالي
+                مواعيد حية وأسعار مباشرة للحجز الفوري
               </p>
             </div>
           </div>
@@ -357,16 +357,16 @@ export default function Home() {
       {/* 4. Three Ways to Play (Tone 2: Elevated Surface) */}
       <section className="py-16 md:py-24 bg-[#141418]">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl mb-12">
+          <div className="max-w-2xl mb-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md mb-3">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              <span>طرق اللعب مع باصيلي</span>
+              <span>طرق اللعب</span>
             </div>
             <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
-              3 طرق تضمن لك ماتشك في أي وقت
+              3 طرق تضمن لك ماتشك
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base mt-2">
-              سواء مجهز فرقتك وجاهزين تلعبوا، أو ناقصك لاعيبة، أو عايز تنافس في بطولات دمنهور.
+              العب بالطريقة اللي تريحك وبدون أي تعقيد.
             </p>
           </div>
 
@@ -381,7 +381,7 @@ export default function Home() {
                   احجز ملعب لفرقتك
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-6">
-                  مجهز فرقتك؟ تصفح ملاعب دمنهور، قارن الأسعار والساعات المتاحة، وادفع العربون بإنستاباي أو المحفظة لتستلم تذكرتك الفورية.
+                  اختر الساعة المناسبة، ادفع العربون، وميعادك اتقفل لفرقتك فوراً.
                 </p>
               </div>
               <Link
@@ -403,7 +403,7 @@ export default function Home() {
                   كمّل ماتشك أو انزل تقسيمة
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-6">
-                  ناقصك لعيبة أو عايز تلعب وممعاكش فرقة؟ انشر ماتشك وحدد المركز الناقص (حارس، دفاع، هجوم) أو انضم لماتش بادل أو خماسي مفتوح.
+                  ناقصك لعيب أو عايز تلعب لوحدك؟ انشر تقسيمة وانزل ماتشك دلوقتي.
                 </p>
               </div>
               <Link
@@ -425,7 +425,7 @@ export default function Home() {
                   بطولات ومنافسات رسمية
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed mb-6">
-                  بطولات دورية وماتشات تحدي بتنظيم احترافي في دمنهور، جداول مباريات وجوائز مالية وعينية لأصحاب المراكز الأولى.
+                  منافسات وجداول مباريات رسمية وجوائز لأبطال ملاعب دمنهور.
                 </p>
               </div>
               <span className="inline-flex min-h-[44px] items-center gap-2 text-xs font-bold text-muted-foreground w-fit">
@@ -439,16 +439,16 @@ export default function Home() {
       {/* 5. How It Works Section (Tone 1: Deep Canvas) */}
       <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-2xl mb-12">
+          <div className="max-w-2xl mb-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md mb-3">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              <span>كيف يعمل باصيلي في 3 خطوات؟</span>
+              <span>خطوات الحجز</span>
             </div>
             <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
               احجز ماتشك في أقل من دقيقة
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base mt-2">
-              وداعاً للاتصالات الطويلة والانتظار لمعرفة الأوقات الفاضية.
+              3 خطوات سريعة وماتشك في جيبك.
             </p>
           </div>
 
@@ -467,7 +467,7 @@ export default function Home() {
                 اختر الملعب والميعاد
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                استعرض ملاعب دمنهور، قارن نوع الأرضية (ترتان، نجيل، بادل بانوراما) والأسعار، واختر الساعة المناسبة لفريقك بدقة متناهية.
+                استعرض ملاعب دمنهور، قارن الأسعار، واختر ساعتك المفضلة.
               </p>
             </div>
 
@@ -482,10 +482,10 @@ export default function Home() {
                 </div>
               </div>
               <h3 className="font-display text-lg font-bold text-white">
-                تأكيد الحجز والدفع السريع
+                تأكيد الحجز والدفع
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                حوّل العربون بسهولة عن طريق إنستاباي أو المحفظة الإلكترونية، وارفع الإيصال لتأكيد موعد ماتشك فوراً.
+                حوّل العربون بسهولة عن طريق إنستاباي أو محفظتك لتأكيد الحجز فوراً.
               </p>
             </div>
 
@@ -500,10 +500,10 @@ export default function Home() {
                 </div>
               </div>
               <h3 className="font-display text-lg font-bold text-white">
-                تأكيد وتذكرة على الواتساب
+                تذكرتك على الواتساب
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                تصلك رسالة تأكيد فورية وتذكرة رقمية رسمية على رقم هاتفك بالواتساب تحتوي تفاصيل الحجز، كود التأكيد، وموقع الملعب الجغرافي.
+                تصلك تذكرة رسمية ولوكيشن الملعب على الواتساب تشيرها مع فرقتك.
               </p>
             </div>
           </div>
@@ -530,7 +530,7 @@ export default function Home() {
               </h2>
 
               <p className="text-muted-foreground text-sm leading-relaxed">
-                مشكلة كل أسبوع: الماتش هيتلغي عشان فيه اتنين اعتذروا في آخر لحظة! مع باصيلي، انشر التقسيمة في ثوانٍ وحدد المركز المطلوب (حارس، دفاع، هجوم) أو انضم لمباريات بادل وخماسي قائمة تبحث عن لاعبين في دمنهور.
+                مفيش ماتش هيتلغي تاني عشان اتنين اعتذروا. انشر مركزك الناقص، كمّل فرقتك في دقايق، أو انزل تقسيمة جاهزة.
               </p>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -624,7 +624,7 @@ export default function Home() {
             <div className="lg:col-span-7 flex flex-col gap-6">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md w-fit mb-1">
                 <Building2 className="h-3.5 w-3.5 text-emerald-400" strokeWidth={1.5} />
-                <span>لأصحاب الملاعب والشركاء في دمنهور</span>
+                <span>شراكة الملاعب</span>
               </div>
 
               <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
@@ -635,7 +635,7 @@ export default function Home() {
               </h2>
 
               <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
-                وداعاً للكشاكيل وحجوزات التليفون اللي بتتلغي في آخر لحظة والماتش يضيع عليك. مع باصيلي، حوّل ملعبك لنظام رقمي ذكي: العربون بيوصل حسابك مسبقاً، المواعيد بتتقفل آلياً، وملعبك بيظهر لآلاف اللعيبة في دمنهور على مدار الساعة.
+                حوّل ملعبك لنظام رقمي ذكي: استلم عربونك مسبقاً، اقفل المواعيد آلياً، وودّع الماتشات الملغية في آخر لحظة.
               </p>
 
               {/* 3 High-Impact Value Pillars */}
@@ -646,7 +646,7 @@ export default function Home() {
                     <span>عربونك مضمون فوري</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-normal">
-                    تحويل مباشر عبر إنستاباي أو فودافون كاش قبل فتح كشافات الملعب.
+                    تحويل مباشر عبر إنستاباي أو المحفظة قبل الماتش.
                   </p>
                 </div>
 
@@ -656,7 +656,7 @@ export default function Home() {
                     <span>انسي لخبطة المواعيد</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-normal">
-                    السيستم بيقفل الساعة لحظياً، ومفيش حجزين هيدخلوا في بعض نهائياً.
+                    السيستم بيقفل الساعة لحظياً بدون أي تضارب.
                   </p>
                 </div>
 
@@ -666,7 +666,7 @@ export default function Home() {
                     <span>إدارة تامة من موبايلك</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-normal">
-                    لوحة تحكم خفيفة وسريعة، تفتح وتقفل الساعات وتعدل الأسعار بلمسة واحدة.
+                    لوحة تحكم سريعة لفتح وقفل الساعات وتعديل الأسعار.
                   </p>
                 </div>
               </div>
@@ -776,21 +776,21 @@ export default function Home() {
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           
           {/* Section Header */}
-          <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="text-center max-w-2xl mx-auto mb-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md shadow-sm mb-3">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              <span>مميزات منصة باصيلي</span>
+              <span>ليه باصيلي؟</span>
             </div>
 
             <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
               إيه اللي بيميزنا؟
               <span className="block text-primary mt-2.5">
-                عملنالك منصة تريّحك من وجع دماغ حجز الملاعب.
+                حجز ملاعب بدون وجع دماغ.
               </span>
             </h3>
 
-            <p className="text-muted-foreground text-xs sm:text-sm mt-3 leading-relaxed">
-              مفيش مكالمات طويلة، مفيش كشاكيل، ومفيش ميعاد هيضيع عليك.. كل حاجة بتخلص من موبايلك في ثواني.
+            <p className="text-muted-foreground text-xs sm:text-sm mt-2 leading-relaxed">
+              مفيش مكالمات ولا كشاكيل.. كل حاجة بتخلص من موبايلك في ثواني.
             </p>
           </div>
 
@@ -805,7 +805,7 @@ export default function Home() {
                   ماتشك مضمون بالثانية
                 </h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  أول ما تحجز، الساعة بتتقفل باسمك فوراً ومستحيل ميعادك يتلغى أو يروح لحد تاني.
+                  الساعة بتتقفل باسمك فوراً ومستحيل ميعادك يتلغى أو يروح لغيرك.
                 </p>
               </div>
             </div>
@@ -816,10 +816,10 @@ export default function Home() {
               </div>
               <div>
                 <h4 className="font-display text-sm font-bold text-white mb-1">
-                  تذكرتك بتوصلك على الواتساب
+                  تذكرتك على الواتساب
                 </h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  بتجيلك رسالة شيك فيها كل تفاصيل الميعاد ولوكيشن الملعب عشان تشيرها مع فرقتك بضغطة واحدة.
+                  رسالة رسمية فيها كل تفاصيل الماتش واللوكيشن تشيرها مع فرقتك.
                 </p>
               </div>
             </div>
@@ -830,10 +830,10 @@ export default function Home() {
               </div>
               <div>
                 <h4 className="font-display text-sm font-bold text-white mb-1">
-                  سريعة وخفيفة على باقتك
+                  خفيفة وسريعة
                 </h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  المنصة بتفتح معاك في ثانية ومبتسحبش من باقة الموبايل، تحجز ماتشك في أقل من دقيقة وانت في الشارع.
+                  تفتح في ثانية وتحجز ميعادك بدون أي استهلاك لباقة الموبايل.
                 </p>
               </div>
             </div>
@@ -847,7 +847,7 @@ export default function Home() {
                   فريق دعم في ضهرك
                 </h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  مفيش رد آلي ولا لف ودوران، فريق دعم معاك خطوة بخطوة بالواتساب والتليفون لأي استفسار.
+                  دعم مباشر بالواتساب والتليفون لمساعدتك خطوة بخطوة، بدون رد آلي.
                 </p>
               </div>
             </div>
@@ -863,18 +863,18 @@ export default function Home() {
             <div className="max-w-xl flex flex-col items-center lg:items-start gap-3">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md shadow-sm mb-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                <span>قريباً على الهواتف الذكية • قيد التطوير</span>
+                <span>قريباً على الموبايل</span>
               </div>
 
               <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.55] sm:leading-[1.5]">
                 تطبيق باصيلي على موبايلك..
                 <span className="block text-primary mt-3 sm:mt-4">
-                  حجزك أسرع بكتير وإشعارات حية.
+                  حجزك أسرع وإشعاراتك حية.
                 </span>
               </h3>
 
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-1">
-                شغالين حالياً على إطلاق التطبيق الرسمي على متجري App Store و Google Play، عشان تتابع حجوزاتك وماتشاتك وتطلب لعيبة بلمسة واحدة ومن غير ما تفتح المتصفح.
+                تابع حجوزاتك وماتشاتك واطلب لعيبة بلمسة واحدة من موبايلك.
               </p>
             </div>
 
