@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ShieldCheck, MessageCircle, Phone, ArrowUpRight } from "lucide-react";
+import { ShieldCheck, MessageCircle, ArrowUpRight, Facebook, Instagram, Mail } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -11,8 +11,11 @@ export default function Footer() {
           
           {/* Brand & Mission Column */}
           <div className="lg:col-span-2 flex flex-col gap-4">
-            <Link href="/" className="flex items-center w-fit">
-              <span className="font-display text-2xl font-black tracking-normal text-white leading-none">
+            <Link href="/" className="flex items-center gap-3 w-fit group">
+              <span className="font-latin text-2xl font-black tracking-tight text-white leading-none" dir="ltr">
+                Passy<span className="text-primary">li</span>
+              </span>
+              <span className="font-display text-xl font-extrabold text-white leading-none">
                 باصـ<span className="text-primary">يلي</span>
               </span>
             </Link>
@@ -21,9 +24,40 @@ export default function Footer() {
               المنصة الرياضية الأولى لحجز ملاعب كرة القدم الخماسي وملاعب البادل في دمنهور والبحيرة. نظام حجز فوري موثق يمنع التضارب ويضمن جاهزية ملعبك.
             </p>
 
-            <div className="flex items-center gap-2 text-xs text-primary font-bold mt-2">
+            <div className="flex items-center gap-2 text-xs text-primary font-bold">
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
               تغطية حية لكافة ملاعب دمنهور والمراكز المجاورة
+            </div>
+
+            {/* Social Media & Email Links (Yalla Hagz Squircle Style) */}
+            <div className="flex items-center gap-2.5 pt-1">
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="صفحتنا على فيسبوك"
+                className="h-10 w-10 rounded-xl bg-[#242427] border border-white/[0.06] hover:bg-[#2e2e33] hover:border-primary/40 flex items-center justify-center text-zinc-300 hover:text-primary transition-all"
+              >
+                <Facebook className="h-4 w-4" strokeWidth={1.5} />
+              </a>
+
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="حسابنا على إنستجرام"
+                className="h-10 w-10 rounded-xl bg-[#242427] border border-white/[0.06] hover:bg-[#2e2e33] hover:border-primary/40 flex items-center justify-center text-zinc-300 hover:text-primary transition-all"
+              >
+                <Instagram className="h-4 w-4" strokeWidth={1.5} />
+              </a>
+
+              <a
+                href="mailto:contact@passyli.com"
+                aria-label="راسلنا عبر البريد الإلكتروني"
+                className="h-10 w-10 rounded-xl bg-[#242427] border border-white/[0.06] hover:bg-[#2e2e33] hover:border-primary/40 flex items-center justify-center text-zinc-300 hover:text-primary transition-all"
+              >
+                <Mail className="h-4 w-4" strokeWidth={1.5} />
+              </a>
             </div>
           </div>
 
