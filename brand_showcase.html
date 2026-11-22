@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>باصيلي (Passyli) — الهوية البصرية المطوّرة (Arabic Typography & Pro Icons)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@700;800;900&family=IBM+Plex+Sans+Arabic:wght@700;800&family=Inter:wght@800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --surface: #121215;
+      --card: #18181b;
+      --border: rgba(255, 255, 255, 0.08);
+      --primary: #10b981;
+      --primary-glow: rgba(16, 185, 129, 0.2);
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Alexandria', 'IBM Plex Sans Arabic', sans-serif;
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+    .container { max-width: 1040px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 45px; }
+    header h1 { font-size: 2.2rem; font-weight: 900; color: #fff; margin-bottom: 8px; }
+    header p { color: var(--muted); font-size: 1rem; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 9999px;
+      color: var(--primary); font-size: 0.85rem; font-weight: 700; margin-bottom: 14px;
+    }
+    .dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; }
+
+    /* Section Titles */
+    .section-title {
+      font-size: 1.4rem; font-weight: 800; color: #fff;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 8px; margin-top: 40px;
+    }
+    .section-desc { color: var(--muted); font-size: 0.9rem; margin-bottom: 25px; }
+
+    /* Cards */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 30px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; }
+    @media (max-width: 850px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 18px;
+      padding: 26px;
+      display: flex; flex-direction: column;
+      position: relative;
+    }
+    .card.highlight {
+      border-color: rgba(16, 185, 129, 0.5);
+      box-shadow: 0 0 30px rgba(16, 185, 129, 0.12);
+    }
+    .card-tag {
+      font-size: 0.75rem; font-weight: 800;
+      color: var(--primary); background: rgba(16, 185, 129, 0.1);
+      padding: 4px 10px; border-radius: 6px; display: inline-block;
+      margin-bottom: 14px; width: fit-content;
+    }
+
+    .logo-stage {
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
+      padding: 35px 20px;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 120px; margin-bottom: 16px;
+    }
+
+    /* Arabic Typography Styles */
+    .ar-brand-1 {
+      font-family: 'Alexandria', sans-serif;
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      display: flex; align-items: center; gap: 2px;
+    }
+    .ar-brand-1 span { color: var(--primary); }
+
+    .ar-brand-2 {
+      font-family: 'Alexandria', sans-serif;
+      font-size: 38px;
+      font-weight: 900;
+      color: #ffffff;
+      position: relative;
+    }
+
+    /* Bilingual Master Lockup */
+    .bilingual-box {
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 45px 30px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 30px; flex-wrap: wrap;
+    }
+    .bi-en {
+      font-family: 'Inter', sans-serif;
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: -1.2px;
+      color: #ffffff;
+      direction: ltr;
+    }
+    .bi-en span { color: var(--primary); }
+    .bi-divider {
+      width: 2px; height: 42px; background: rgba(255, 255, 255, 0.15);
+      border-radius: 2px;
+    }
+    .bi-ar {
+      font-family: 'Alexandria', sans-serif;
+      font-size: 38px;
+      font-weight: 900;
+      color: #ffffff;
+    }
+    .bi-ar span { color: var(--primary); }
+
+    /* Pro App Icons */
+    .pro-icon-box {
+      display: flex; flex-direction: column; align-items: center; gap: 14px;
+      padding: 20px 10px;
+    }
+    .app-squircle-pro {
+      width: 76px; height: 76px; border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+    .app-squircle-pro:hover { transform: scale(1.05); }
+
+    .squircle-1 {
+      background: linear-gradient(145deg, #18181b 0%, #09090b 100%);
+      border: 1.5px solid rgba(16, 185, 129, 0.5);
+      box-shadow: 0 12px 30px -5px rgba(16, 185, 129, 0.3);
+    }
+    .squircle-2 {
+      background: linear-gradient(145deg, #10b981 0%, #059669 100%);
+      box-shadow: 0 12px 30px -5px rgba(16, 185, 129, 0.4);
+    }
+    .squircle-3 {
+      background: #09090b;
+      border: 1.5px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.8);
+    }
+
+    .icon-label-pro { font-size: 0.95rem; font-weight: 700; color: #fff; }
+    .icon-sub-pro { font-size: 0.8rem; color: var(--muted); text-align: center; }
+
+    /* Navbar Preview */
+    .navbar-preview {
+      background: #09090b;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 26px;
+      display: flex; align-items: center; justify-content: space-between;
+      direction: rtl; margin-top: 20px;
+    }
+    .nav-links { display: flex; gap: 24px; font-size: 0.9rem; color: #71717a; }
+    .nav-links span.active { color: #fff; font-weight: 700; }
+    .nav-cta {
+      background: var(--primary); color: #000;
+      font-weight: 800; font-size: 0.85rem;
+      padding: 9px 20px; border-radius: 9px; text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge"><div class="dot"></div> التطوير الشامل للهوية البصرية بعد ملاحظاتك</div>
+      <h1>إعادة تصميم التايبوجرافي العربي وأيقونات الموبايل</h1>
+      <p>تصحيح جذري: إعطاء الاسم العربي هيبة هندسية مساوية للإنجليزية، وبناء أيقونات موبايل احترافية بمفهوم السرعة والكورت</p>
+    </header>
+
+    <!-- ================= PART 1: THE ARABIC TYPOGRAPHY ================= -->
+    <div class="section-title">1. التصميم التيبوغرافي العربي المطور (الاسم العربي الفخم)</div>
+    <div class="section-desc">تخلصنا من الخط الرفيع الفاصل العشوائي، واستخدمنا خطاً هندسياً عريضاً جداً (Alexandria 900) بنفس أسلوب التباين اللوني للإنجليزية:</div>
+
+    <div class="grid-2">
+      <!-- Arabic Concept A -->
+      <div class="card highlight">
+        <div class="card-tag">النمط العربي 1 — التناغم اللوني المزدوج (الأقوى)</div>
+        <div class="logo-stage">
+          <div class="ar-brand-1">
+            باصـ<span>يلي</span>
+          </div>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--muted); text-align: center;">
+          كلمة <strong>باصـ</strong> باللون الأبيض الصريح + مقطع <strong>يلي</strong> بالأخضر الزمردي المتوهج، متناسق 100% مع Passy (أبيض) و li (أخضر).
+        </div>
+      </div>
+
+      <!-- Arabic Concept B -->
+      <div class="card">
+        <div class="card-tag">النمط العربي 2 — النقطة الكروية الحية</div>
+        <div class="logo-stage">
+          <div class="ar-brand-2">
+            باصيلـ<span style="color: var(--primary);">ي</span>
+          </div>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--muted); text-align: center;">
+          الكلمة بالكامل باللون الأبيض الصافي، مع تمييز حرف الـ <strong>ياء</strong> بالأخضر الزمردي لترمز لكرة الماتش.
+        </div>
+      </div>
+    </div>
+
+    <!-- The Master Bilingual Lockup -->
+    <div class="card" style="margin-bottom: 45px;">
+      <div class="card-tag">الشعار الموحد (Bilingual Masterpiece)</div>
+      <div class="bilingual-box">
+        <div class="bi-en">Passy<span>li</span></div>
+        <div class="bi-divider"></div>
+        <div class="bi-ar">باصـ<span>يلي</span></div>
+      </div>
+      <div style="color: var(--muted); font-size: 0.9rem; text-align: center; margin-top: 15px;">
+        الآن العربي والإنجليزي بنفس القوة البصرية والوزن الهندسي والتباين اللوني المتناغم بدون أي تشويه وبدون الفاصل العشوائي القديم.
+      </div>
+    </div>
+
+
+    <!-- ================= PART 2: PRO APP ICONS ================= -->
+    <div class="section-title">2. أيقونات الموبايل الرياضية الاحترافية (Pro App Icons)</div>
+    <div class="section-desc">تخلصنا تماماً من حرف الـ P البدائي التقليدي الشبيه بعلامات الباركنج، وبنينا 3 رموز رياضية حقيقية عالية الفخامة:</div>
+
+    <div class="grid-3">
+
+      <!-- Icon Concept 1: The Kinetic Speed P -->
+      <div class="card highlight">
+        <div class="card-tag">الأيقونة 1 — الـ P الرياضية الحقيقية (The Speed P)</div>
+        <div class="pro-icon-box">
+          <div class="app-squircle-pro squircle-1">
+            <!-- Custom Dynamic P vector with athletic angle and pitch ball -->
+            <svg width="42" height="42" viewBox="0 0 44 44" fill="none">
+              <!-- Stem with dynamic sprint angle -->
+              <path d="M 12 36 L 15 10 L 26 10 C 33 10 36.5 14 35 21 C 33.5 28 28.5 30 22 30 L 17 30" 
+                    stroke="#10b981" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+              <!-- Pitch ball in negative space -->
+              <circle cx="23" cy="20" r="4" fill="#ffffff" />
+            </svg>
+          </div>
+          <div class="icon-label-pro">الـ P الديناميكية المائلة</div>
+          <div class="icon-sub-pro">حرف P رياضي بزاوية انطلاق 12 درجة مع كرة الهدف البيضاء في المنتصف. مستحيل يشبه باركنج السيارات.</div>
+        </div>
+      </div>
+
+      <!-- Icon Concept 2: The Pitch Stadium Vertex -->
+      <div class="card">
+        <div class="card-tag">الأيقونة 2 — كورت الملاعب المتوهج (Pitch Crest)</div>
+        <div class="pro-icon-box">
+          <div class="app-squircle-pro squircle-2">
+            <!-- Minimalist pitch corner / chevron with ball -->
+            <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
+              <!-- Corner boundary -->
+              <path d="M 10 32 V 12 C 10 10.9 10.9 10 12 10 H 32" stroke="#09090b" stroke-width="4.5" stroke-linecap="round" />
+              <!-- Diagonal pass line -->
+              <line x1="12" y1="26" x2="26" y2="12" stroke="#09090b" stroke-width="4.5" stroke-linecap="round" />
+              <!-- Precision ball -->
+              <circle cx="28" cy="28" r="4.5" fill="#ffffff" />
+            </svg>
+          </div>
+          <div class="icon-label-pro">زاوية الكورت والشبكة</div>
+          <div class="icon-sub-pro">رمز معماري مجرد يعبر عن زاوية المرمى وكورت البادل مع الكرة البيضاء.</div>
+        </div>
+      </div>
+
+      <!-- Icon Concept 3: The Kinetic Chevron Pass -->
+      <div class="card">
+        <div class="card-tag">الأيقونة 3 — أسهم التمريرة السريعة (The Pass Chevrons)</div>
+        <div class="pro-icon-box">
+          <div class="app-squircle-pro squircle-3">
+            <!-- Dual Chevrons -->
+            <svg width="38" height="38" viewBox="0 0 40 40" fill="none">
+              <path d="M 10 9 L 20 20 L 10 31" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M 20 9 L 30 20 L 20 31" stroke="#10b981" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="icon-label-pro">سهم التمريرة الثنائي</div>
+          <div class="icon-sub-pro">مستوحى من Strava و Playtomic؛ رمز نقي للتمرير السريع والحركة الرياضية.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Live Navbar Test with the New Arabic & New Brand -->
+    <div class="card">
+      <div class="card-tag">المعاينة الحية على هيدر الموقع الرسمي</div>
+      <div class="navbar-preview">
+        <!-- Brand on navbar -->
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <!-- Using Pro Icon 1 + Wordmark -->
+          <svg width="28" height="28" viewBox="0 0 44 44" fill="none">
+            <path d="M 12 36 L 15 10 L 26 10 C 33 10 36.5 14 35 21 C 33.5 28 28.5 30 22 30 L 17 30" 
+                  stroke="#10b981" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="23" cy="20" r="4.5" fill="#ffffff" />
+          </svg>
+          <div style="font-family: 'Inter'; font-size: 22px; font-weight: 900; letter-spacing: -0.8px; color: #fff; direction: ltr;">
+            Passy<span style="color: #10b981;">li</span>
+          </div>
+          <div style="font-family: 'Alexandria'; font-size: 19px; font-weight: 800; color: #fff; margin-right: 6px;">
+            باصـ<span style="color: #10b981;">يلي</span>
+          </div>
+        </div>
+
+        <div class="nav-links">
+          <span class="active">الملاعب</span>
+          <span>الماتشات المفتوحة</span>
+          <span>حجوزاتي</span>
+        </div>
+
+        <a href="#" class="nav-cta">احجز الآن</a>
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
