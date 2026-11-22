@@ -331,8 +331,8 @@ export default function Home() {
 
       {/* 3. How It Works Section (3 Enterprise Steps) */}
       <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-border/60 bg-surface/40 p-8 sm:p-12 lg:p-16">
-          <div className="max-w-2xl mb-12">
+        <div className="border-0 bg-transparent p-0 sm:rounded-3xl sm:border sm:border-border/60 sm:bg-surface/40 sm:p-10 lg:p-16">
+          <div className="max-w-2xl mb-8 sm:mb-12">
             <span className="text-xs font-extrabold text-primary tracking-wider uppercase block mb-2">
               تجربة مستخدم بدون تعقيد
             </span>
@@ -344,9 +344,9 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-8">
             {/* Step 1 */}
-            <div className="relative flex flex-col gap-4 p-6 rounded-2xl border border-border/40 bg-card">
+            <div className="relative flex flex-col gap-4 p-5 sm:p-6 rounded-2xl border border-border/40 bg-card">
               <div className="flex items-center justify-between">
                 <span className="font-latin text-3xl font-black text-primary/80 tabular-nums">
                   01
@@ -364,7 +364,7 @@ export default function Home() {
             </div>
 
             {/* Step 2 */}
-            <div className="relative flex flex-col gap-4 p-6 rounded-2xl border border-primary/30 bg-card shadow-[0_4px_20px_rgba(16,185,129,0.06)]">
+            <div className="relative flex flex-col gap-4 p-5 sm:p-6 rounded-2xl border border-primary/30 bg-card shadow-[0_4px_20px_rgba(16,185,129,0.06)]">
               <div className="flex items-center justify-between">
                 <span className="font-latin text-3xl font-black text-primary tabular-nums">
                   02
@@ -382,7 +382,7 @@ export default function Home() {
             </div>
 
             {/* Step 3 */}
-            <div className="relative flex flex-col gap-4 p-6 rounded-2xl border border-border/40 bg-card">
+            <div className="relative flex flex-col gap-4 p-5 sm:p-6 rounded-2xl border border-border/40 bg-card">
               <div className="flex items-center justify-between">
                 <span className="font-latin text-3xl font-black text-primary/80 tabular-nums">
                   03
@@ -404,7 +404,7 @@ export default function Home() {
 
       {/* 4. Matchmaking Showcase ("كمّل ماتشك") */}
       <section id="matchmaking" className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center rounded-3xl border border-primary/30 bg-gradient-to-br from-card via-card to-primary/5 p-8 sm:p-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center rounded-2xl sm:rounded-3xl border border-primary/20 sm:border-primary/30 bg-gradient-to-b sm:bg-gradient-to-br from-card via-[#0e1713] to-card p-5 sm:p-10 lg:p-12">
 
           {/* Text Content */}
           <div className="lg:col-span-6 flex flex-col gap-5">
@@ -507,7 +507,7 @@ export default function Home() {
 
       {/* 5. Venue Owners & Partners Section (High-Impact Edition) */}
       <section id="partner" className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-card via-[#0b1410] to-card p-8 sm:p-12 lg:p-16 shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-primary/25 sm:border-primary/30 bg-gradient-to-b sm:bg-gradient-to-br from-card via-[#0b1410] to-card p-5 sm:p-10 lg:p-14 shadow-lg sm:shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
 
           {/* Subtle Ambient Glow */}
           <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
@@ -751,7 +751,7 @@ export default function Home() {
 
       {/* 7. Mobile App Coming Soon Banner */}
       <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-3xl border border-border/70 bg-gradient-to-r from-surface via-card to-surface p-8 sm:p-12">
+        <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-white/10 sm:border-border/60 bg-gradient-to-b sm:bg-gradient-to-r from-card via-surface/60 to-card p-5 sm:p-10 lg:p-12">
 
           {/* Subtle Ambient Glow */}
           <div className="absolute top-1/2 left-1/4 -translate-y-1/2 h-64 w-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
@@ -777,10 +777,10 @@ export default function Home() {
             </div>
 
             {/* App Store & Google Play Badges */}
-            <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto">
 
               {/* App Store Badge */}
-              <div className="flex items-center gap-3.5 rounded-2xl border border-white/15 bg-card/90 px-5 py-3 text-right backdrop-blur-md hover:border-primary/40 transition-all shadow-sm">
+              <div className="w-full sm:w-auto flex items-center justify-center sm:justify-start gap-3.5 rounded-xl border border-white/15 bg-surface/80 hover:bg-surface px-5 py-3 text-right backdrop-blur-md hover:border-primary/40 transition-all shadow-sm">
                 <svg className="h-6 w-6 text-white fill-current shrink-0" viewBox="0 0 170 170">
                   <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.7-3.04-7.58-7.74-11.64-14.1-6.19-9.77-10.9-20.91-14.15-33.43-3.24-12.51-4.87-24.13-4.87-34.86 0-15.01 3.86-27.42 11.58-37.22 7.72-9.8 17.37-14.86 28.94-15.18 4.79 0 10.15 1.25 16.08 3.75 5.93 2.5 9.77 3.86 11.52 4.08 2.06-.33 5.98-1.74 11.76-4.23 5.77-2.5 10.81-3.69 15.12-3.59 13.06.76 23.47 5.49 31.23 14.18-11.53 6.96-17.18 16.52-16.96 28.69.22 10.11 4.13 18.59 11.74 25.43 7.61 6.85 16.63 10.76 27.06 11.74-2.39 7.4-5.22 14.9-8.49 22.51zm-32.99-106.6c0-6.19 2.28-12.17 6.85-17.93 4.56-5.76 10.22-9.46 16.96-11.1 1.09 5.87.65 11.74-1.3 17.61-1.96 5.87-5.11 11.09-9.46 15.65-4.24 4.35-8.91 7.28-14.02 8.8-1.52-4.13-2.03-8.48-2.03-13.03z" />
                 </svg>
@@ -791,7 +791,7 @@ export default function Home() {
               </div>
 
               {/* Google Play Badge (Official 4-color Vector Icon) */}
-              <div className="flex items-center gap-3.5 rounded-2xl border border-white/15 bg-card/90 px-5 py-3 text-right backdrop-blur-md hover:border-primary/40 transition-all shadow-sm">
+              <div className="w-full sm:w-auto flex items-center justify-center sm:justify-start gap-3.5 rounded-xl border border-white/15 bg-surface/80 hover:bg-surface px-5 py-3 text-right backdrop-blur-md hover:border-primary/40 transition-all shadow-sm">
                 <svg className="h-6 w-6 shrink-0" viewBox="0 0 24 24" fill="none">
                   <path d="M3.609 1.814L13.793 12 3.61 22.186c-.309-.327-.492-.796-.492-1.346V3.16c0-.55.183-1.019.491-1.346z" fill="#00D2FF" />
                   <path d="M17.419 8.406L5.522 2.204 13.793 12l3.626-3.594z" fill="#FFD400" />
