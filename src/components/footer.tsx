@@ -79,18 +79,18 @@ export default function Footer() {
               href="https://wa.me/201000000000"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 text-xs font-bold text-primary hover:bg-primary/20 transition-all"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-white/[0.08] bg-[#242427] hover:bg-[#28282c] px-4 text-xs font-bold text-white transition-all"
             >
-              <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
+              <MessageCircle className="h-4 w-4 text-primary" strokeWidth={1.5} />
               <span>دعم واتساب الفوري</span>
             </a>
 
-            <div className="rounded-xl border border-border/40 bg-card p-3 text-[11px] text-muted-foreground space-y-1.5 mt-1">
-              <div className="font-bold text-white flex items-center gap-1">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                دفع مؤمن وموثق
+            <div className="rounded-[14px] border border-white/[0.06] bg-[#242427] p-3.5 text-[11px] text-muted-foreground space-y-1.5 mt-1">
+              <div className="font-bold text-white flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                <span>دفع مؤمن وموثق</span>
               </div>
-              <p>إنستاباي (InstaPay) • فودافون كاش • أورانج كاش • إيصال معتمد</p>
+              <p className="leading-relaxed">إنستاباي (InstaPay) • فودافون كاش • أورانج كاش • إيصال معتمد</p>
             </div>
           </div>
 
