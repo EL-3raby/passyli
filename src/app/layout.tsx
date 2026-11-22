@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Alexandria, IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
+import Footer from "@/components/footer";
 
 const alexandria = Alexandria({
   subsets: ["arabic", "latin"],
@@ -45,6 +46,7 @@ export default function RootLayout({
       >
         <Navbar />
         <main className="flex-1">{children}</main>
+        <Footer />
       </body>
     </html>
   );
