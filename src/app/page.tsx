@@ -31,9 +31,9 @@ export default function Home() {
               <span>حجز ملاعب فوري ومضمون • دمنهور</span>
             </div>
 
-            <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-normal leading-[1.5] sm:leading-[1.45] lg:leading-[1.4] mb-6">
+            <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-normal leading-[1.65] sm:leading-[1.6] lg:leading-[1.55] mb-6">
               احجز ملعبك في ثواني،
-              <span className="block mt-2.5 sm:mt-3.5 text-primary">
+              <span className="block mt-3 sm:mt-4 text-primary">
                 وكمّل ماتشك <span className="text-white">على طول.</span>
               </span>
             </h1>
@@ -362,7 +362,7 @@ export default function Home() {
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
               <span>طرق اللعب</span>
             </div>
-            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
+            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-[1.6] sm:leading-[1.55]">
               3 طرق تضمن لك ماتشك
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base mt-2">
@@ -444,7 +444,7 @@ export default function Home() {
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
               <span>خطوات الحجز</span>
             </div>
-            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
+            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-[1.6] sm:leading-[1.55]">
               احجز ماتشك في أقل من دقيقة
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base mt-2">
@@ -522,9 +522,9 @@ export default function Home() {
                 <span>خاصية كمّل ماتشك • Matchmaking</span>
               </div>
 
-              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.6] sm:leading-[1.55]">
                 ناقصك لاعب لماتشك؟
-                <span className="block text-primary mt-2.5">
+                <span className="block text-primary mt-3 sm:mt-4">
                   أو عايز تنزل تلعب دلوقتي؟
                 </span>
               </h2>
@@ -623,60 +623,60 @@ export default function Home() {
         <div className="container mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col items-center text-center gap-8">
             
-            {/* Header & Pitch */}
+            {/* Header & Simple Direct Pitch */}
             <div className="flex flex-col items-center gap-4 max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-bold text-emerald-400 backdrop-blur-md mb-1">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md mb-1">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-                <span>شراكة أصحاب الملاعب • استثمار وإشغال الملاعب</span>
+                <span>شراكة الملاعب</span>
               </div>
 
-              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.35] tracking-tight">
-                زوّد دخل ملعبك +30%،
-                <span className="block text-primary mt-2">
-                  وعربونك في جيبك قبل ما الكشافات تنوّر.
+              <h2 className="font-display text-2xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.65] sm:leading-[1.6]">
+                عندك ملعب في دمنهور؟
+                <span className="block text-primary mt-3 sm:mt-4">
+                  زوّد حجوزاتك واضمن عربونك.
                 </span>
               </h2>
 
-              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-2xl mt-1">
-                ودّع الماتشات الملغية في آخر لحظة، وساعات النهار الفاضية، ولخبطة الكشكول الورقي. باصيلي بتشغّل ملعبك بنظام حجز إلكتروني مؤكد بالعربون، يوصلك لآلاف اللعيبة في دمنهور والبحيرة.
+              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-xl mt-1">
+                سجّل ملعبك مجاناً، واستقبل حجوزات مؤكدة بعربون فوري على إنستاباي أو محفظتك.
               </p>
             </div>
 
-            {/* 3 High-Impact Value Pillars in 3-Columns */}
+            {/* 3 Simple Value Pillars */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full text-right">
-              <div className="p-5 rounded-2xl border border-white/10 bg-card/80 hover:border-primary/40 transition-colors flex flex-col gap-2.5">
+              <div className="p-5 rounded-2xl border border-white/10 bg-card/80 hover:border-primary/40 transition-colors flex flex-col gap-2">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                   <Wallet className="h-5 w-5" strokeWidth={1.5} />
                 </div>
                 <h3 className="font-display text-base font-bold text-white">
-                  عربونك كاش فوري
+                  عربون فوري
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  تحويل مباشر عبر إنستاباي أو المحفظة لحسابك قبل نزول أي لاعب أرض الملعب.
+                  تحويل كاش أو إنستاباي لحسابك قبل بداية كل ماتش.
                 </p>
               </div>
 
-              <div className="p-5 rounded-2xl border border-white/10 bg-card/80 hover:border-primary/40 transition-colors flex flex-col gap-2.5">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                  <TrendingUp className="h-5 w-5" strokeWidth={1.5} />
-                </div>
-                <h3 className="font-display text-base font-bold text-white">
-                  ملء الساعات الميتة
-                </h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  تشغيل أوتوماتيكي لفترات النهار الفاضية (من 1 الظهر لـ 6 المغرب) بخصومات ذكية ترفع دخلك.
-                </p>
-              </div>
-
-              <div className="p-5 rounded-2xl border border-white/10 bg-card/80 hover:border-primary/40 transition-colors flex flex-col gap-2.5">
+              <div className="p-5 rounded-2xl border border-white/10 bg-card/80 hover:border-primary/40 transition-colors flex flex-col gap-2">
                 <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
                   <ShieldCheck className="h-5 w-5" strokeWidth={1.5} />
                 </div>
                 <h3 className="font-display text-base font-bold text-white">
-                  صفر تضارب بالمواعيد
+                  بدون حجز مزدوج
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  الساعة بتتقفل لحظياً أول ما الحجز يتم.. مستحيل حجزين يدخلوا في بعض نهائياً.
+                  الساعة بتتقفل آلياً بمجرد تأكيد الحجز ومستحيل ميعاد يتلغى.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl border border-white/10 bg-card/80 hover:border-primary/40 transition-colors flex flex-col gap-2">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                  <Zap className="h-5 w-5" strokeWidth={1.5} />
+                </div>
+                <h3 className="font-display text-base font-bold text-white">
+                  انضمام مجاني
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  بدون أي اشتراكات أو مصاريف تسجيل شهرية لملعبك.
                 </p>
               </div>
             </div>
@@ -687,7 +687,7 @@ export default function Home() {
                 href="#register-venue"
                 className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-primary px-8 text-sm font-black text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(16,185,129,0.35)]"
               >
-                <span>سجل ملعبك كشريك — مجاناً 100%</span>
+                <span>سجّل ملعبك مجاناً</span>
                 <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
               </Link>
 
@@ -698,7 +698,7 @@ export default function Home() {
                 className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border border-white/15 bg-card/80 hover:bg-card px-6 text-sm font-bold text-white transition-all"
               >
                 <MessageCircle className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                <span>تحدث مع مسؤول التعاقدات (واتساب)</span>
+                <span>تواصل واتساب</span>
               </a>
             </div>
 
@@ -717,9 +717,9 @@ export default function Home() {
               <span>ليه باصيلي؟</span>
             </div>
 
-            <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
+            <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.6] sm:leading-[1.55]">
               إيه اللي بيميزنا؟
-              <span className="block text-primary mt-2.5">
+              <span className="block text-primary mt-3 sm:mt-4">
                 حجز ملاعب بدون وجع دماغ.
               </span>
             </h3>
@@ -801,7 +801,7 @@ export default function Home() {
                 <span>قريباً على الموبايل</span>
               </div>
 
-              <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.55] sm:leading-[1.5]">
+              <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.65] sm:leading-[1.6]">
                 تطبيق باصيلي على موبايلك..
                 <span className="block text-primary mt-3 sm:mt-4">
                   حجزك أسرع وإشعاراتك حية.
