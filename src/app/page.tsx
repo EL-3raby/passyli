@@ -372,10 +372,10 @@ export default function Home() {
                 </div>
               </div>
               <h3 className="font-display text-lg font-bold text-white">
-                قفل الميعاد ودفع العربون
+                تأكيد الحجز والدفع السريع
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                يتم قفل الميعاد حصرياً لك لمدة 8 دقائق لمنع الحجز المزدوج. حوّل العربون أو المبلغ عبر إنستاباي أو محفظتك، وارفع الإيصال فوراً.
+                حوّل العربون بسهولة عن طريق إنستاباي أو المحفظة الإلكترونية، وارفع الإيصال لتأكيد موعد ماتشك فوراً.
               </p>
             </div>
 
