@@ -336,7 +336,7 @@ export default function Home() {
             <span className="text-xs font-extrabold text-primary tracking-wider uppercase block mb-2">
               تجربة مستخدم بدون تعقيد
             </span>
-            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-tight">
+            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-[1.4] sm:leading-[1.35]">
               كيف يعمل باصيلي في 3 خطوات بسيطة؟
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base mt-3">
@@ -413,9 +413,9 @@ export default function Home() {
               خاصية كمّل ماتشك (Matchmaking)
             </div>
 
-            <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white leading-snug">
+            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.45] sm:leading-[1.4]">
               ناقصك لاعب لماتشك؟
-              <span className="block text-primary mt-1">
+              <span className="block text-primary mt-2">
                 أو عايز تنزل تلعب دلوقتي؟
               </span>
             </h2>
@@ -516,14 +516,14 @@ export default function Home() {
             
             {/* Right Column: Copy & Value Proposition */}
             <div className="lg:col-span-7 flex flex-col gap-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-xs font-bold text-primary w-fit">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1 text-xs font-bold text-primary w-fit mb-1">
                 <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                 <span>شركاء ملاعب باصيلي في دمنهور والبحيرة</span>
               </div>
 
-              <h2 className="font-display text-2xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.3] sm:leading-[1.25]">
+              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
                 ملعبك شغال بأعلى إشغال،
-                <span className="block text-primary mt-1 sm:mt-2">
+                <span className="block text-primary mt-2 sm:mt-3">
                   وفلوسك في جيبك قبل الماتش.
                 </span>
               </h2>
