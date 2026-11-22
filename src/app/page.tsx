@@ -16,6 +16,8 @@ import {
   Wallet,
   Bell,
   Trophy,
+  TrendingUp,
+  ArrowUpRight,
 } from "lucide-react";
 
 export default function Home() {
@@ -616,57 +618,60 @@ export default function Home() {
       </section>
 
       {/* 7. Venue Owners & Partners Section (Tone 1: Deep Canvas) */}
-      <section id="partner" className="py-16 md:py-24 bg-background">
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <section id="partner" className="relative overflow-hidden py-16 md:py-24 bg-background">
+        {/* Subtle Ambient Emerald Glow Behind Dashboard */}
+        <div className="absolute top-1/2 left-10 -translate-y-1/2 h-[420px] w-[420px] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none" />
+
+        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
             
-            {/* Right Column: Copy & Value Proposition */}
+            {/* Right Column: Copy & Value Proposition (The B2B Pitch) */}
             <div className="lg:col-span-7 flex flex-col gap-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md w-fit mb-1">
-                <Building2 className="h-3.5 w-3.5 text-emerald-400" strokeWidth={1.5} />
-                <span>شراكة الملاعب</span>
+              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-bold text-emerald-400 backdrop-blur-md w-fit mb-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                <span>شراكة أصحاب الملاعب • زوّد أرباحك وقفل الساعات الفاضية</span>
               </div>
 
-              <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.5] sm:leading-[1.45]">
-                ملعبك شغال بأعلى إشغال،
+              <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-[1.4] sm:leading-[1.35] tracking-tight">
+                زوّد دخل ملعبك +30%،
                 <span className="block text-primary mt-2 sm:mt-3">
-                  وفلوسك في جيبك قبل الماتش.
+                  وعربونك في جيبك قبل ما الكشافات تنوّر.
                 </span>
               </h2>
 
-              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
-                حوّل ملعبك لنظام رقمي ذكي: استلم عربونك مسبقاً، اقفل المواعيد آلياً، وودّع الماتشات الملغية في آخر لحظة.
+              <p className="text-muted-foreground text-sm sm:text-base leading-relaxed max-w-2xl">
+                ودّع الماتشات الملغية في آخر لحظة، وساعات النهار الفاضية، ولخبطة الكشكول الورقي. باصيلي بتشغّل ملعبك بنظام حجز إلكتروني مؤكد بالعربون، يوصلك لآلاف اللعيبة في دمنهور والبحيرة.
               </p>
 
-              {/* 3 High-Impact Value Pillars */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                <div className="p-3.5 rounded-xl border border-border/60 bg-surface/60 flex flex-col gap-1.5">
+              {/* 3 High-Impact Value Pillars with Clear Commercial Proof */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-2">
+                <div className="p-4 rounded-xl border border-white/10 bg-card/90 hover:border-primary/40 transition-colors flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-primary font-bold text-xs">
                     <Wallet className="h-4 w-4" strokeWidth={1.5} />
-                    <span>عربونك مضمون فوري</span>
+                    <span>عربونك كاش فوري</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground leading-normal">
-                    تحويل مباشر عبر إنستاباي أو المحفظة قبل الماتش.
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    تحويل مباشر عبر إنستاباي أو المحفظة لحسابك قبل نزول أي لاعب أرض الملعب.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-xl border border-border/60 bg-surface/60 flex flex-col gap-1.5">
+                <div className="p-4 rounded-xl border border-white/10 bg-card/90 hover:border-primary/40 transition-colors flex flex-col gap-2">
+                  <div className="flex items-center gap-2 text-primary font-bold text-xs">
+                    <TrendingUp className="h-4 w-4" strokeWidth={1.5} />
+                    <span>ملء الساعات الميتة</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    تشغيل أوتوماتيكي لفترات النهار الفاضية (من 1 الظهر لـ 6 المغرب) بخصومات ذكية ترفع دخلك.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl border border-white/10 bg-card/90 hover:border-primary/40 transition-colors flex flex-col gap-2">
                   <div className="flex items-center gap-2 text-primary font-bold text-xs">
                     <ShieldCheck className="h-4 w-4" strokeWidth={1.5} />
-                    <span>انسي لخبطة المواعيد</span>
+                    <span>صفر تضارب بالمواعيد</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground leading-normal">
-                    السيستم بيقفل الساعة لحظياً بدون أي تضارب.
-                  </p>
-                </div>
-
-                <div className="p-3.5 rounded-xl border border-border/60 bg-surface/60 flex flex-col gap-1.5">
-                  <div className="flex items-center gap-2 text-primary font-bold text-xs">
-                    <Smartphone className="h-4 w-4" strokeWidth={1.5} />
-                    <span>إدارة تامة من موبايلك</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-normal">
-                    لوحة تحكم سريعة لفتح وقفل الساعات وتعديل الأسعار.
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    الساعة بتتقفل لحظياً أول ما الحجز يتم.. مستحيل حجزين يدخلوا في بعض نهائياً.
                   </p>
                 </div>
               </div>
@@ -675,9 +680,9 @@ export default function Home() {
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <Link
                   href="#register-venue"
-                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-xl bg-primary px-6 text-sm font-extrabold text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(16,185,129,0.25)]"
+                  className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl bg-primary px-7 text-sm font-black text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_4px_20px_rgba(16,185,129,0.35)]"
                 >
-                  <span>سجل ملعبك كشريك رسمي</span>
+                  <span>سجل ملعبك كشريك — مجاناً 100%</span>
                   <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
                 </Link>
 
@@ -685,82 +690,106 @@ export default function Home() {
                   href="https://wa.me/201000000000"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-border bg-card px-5 text-sm font-bold text-foreground hover:bg-secondary transition-all"
+                  className="inline-flex min-h-[48px] items-center gap-2 rounded-xl border border-white/15 bg-card/80 hover:bg-card px-5 text-sm font-bold text-white transition-all"
                 >
                   <MessageCircle className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                  <span>تحدث مع مسؤول الملاعب بالواتساب</span>
+                  <span>تحدث مع مسؤول التعاقدات (واتساب)</span>
                 </a>
               </div>
             </div>
 
-            {/* Left Column: Live Court Manager Mobile Notification Card (The Visual Hook) */}
+            {/* Left Column: Real Enterprise Financial Dashboard & Live Booking Terminal */}
             <div className="lg:col-span-5 flex flex-col gap-4">
-              <div className="rounded-2xl border border-primary/30 bg-card p-5 shadow-[0_12px_36px_rgba(0,0,0,0.5)] flex flex-col gap-4">
+              <div className="relative rounded-2xl sm:rounded-3xl border border-primary/30 bg-gradient-to-b from-[#18181b] via-[#121215] to-[#18181b] p-5 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl flex flex-col gap-4">
                 
-                {/* Alert Top Bar */}
-                <div className="flex items-center justify-between pb-3 border-b border-border/50">
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center text-primary">
-                      <Bell className="h-3.5 w-3.5" strokeWidth={1.5} />
+                {/* Header: Court Profile & Live System Status */}
+                <div className="flex items-center justify-between pb-3.5 border-b border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center text-primary font-bold shrink-0">
+                      <Building2 className="h-5 w-5" strokeWidth={1.5} />
                     </div>
                     <div>
-                      <span className="text-xs font-bold text-white block leading-tight">إشعار حجز فوري مؤكد</span>
-                      <span className="text-[10px] text-muted-foreground">منذ دقيقتين • تم الاعتماد</span>
+                      <div className="font-display text-sm font-bold text-white flex items-center gap-2">
+                        <span>ملعب الأبطال الدولي</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold border border-emerald-500/30">شريك معتمد</span>
+                      </div>
+                      <span className="text-[11px] text-muted-foreground block">دمنهور — ش عبد السلام الشاذلي</span>
                     </div>
                   </div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-0.5 text-[10px] font-semibold text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
-                    عربون مستلم
+                  <span className="flex items-center gap-1.5 text-[11px] text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 shrink-0">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    متصل الآن
                   </span>
                 </div>
 
-                {/* Match & Booking Specs */}
-                <div className="rounded-xl bg-surface/80 border border-border/40 p-3.5 flex flex-col gap-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">ملعب الأبطال الخماسي</span>
-                    <span className="text-xs font-extrabold text-primary tabular-nums">100 ج.م عربون</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3 text-primary" strokeWidth={1.5} />
-                      اليوم الجمعة • 09:00 م - 10:00 م
+                {/* 2 Big Financial KPI Blocks (The Money Proof) */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 flex flex-col gap-1">
+                    <span className="text-[11px] text-muted-foreground font-medium">أرباح الحجوزات (هذا الشهر)</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-latin text-2xl font-black text-primary tabular-nums">38,400</span>
+                      <span className="text-xs text-primary font-bold">ج.م</span>
+                    </div>
+                    <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1 mt-0.5">
+                      <TrendingUp className="h-3 w-3" strokeWidth={2} />
+                      +32% زيادة في الدخل
                     </span>
-                    <span className="tabular-nums">ساعة كاملة</span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[11px] pt-2 border-t border-border/30">
-                    <span className="text-muted-foreground">كابتن الفريق:</span>
-                    <span className="text-white font-medium">أحمد محمود (01099887766)</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="text-muted-foreground">وسيلة التحويل:</span>
-                    <span className="text-primary font-bold">إنستاباي (InstaPay) — إيصال موثق</span>
+                  <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/10 flex flex-col gap-1">
+                    <span className="text-[11px] text-muted-foreground font-medium">نسبة إشغال الساعات</span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="font-latin text-2xl font-black text-white tabular-nums">94%</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-medium mt-0.5">
+                      156 ساعة مؤكدة بالعربون
+                    </span>
                   </div>
                 </div>
 
-                {/* Automation Status Pills */}
-                <div className="space-y-1.5 text-[11px]">
-                  <div className="flex items-center gap-2 text-foreground font-medium">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" strokeWidth={1.5} />
-                    <span>تم قفل الساعة ومنع أي حجز آخر آلياً</span>
+                {/* Live Real-Time Incoming Booking Ticket */}
+                <div className="p-4 rounded-xl bg-surface/90 border border-primary/30 flex flex-col gap-3 shadow-inner">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-primary animate-ping" />
+                      <span className="text-xs font-bold text-white">آخر حجز مؤكد لحظياً</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-primary bg-primary/15 border border-primary/30 px-2.5 py-0.5 rounded-md">
+                      عربون 100 ج.م مستلم (InstaPay)
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 text-foreground font-medium">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" strokeWidth={1.5} />
-                    <span>تم إرسال تذكرة الحجز الرقمية للاعب على الواتساب</span>
+
+                  <div className="grid grid-cols-2 gap-3 text-xs py-2.5 border-y border-white/10">
+                    <div>
+                      <span className="text-[10px] text-muted-foreground block mb-0.5">كابتن الفريق:</span>
+                      <span className="text-xs font-bold text-white block">أحمد محمود (01099887766)</span>
+                    </div>
+                    <div className="text-left" dir="ltr">
+                      <span className="text-[10px] text-muted-foreground block mb-0.5 text-right" dir="rtl">الميعاد المحدد:</span>
+                      <span className="text-xs font-bold text-emerald-400 font-latin">09:00 PM - 10:00 PM</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5 text-[11px]">
+                    <div className="flex items-center gap-2 text-zinc-300">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" strokeWidth={2} />
+                      <span>تم قفل الساعة ومنع أي حجز مزدوج آلياً</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-zinc-300">
+                      <CheckCircle2 className="h-3.5 w-3.5 text-primary shrink-0" strokeWidth={2} />
+                      <span>تم إرسال تذكرة الواتساب الرسمية للاعب</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Mini Stats Bar */}
-                <div className="pt-3 border-t border-border/50 grid grid-cols-2 gap-2 text-center">
-                  <div className="p-2 rounded-lg bg-surface/50 border border-border/30">
-                    <span className="text-[10px] text-muted-foreground block">إشغال اليوم</span>
-                    <span className="text-sm font-black text-white tabular-nums">7 ساعات</span>
+                {/* Day Occupancy Progress Bar */}
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground font-medium">إشغال اليوم (الجمعة):</span>
+                    <span className="text-white font-bold tabular-nums">11 من 12 ساعة محجوزة (92%)</span>
                   </div>
-                  <div className="p-2 rounded-lg bg-surface/50 border border-border/30">
-                    <span className="text-[10px] text-muted-foreground block">نسبة الحضور</span>
-                    <span className="text-sm font-black text-primary tabular-nums">100%</span>
+                  <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
+                    <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-primary w-[92%]" />
                   </div>
                 </div>
 
