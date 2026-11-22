@@ -3,7 +3,7 @@ import { ShieldCheck, MessageCircle, Phone, ArrowUpRight } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="w-full border-t border-border/40 bg-background/95 pt-16 pb-12 text-sm">
+    <footer className="w-full bg-[#141418] pt-16 pb-12 text-sm">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* Main Footer Grid */}

@@ -21,8 +21,8 @@ import {
 export default function Home() {
   return (
     <div className="flex flex-col w-full">
-      {/* 1. Hero Section (Full-Width Band) */}
-      <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28 bg-gradient-to-b from-background via-surface/20 to-background">
+      {/* 1. Hero Section (Tone 1: Deep Canvas) */}
+      <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28 bg-background">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl">
             {/* Live Indicator Status Badge (Linear / Vercel Glass Style) */}
@@ -75,8 +75,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 2. Platform Metrics & Trust Bar (Full-Width Strip) */}
-      <section className="bg-surface/30 py-10">
+      {/* 2. Platform Metrics & Trust Bar (Tone 2: Elevated Surface) */}
+      <section className="bg-[#141418] py-10">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center md:text-right">
             <div className="flex flex-col gap-1 border-l border-border/30 last:border-l-0 pl-4">
@@ -118,8 +118,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. Featured Venues Section in Damanhour */}
-      <section id="courts" className="py-16 md:py-24">
+      {/* 3. Featured Venues Section in Damanhour (Tone 1: Deep Canvas) */}
+      <section id="courts" className="py-16 md:py-24 bg-background">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10">
             <div>
@@ -354,8 +354,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. Three Ways to Play (Inspired by Yalla Hagz Experience) */}
-      <section className="py-16 md:py-24 bg-surface/20">
+      {/* 4. Three Ways to Play (Tone 2: Elevated Surface) */}
+      <section className="py-16 md:py-24 bg-[#141418]">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mb-12">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md mb-3">
@@ -436,8 +436,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. How It Works Section (3 Enterprise Steps) */}
-      <section className="py-16 md:py-24">
+      {/* 5. How It Works Section (Tone 1: Deep Canvas) */}
+      <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mb-12">
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md mb-3">
@@ -510,8 +510,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. Matchmaking Live Feed (كمّل ماتشك) */}
-      <section id="matchmaking" className="py-16 md:py-24 bg-surface/10">
+      {/* 6. Matchmaking Live Feed (Tone 2: Elevated Surface) */}
+      <section id="matchmaking" className="py-16 md:py-24 bg-[#141418]">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
@@ -615,8 +615,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. Venue Owners & Partners Section (Full-Width Clean Layout) */}
-      <section id="partner" className="py-16 md:py-24 bg-gradient-to-b from-surface/20 via-background to-surface/20">
+      {/* 7. Venue Owners & Partners Section (Tone 1: Deep Canvas) */}
+      <section id="partner" className="py-16 md:py-24 bg-background">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
             
@@ -771,8 +771,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. Why Passyli / What Makes Us Special Section */}
-      <section className="py-16 md:py-24">
+      {/* 8. Why Passyli (Tone 2: Elevated Surface) */}
+      <section className="py-16 md:py-24 bg-[#141418]">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           
           {/* Section Header */}
@@ -855,8 +855,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 9. Mobile App Coming Soon Banner (Full-Width Clean Band) */}
-      <section className="py-16 md:py-24 bg-surface/30">
+      {/* 9. Mobile App Coming Soon Banner (Tone 1: Deep Canvas) */}
+      <section className="py-16 md:py-24 bg-background">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-8 text-center lg:text-right">
             
