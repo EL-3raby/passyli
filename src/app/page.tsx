@@ -131,20 +131,20 @@ export default function Home() {
             </div>
 
             {/* Card Footer */}
-            <div className="p-5 pt-0 flex items-center justify-between border-t border-border/30 mt-2">
+            <div className="px-5 py-4 flex items-center justify-between border-t border-border/40 mt-auto bg-surface/30">
               <div>
-                <span className="text-xs text-muted-foreground block">سعر الساعة</span>
-                <span className="font-bold text-white text-base tabular-nums">
-                  280 <span className="text-xs text-muted-foreground">ج.م</span>
+                <span className="text-xs text-muted-foreground block mb-1">سعر الساعة</span>
+                <span className="font-extrabold text-white text-lg tabular-nums">
+                  280 <span className="text-xs font-medium text-muted-foreground">ج.م</span>
                 </span>
               </div>
 
               <Link
                 href="#book"
-                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-xl bg-primary px-4 text-xs font-extrabold text-black hover:bg-primary-hover active:scale-[0.98] transition-all"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_2px_10px_rgba(16,185,129,0.2)]"
               >
                 <span>احجز الآن</span>
-                <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
+                <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
               </Link>
             </div>
           </div>
@@ -200,20 +200,20 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="p-5 pt-0 flex items-center justify-between border-t border-border/30 mt-2">
+            <div className="px-5 py-4 flex items-center justify-between border-t border-border/40 mt-auto bg-surface/30">
               <div>
-                <span className="text-xs text-muted-foreground block">سعر الساعة</span>
-                <span className="font-bold text-white text-base tabular-nums">
-                  200 <span className="text-xs text-muted-foreground">ج.م</span>
+                <span className="text-xs text-muted-foreground block mb-1">سعر الساعة</span>
+                <span className="font-extrabold text-white text-lg tabular-nums">
+                  200 <span className="text-xs font-medium text-muted-foreground">ج.م</span>
                 </span>
               </div>
 
               <Link
                 href="#book"
-                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-xl bg-primary px-4 text-xs font-extrabold text-black hover:bg-primary-hover active:scale-[0.98] transition-all"
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_2px_10px_rgba(16,185,129,0.2)]"
               >
                 <span>احجز الآن</span>
-                <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2} />
+                <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
               </Link>
             </div>
           </div>
