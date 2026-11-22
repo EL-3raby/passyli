@@ -32,7 +32,6 @@ export default function Home() {
             fill
             priority
             className="object-cover object-center lg:object-left"
-            quality={90}
           />
 
           {/* RTL Gradient Overlay: Deep black on the right for high text contrast, revealing the illuminated stadium & emerald pitch on the left */}
