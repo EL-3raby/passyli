@@ -739,10 +739,10 @@ export default function Home() {
             </div>
             <div>
               <h4 className="font-display text-sm font-bold text-white mb-1">
-                فريق دمنهوري في ضهرك
+                فريق دعم في ضهرك
               </h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                مفيش رد آلي ولا لف ودوران، شباب من دمنهور معاك خطوة بخطوة بالواتساب والتليفون لأي استفسار.
+                مفيش رد آلي ولا لف ودوران، فريق دعم معاك خطوة بخطوة بالواتساب والتليفون لأي استفسار.
               </p>
             </div>
           </div>
