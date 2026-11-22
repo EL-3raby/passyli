@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   MapPin,
   Navigation,
@@ -22,55 +23,132 @@ export default function Home() {
   return (
     <div className="flex flex-col w-full">
       {/* 1. Hero Section (Tone 1: Deep Canvas) */}
-      <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28 bg-background">
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            {/* Live Indicator Status Badge (Linear / Vercel Glass Style) */}
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-zinc-200 backdrop-blur-md shadow-sm mb-6">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              <span>حجز ملاعب فوري ومضمون • دمنهور</span>
+      <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28 bg-background">
+        {/* Subtle Ambient Stadium Light Cones */}
+        <div className="absolute top-0 left-1/4 -translate-x-1/2 w-[500px] h-[350px] bg-emerald-500/10 blur-[140px] pointer-events-none" />
+
+        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+            
+            {/* Right Column: Hero Pitch & Fast Actions */}
+            <div className="lg:col-span-7 flex flex-col items-start text-right">
+              {/* Live Indicator Status Badge (Linear / Vercel Glass Style) */}
+              <div className="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-1.5 text-xs font-semibold text-zinc-200 backdrop-blur-md shadow-sm mb-6">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                <span>حجز ملاعب فوري ومضمون • دمنهور</span>
+              </div>
+
+              <h1 className="font-display text-3xl sm:text-5xl lg:text-5xl xl:text-6xl font-black text-white tracking-normal leading-[1.65] sm:leading-[1.6] lg:leading-[1.55] mb-6">
+                احجز ملعبك في ثواني،
+                <span className="block mt-3 sm:mt-4 text-primary">
+                  وكمّل ماتشك <span className="text-white">على طول.</span>
+                </span>
+              </h1>
+
+              <p className="text-muted-foreground text-sm sm:text-base max-w-xl leading-relaxed mb-8">
+                احجز ملعبك المفضل في دمنهور بضغطة زر، واقفل ميعادك فوراً بدون مكالمات.
+              </p>
+
+              {/* Quick Action & Filter Buttons (Yalla Hagz Pill Style) */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <Link
+                  href="#courts"
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-black text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(16,185,129,0.25)]"
+                >
+                  <span>تصفح كل الملاعب</span>
+                  <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
+                </Link>
+                <Link
+                  href="#padel"
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-[#242427] border border-white/[0.06] px-5 text-sm font-bold text-white hover:bg-[#2c2c30] active:scale-[0.98] transition-all"
+                >
+                  ملاعب البادل
+                </Link>
+                <Link
+                  href="#football"
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-[#242427] border border-white/[0.06] px-5 text-sm font-bold text-white hover:bg-[#2c2c30] active:scale-[0.98] transition-all"
+                >
+                  كرة قدم خماسي
+                </Link>
+                <Link
+                  href="#matchmaking"
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-full bg-[#242427] border border-primary/40 px-5 text-sm font-bold text-primary hover:bg-[#2c2c30] active:scale-[0.98] transition-all"
+                >
+                  <Users className="h-4 w-4" strokeWidth={1.5} />
+                  <span>كمّل ماتشك</span>
+                </Link>
+              </div>
             </div>
 
-            <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-normal leading-[1.65] sm:leading-[1.6] lg:leading-[1.55] mb-6">
-              احجز ملعبك في ثواني،
-              <span className="block mt-3 sm:mt-4 text-primary">
-                وكمّل ماتشك <span className="text-white">على طول.</span>
-              </span>
-            </h1>
+            {/* Left Column: Visual Brand Showcase & Real-Time Booking HUD */}
+            <div className="lg:col-span-5 relative w-full mt-6 lg:mt-0">
+              {/* Subtle Ambient Emerald Glow Behind Card */}
+              <div className="absolute -inset-2 rounded-[28px] bg-gradient-to-tr from-emerald-500/20 via-emerald-500/5 to-transparent blur-2xl pointer-events-none" />
 
-            <p className="text-muted-foreground text-sm sm:text-base max-w-xl leading-relaxed mb-8">
-              احجز ملعبك المفضل في دمنهور بضغطة زر، واقفل ميعادك فوراً بدون مكالمات.
-            </p>
+              {/* Main Visual Showcase Container */}
+              <div className="relative rounded-[22px] border border-white/[0.08] bg-[#1a1a1d] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
+                {/* Hero Court Image with Cinematic Night Lighting */}
+                <div className="relative h-[290px] sm:h-[350px] w-full overflow-hidden">
+                  <Image
+                    src="/images/hero-court.jpg"
+                    alt="ملاعب باصيلي المعتمدة في دمنهور"
+                    fill
+                    priority
+                    className="object-cover object-center scale-[1.02] hover:scale-105 transition-transform duration-700"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 480px"
+                  />
 
-            {/* Quick Action & Filter Buttons (Yalla Hagz Pill Style) */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              <Link
-                href="#courts"
-                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-black text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_4px_16px_rgba(16,185,129,0.25)]"
-              >
-                <span>تصفح كل الملاعب</span>
-                <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
-              </Link>
-              <Link
-                href="#padel"
-                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-[#242427] border border-white/[0.06] px-5 text-sm font-bold text-white hover:bg-[#2c2c30] active:scale-[0.98] transition-all"
-              >
-                ملاعب البادل
-              </Link>
-              <Link
-                href="#football"
-                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-[#242427] border border-white/[0.06] px-5 text-sm font-bold text-white hover:bg-[#2c2c30] active:scale-[0.98] transition-all"
-              >
-                كرة قدم خماسي
-              </Link>
-              <Link
-                href="#matchmaking"
-                className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-full bg-[#242427] border border-primary/40 px-5 text-sm font-bold text-primary hover:bg-[#2c2c30] active:scale-[0.98] transition-all"
-              >
-                <Users className="h-4 w-4" strokeWidth={1.5} />
-                <span>كمّل ماتشك</span>
-              </Link>
+                  {/* Dark Vignette Gradients for Text Legibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#202024] via-black/20 to-black/40" />
+
+                  {/* Top Badges Floating Over Image */}
+                  <div className="absolute top-3.5 right-3.5 z-10 inline-flex items-center gap-2 rounded-full bg-[#1c1c1f]/90 backdrop-blur-md border border-white/10 px-3 py-1 text-xs font-bold text-white shadow-lg">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                    <span>ملاعب معتمدة • دمنهور</span>
+                  </div>
+
+                  <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-1.5 rounded-full bg-[#1c1c1f]/90 backdrop-blur-md border border-white/10 px-3 py-1 text-xs font-bold text-white shadow-lg">
+                    <svg className="h-4 w-4 text-primary shrink-0" viewBox="0 0 80 80" fill="none">
+                      <path d="M 10 40 L 14.5 8 L 28 8 C 36.5 8 40.5 12.5 39 21 C 37.5 29.5 31.5 32 23.5 32 L 17 32" stroke="#10b981" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="26" cy="20" r="5" fill="#ffffff" />
+                    </svg>
+                    <span className="font-latin font-black text-xs text-white" dir="ltr">Passy<span className="text-primary">li</span></span>
+                  </div>
+                </div>
+
+                {/* Bottom Digital Ticket HUD (Yalla Hagz Style Card) */}
+                <div className="p-5 bg-[#202024] border-t border-white/[0.06] flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] text-muted-foreground block mb-0.5">الملعب المختار</span>
+                      <h4 className="font-display text-sm font-bold text-white">
+                        نادي دمنهور للبادل • Padel Club
+                      </h4>
+                    </div>
+                    <span className="text-[11px] font-bold text-primary bg-[#2e2e33] border border-white/[0.04] px-2.5 py-1 rounded-lg tabular-nums">
+                      اليوم 09:00 م
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs py-2 px-3 rounded-xl bg-[#18181b] border border-white/[0.04]">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                      <span className="text-muted-foreground">عربون مؤكد (InstaPay):</span>
+                    </div>
+                    <span className="font-latin font-bold text-white tabular-nums">100 EGP</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-white/[0.04]">
+                    <span className="flex items-center gap-1.5 text-white/90">
+                      <Clock className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                      قفل الساعة لحظياً ومنع التضارب
+                    </span>
+                    <span className="text-primary font-bold">100% مضمون</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
           </div>
         </div>
       </section>
