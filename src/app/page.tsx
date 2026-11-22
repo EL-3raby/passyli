@@ -667,61 +667,82 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. Security & Trust Badges Section */}
+      {/* 6. Why Passyli / What Makes Us Special Section */}
       <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary mb-3">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+            <span>ليه باصيلي مش مجرد موقع حجز؟</span>
+          </div>
+
+          <h3 className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.45] sm:leading-[1.4]">
+            إيه اللي بيميزنا؟
+            <span className="block text-primary mt-2">
+              عملنالك منصة تريّحك من وجع دماغ حجز الملاعب.
+            </span>
+          </h3>
+
+          <p className="text-muted-foreground text-xs sm:text-sm mt-3 leading-relaxed">
+            مفيش مكالمات طويلة، مفيش كشاكيل، ومفيش ميعاد هيضيع عليك.. كل حاجة بتخلص من موبايلك في ثواني.
+          </p>
+        </div>
+
+        {/* 4 Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-5 rounded-2xl border border-border/50 bg-card/60 flex items-start gap-3.5">
+          <div className="p-5 rounded-2xl border border-border/60 bg-card/70 hover:border-primary/40 transition-colors flex items-start gap-3.5">
             <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
               <ShieldCheck className="h-4 w-4" strokeWidth={1.5} />
             </div>
             <div>
               <h4 className="font-display text-sm font-bold text-white mb-1">
-                حجز موثق ومؤكد
+                ماتشك مضمون بالثانية
               </h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                قفل الميعاد بنظام تقني صارم يمنع الحجز المزدوج تحت أي ظرف.
+                أول ما تحجز، الساعة بتتقفل باسمك فوراً ومستحيل ميعادك يتلغى أو يروح لحد تاني.
               </p>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-border/50 bg-card/60 flex items-start gap-3.5">
+          <div className="p-5 rounded-2xl border border-border/60 bg-card/70 hover:border-primary/40 transition-colors flex items-start gap-3.5">
             <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
               <Clock className="h-4 w-4" strokeWidth={1.5} />
             </div>
             <div>
               <h4 className="font-display text-sm font-bold text-white mb-1">
-                تأكيد فوري بالواتساب
+                تذكرتك بتوصلك على الواتساب
               </h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                تصلك تذكرة رقمية رسمية على هاتفك فور اعتماد إيصال التحويل.
+                بتجيلك رسالة شيك فيها كل تفاصيل الميعاد ولوكيشن الملعب عشان تشيرها مع فرقتك بضغطة واحدة.
               </p>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-border/50 bg-card/60 flex items-start gap-3.5">
+          <div className="p-5 rounded-2xl border border-border/60 bg-card/70 hover:border-primary/40 transition-colors flex items-start gap-3.5">
             <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
               <Zap className="h-4 w-4" strokeWidth={1.5} />
             </div>
             <div>
               <h4 className="font-display text-sm font-bold text-white mb-1">
-                سرعة فائقة للموبايل
+                سريعة وخفيفة على باقتك
               </h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                المنصة مصممة بتقنيات Next.js 15 لتعمل بسلاسة على باقات الموبايل.
+                المنصة بتفتح معاك في ثانية ومبتسحبش من باقة الموبايل، تحجز ماتشك في أقل من دقيقة وانت في الشارع.
               </p>
             </div>
           </div>
 
-          <div className="p-5 rounded-2xl border border-border/50 bg-card/60 flex items-start gap-3.5">
+          <div className="p-5 rounded-2xl border border-border/60 bg-card/70 hover:border-primary/40 transition-colors flex items-start gap-3.5">
             <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
               <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
             </div>
             <div>
               <h4 className="font-display text-sm font-bold text-white mb-1">
-                دعم محلي في دمنهور
+                فريق دمنهوري في ضهرك
               </h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                فريق دعم متاح لمساعدتك وحل أي استفسار بخصوص الحجوزات فورياً.
+                مفيش رد آلي ولا لف ودوران، شباب من دمنهور معاك خطوة بخطوة بالواتساب والتليفون لأي استفسار.
               </p>
             </div>
           </div>
