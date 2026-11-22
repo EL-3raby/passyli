@@ -10,17 +10,19 @@ export default function Home() {
           <div className="max-w-3xl">
             
             {/* Status Live Indicator Badge (Zero Emojis) */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3.5 py-1.5 text-xs font-bold text-primary mb-6">
+            <div className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary mb-8">
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
               خدمة حجز الملاعب الفورية في دمنهور والبحيرة
             </div>
 
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15] mb-6">
-              احجز ملعبك في ثواني، <br />
-              <span className="text-primary">وكمّل ماتشك</span> على طول.
+            <h1 className="font-display text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-normal leading-[1.45] sm:leading-[1.4] lg:leading-[1.35] mb-8">
+              احجز ملعبك في ثواني،
+              <span className="block mt-2 sm:mt-3 text-primary">
+                وكمّل ماتشك <span className="text-white">على طول.</span>
+              </span>
             </h1>
 
-            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl leading-relaxed mb-8">
+            <p className="text-muted-foreground text-base sm:text-lg max-w-2xl leading-relaxed mb-10">
               قارن أسعار وساعات ملاعب كرة القدم الخماسي وملاعب البادل القريبة منك في دمنهور. احجز موعدك بضغطة زر وتأكيد فوري على الواتساب.
             </p>
 
