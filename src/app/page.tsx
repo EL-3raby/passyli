@@ -547,10 +547,10 @@ export default function Home() {
                 <div className="p-3.5 rounded-xl border border-border/60 bg-surface/60 flex flex-col gap-1.5">
                   <div className="flex items-center gap-2 text-primary font-bold text-xs">
                     <ShieldCheck className="h-4 w-4" strokeWidth={1.5} />
-                    <span>زيرو خناقات مواعيد</span>
+                    <span>انسي لخبطة المواعيد</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground leading-normal">
-                    النظام بيقفل الساعة لحظياً وبيمنع أي تداخل أو حجز مزدوج نهائياً.
+                    السيستم بيقفل الساعة لحظياً، ومفيش حجزين هيدخلوا في بعض نهائياً.
                   </p>
                 </div>
 
