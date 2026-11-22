@@ -11,12 +11,8 @@ export default function Footer() {
           
           {/* Brand & Mission Column */}
           <div className="lg:col-span-2 flex flex-col gap-4">
-            <Link href="/" className="flex items-center gap-3 w-fit">
-              <span className="font-latin text-2xl font-black tracking-tight text-white leading-none" dir="ltr">
-                Passy<span className="text-primary">li</span>
-              </span>
-              <span className="h-4 w-px bg-white/20" />
-              <span className="font-display text-xl font-extrabold text-white leading-none">
+            <Link href="/" className="flex items-center w-fit">
+              <span className="font-display text-2xl font-black tracking-normal text-white leading-none">
                 باصـ<span className="text-primary">يلي</span>
               </span>
             </Link>
