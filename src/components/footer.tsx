@@ -15,6 +15,7 @@ export default function Footer() {
               <span className="font-latin text-2xl font-black tracking-tight text-white leading-none" dir="ltr">
                 Passy<span className="text-primary">li</span>
               </span>
+              <span className="h-5 w-[2px] bg-white/35 rounded-full shrink-0" aria-hidden="true" />
               <span className="font-display text-xl font-extrabold text-white leading-none">
                 باصـ<span className="text-primary">يلي</span>
               </span>
