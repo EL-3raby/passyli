@@ -249,6 +249,113 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- 9.3 GPS Haversine Distance Calculation (حساب المسافة بالكيلومتر من موقع اللاعب للملعب)
+CREATE OR REPLACE FUNCTION public.calculate_distance_km(
+  lat1 NUMERIC,
+  lon1 NUMERIC,
+  lat2 NUMERIC,
+  lon2 NUMERIC
+)
+RETURNS NUMERIC AS $$
+DECLARE
+  r NUMERIC := 6371; -- Earth radius in km
+  dlat NUMERIC;
+  dlon NUMERIC;
+  a NUMERIC;
+  c NUMERIC;
+BEGIN
+  dlat := radians(lat2 - lat1);
+  dlon := radians(lon2 - lon1);
+  a := sin(dlat / 2)^2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2)^2;
+  c := 2 * atan2(sqrt(a), sqrt(1 - a));
+  RETURN ROUND(r * c, 1);
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+-- 9.4 Atomic 8-Minute Slot Hold (تثبيت الحجز وقفل الساعة ذرياً لمدة 8 دقائق لمنع التضارب)
+CREATE OR REPLACE FUNCTION public.lock_court_slot(
+  p_court_id UUID,
+  p_booking_date DATE,
+  p_start_time TIME,
+  p_end_time TIME,
+  p_booker_name TEXT,
+  p_booker_phone VARCHAR(20),
+  p_total_price INTEGER,
+  p_deposit_required INTEGER,
+  p_cash_remaining INTEGER,
+  p_session_id TEXT
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_booking_ref VARCHAR(24);
+  v_booking_id UUID;
+  v_existing_id UUID;
+BEGIN
+  -- 1. First release any expired locks
+  PERFORM public.release_expired_booking_locks();
+
+  -- 2. Check if slot is already actively booked or held
+  SELECT id INTO v_existing_id
+  FROM public.bookings
+  WHERE court_id = p_court_id
+    AND booking_date = p_booking_date
+    AND start_time = p_start_time
+    AND status NOT IN ('cancelled', 'expired')
+  FOR UPDATE;
+
+  IF v_existing_id IS NOT NULL THEN
+    RETURN jsonb_build_object(
+      'success', FALSE,
+      'error', 'الميعاد محجوز بالفعل أو قيد الدفع من لاعب آخر حالياً'
+    );
+  END IF;
+
+  -- 3. Generate unique booking reference (e.g. PAS-YYYYMMDD-XXXX)
+  v_booking_ref := 'PAS-' || TO_CHAR(p_booking_date, 'YYYYMMDD') || '-' || UPPER(SUBSTRING(MD5(RANDOM()::TEXT) FROM 1 FOR 4));
+
+  -- 4. Insert atomic hold
+  INSERT INTO public.bookings (
+    booking_reference,
+    court_id,
+    booker_name,
+    booker_phone,
+    booking_date,
+    start_time,
+    end_time,
+    total_price,
+    deposit_required,
+    deposit_paid,
+    cash_remaining,
+    status,
+    locked_until,
+    locked_by_session
+  ) VALUES (
+    v_booking_ref,
+    p_court_id,
+    p_booker_name,
+    p_booker_phone,
+    p_booking_date,
+    p_start_time,
+    p_end_time,
+    p_total_price,
+    p_deposit_required,
+    0,
+    p_cash_remaining,
+    'pending_payment',
+    NOW() + INTERVAL '8 minutes',
+    p_session_id
+  )
+  RETURNING id INTO v_booking_id;
+
+  RETURN jsonb_build_object(
+    'success', TRUE,
+    'booking_id', v_booking_id,
+    'booking_reference', v_booking_ref,
+    'locked_until', NOW() + INTERVAL '8 minutes'
+  );
+END;
+$$ LANGUAGE plpgsql;
+
 -- =====================================================================
 -- 10. Row Level Security (RLS) Policies
 -- =====================================================================
@@ -296,3 +403,20 @@ CREATE POLICY "Users can upload receipts" ON public.receipts FOR INSERT WITH CHE
 -- 10.4 Matchmaking Policies
 CREATE POLICY "Matchmaking posts are viewable by everyone" ON public.matchmaking_posts FOR SELECT USING (TRUE);
 CREATE POLICY "Authenticated users can create matchmaking posts" ON public.matchmaking_posts FOR INSERT WITH CHECK (auth.uid() = creator_id);
+
+-- =====================================================================
+-- 11. Supabase Storage Buckets & Policies (تخزين صور الملاعب وإيصالات الدفع)
+-- =====================================================================
+INSERT INTO storage.buckets (id, name, public) 
+VALUES 
+  ('venues-storage', 'venues-storage', TRUE),
+  ('receipts-storage', 'receipts-storage', FALSE)
+ON CONFLICT (id) DO NOTHING;
+
+-- Venues Storage: Publicly readable for players, uploadable by authenticated owners
+CREATE POLICY "Public can view venue photos" ON storage.objects FOR SELECT USING (bucket_id = 'venues-storage');
+CREATE POLICY "Venue owners can upload photos" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'venues-storage');
+
+-- Receipts Storage: Uploadable by bookers during payment, viewable only by authorized parties
+CREATE POLICY "Anyone can upload receipt screenshots" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'receipts-storage');
+CREATE POLICY "Authorized view of receipts" ON storage.objects FOR SELECT USING (bucket_id = 'receipts-storage');
