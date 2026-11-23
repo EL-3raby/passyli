@@ -157,101 +157,85 @@ export default function CourtsSection() {
             </p>
           </div>
 
-          {/* Interactive Filters & GPS Locator Controls */}
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Filter Pills */}
-            <button
-              type="button"
-              onClick={() => setSelectedSport("all")}
-              className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-5 text-xs sm:text-sm font-bold transition-all ${
-                selectedSport === "all"
-                  ? "bg-primary text-black font-black shadow-[0_2px_12px_rgba(16,185,129,0.3)]"
-                  : "bg-[#242427] border border-white/[0.06] text-white hover:bg-[#2c2c30]"
-              }`}
-            >
-              كل الملاعب
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedSport("padel")}
-              className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-5 text-xs sm:text-sm font-bold transition-all ${
-                selectedSport === "padel"
-                  ? "bg-primary text-black font-black shadow-[0_2px_12px_rgba(16,185,129,0.3)]"
-                  : "bg-[#242427] border border-white/[0.06] text-white hover:bg-[#2c2c30]"
-              }`}
-            >
-              ملاعب البادل
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedSport("football")}
-              className={`inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full px-5 text-xs sm:text-sm font-bold transition-all ${
-                selectedSport === "football"
-                  ? "bg-primary text-black font-black shadow-[0_2px_12px_rgba(16,185,129,0.3)]"
-                  : "bg-[#242427] border border-white/[0.06] text-white hover:bg-[#2c2c30]"
-              }`}
-            >
-              كرة قدم خماسي
-            </button>
-
-            {/* GPS Geolocation Locator Button */}
-            <button
-              type="button"
-              onClick={requestLocation}
-              disabled={isLocating}
-              className={`inline-flex min-h-[44px] min-w-[44px] items-center gap-2 rounded-full px-4 text-xs font-bold transition-all border ${
-                locationStatus === "located"
-                  ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
-                  : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white hover:bg-[#2c2c30]"
-              }`}
-            >
-              <Navigation
-                className={`h-3.5 w-3.5 text-primary ${isLocating ? "animate-spin" : ""}`}
-                strokeWidth={1.5}
-              />
-              <span>
-                {isLocating
-                  ? "بنحدد مكانك..."
-                  : locationStatus === "located"
-                  ? "الأقرب ليك أولاً"
-                  : "رتّب حسب موقعي"}
-              </span>
-            </button>
-          </div>
         </div>
 
-        {/* Egyptian Day Selector Bar */}
-        <div className="mb-8 p-3 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-zinc-300 px-1">
-            <Calendar className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
-            <span className="font-bold">يوم الماتش:</span>
-          </div>
+        {/* Compact Horizontal Quick-Filter Rail (Airbnb / Yalla Hagz style) */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-none text-xs -mx-4 px-4 sm:mx-0 sm:px-0">
+          {/* Quick Sport Pills */}
+          <button
+            type="button"
+            onClick={() => setSelectedSport("all")}
+            className={`inline-flex min-h-[38px] items-center justify-center rounded-xl px-4 font-bold transition-all whitespace-nowrap shrink-0 border ${
+              selectedSport === "all"
+                ? "bg-primary text-black border-primary font-black shadow-sm"
+                : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white"
+            }`}
+          >
+            كل الملاعب
+          </button>
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-            {availableDays.map((day) => {
-              const isSelected = selectedDayKey === day.key;
-              return (
-                <button
-                  key={day.key}
-                  type="button"
-                  onClick={() => setSelectedDayKey(day.key)}
-                  className={`inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap shrink-0 border ${
-                    isSelected
-                      ? "bg-primary text-black border-primary shadow-[0_2px_10px_rgba(16,185,129,0.25)] font-black"
-                      : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30] hover:text-white"
-                  }`}
-                >
-                  <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-black" : "bg-primary"}`} />
-                  <span>{day.label}</span>
-                  <span className={`text-[11px] ${isSelected ? "text-black/80 font-bold" : "text-zinc-400 font-normal"}`}>
-                    ({day.displayDate})
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedSport("padel")}
+            className={`inline-flex min-h-[38px] items-center justify-center rounded-xl px-4 font-bold transition-all whitespace-nowrap shrink-0 border ${
+              selectedSport === "padel"
+                ? "bg-primary text-black border-primary font-black shadow-sm"
+                : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white"
+            }`}
+          >
+            بادل
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedSport("football")}
+            className={`inline-flex min-h-[38px] items-center justify-center rounded-xl px-4 font-bold transition-all whitespace-nowrap shrink-0 border ${
+              selectedSport === "football"
+                ? "bg-primary text-black border-primary font-black shadow-sm"
+                : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white"
+            }`}
+          >
+            كرة قدم
+          </button>
+
+          <span className="h-4 w-px bg-white/10 shrink-0" />
+
+          {/* Quick Day Selector Pills */}
+          {availableDays.map((day) => {
+            const isSelected = selectedDayKey === day.key;
+            return (
+              <button
+                key={day.key}
+                type="button"
+                onClick={() => setSelectedDayKey(day.key)}
+                className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-xl px-3.5 font-bold transition-all whitespace-nowrap shrink-0 border ${
+                  isSelected
+                    ? "bg-white text-black border-white font-black shadow-sm"
+                    : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:text-white"
+                }`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-black" : "bg-primary"}`} />
+                <span>{day.label}</span>
+              </button>
+            );
+          })}
+
+          <span className="h-4 w-px bg-white/10 shrink-0" />
+
+          {/* Quick GPS Locator Pill */}
+          <button
+            type="button"
+            onClick={requestLocation}
+            disabled={isLocating}
+            className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-xl px-3.5 font-bold transition-all whitespace-nowrap shrink-0 border ${
+              locationStatus === "located"
+                ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 font-bold"
+                : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white"
+            }`}
+          >
+            <Navigation className={`h-3.5 w-3.5 text-primary ${isLocating ? "animate-spin" : ""}`} strokeWidth={1.5} />
+            <span>{isLocating ? "بنحدد موقعك..." : locationStatus === "located" ? "الأقرب ليك" : "الأقرب بالـ GPS"}</span>
+          </button>
         </div>
 
         {/* 1. Shimmer Skeleton State */}

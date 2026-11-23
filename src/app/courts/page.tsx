@@ -14,7 +14,9 @@ import {
   RotateCcw,
   ShieldCheck,
   Check,
-  Sparkles,
+  SlidersHorizontal,
+  ArrowDownWideNarrow,
+  Building2,
 } from "lucide-react";
 import {
   getVenues,
@@ -62,12 +64,23 @@ function getEgyptianDays(): DayOption[] {
   });
 }
 
+const DAMANHOUR_DISTRICTS = [
+  { key: "all", label: "كل دمنهور" },
+  { key: "عبد السلام الشاذلي", label: "شارع عبد السلام الشاذلي" },
+  { key: "شبرا", label: "طريق شبرا" },
+  { key: "المعهد الديني", label: "شارع المعهد الديني" },
+];
+
 export default function CourtsCatalogPage() {
   const [venues, setVenues] = useState<VenueWithCourts[]>(DAMANHOUR_SEED_VENUES);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSport, setSelectedSport] = useState<"all" | SportType>("all");
   const [availableDays] = useState<DayOption[]>(getEgyptianDays());
   const [selectedDayKey, setSelectedDayKey] = useState<string>("today");
+  const [selectedDistrict, setSelectedDistrict] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"default" | "distance" | "price_asc">("default");
+  const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState<"idle" | "located" | "denied">("idle");
@@ -107,6 +120,7 @@ export default function CourtsCatalogPage() {
         const { latitude, longitude } = position.coords;
         setUserLocation({ lat: latitude, lon: longitude });
         setLocationStatus("located");
+        setSortBy("distance");
         setIsLocating(false);
 
         // Sort venues by distance
@@ -129,25 +143,52 @@ export default function CourtsCatalogPage() {
     );
   };
 
-  // Filter venues by search query and sport
-  const filteredVenues = venues.filter((venue) => {
-    // Sport filter
-    if (selectedSport !== "all") {
-      const matchSport = venue.courts.some((c) => c.sport === selectedSport);
-      if (!matchSport) return false;
-    }
+  // Filter & Sort venues
+  const filteredVenues = venues
+    .filter((venue) => {
+      // Sport filter
+      if (selectedSport !== "all") {
+        const matchSport = venue.courts.some((c) => c.sport === selectedSport);
+        if (!matchSport) return false;
+      }
 
-    // Search query filter (name, district, address)
-    if (searchQuery.trim()) {
-      const query = searchQuery.trim().toLowerCase();
-      const matchName = venue.name.toLowerCase().includes(query);
-      const matchDistrict = venue.district.toLowerCase().includes(query);
-      const matchAddress = venue.address.toLowerCase().includes(query);
-      if (!matchName && !matchDistrict && !matchAddress) return false;
-    }
+      // District filter
+      if (selectedDistrict !== "all") {
+        const matchDistrict =
+          venue.district.includes(selectedDistrict) ||
+          venue.address.includes(selectedDistrict);
+        if (!matchDistrict) return false;
+      }
 
-    return true;
-  });
+      // Search query filter (name, district, address)
+      if (searchQuery.trim()) {
+        const query = searchQuery.trim().toLowerCase();
+        const matchName = venue.name.toLowerCase().includes(query);
+        const matchDistrict = venue.district.toLowerCase().includes(query);
+        const matchAddress = venue.address.toLowerCase().includes(query);
+        if (!matchName && !matchDistrict && !matchAddress) return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "distance" && a.distance_km && b.distance_km) {
+        return a.distance_km - b.distance_km;
+      }
+      if (sortBy === "price_asc") {
+        const priceA = a.courts[0]?.price_evening || 200;
+        const priceB = b.courts[0]?.price_evening || 200;
+        return priceA - priceB;
+      }
+      return 0;
+    });
+
+  // Count active filters (for badge)
+  const activeFiltersCount =
+    (selectedSport !== "all" ? 1 : 0) +
+    (selectedDistrict !== "all" ? 1 : 0) +
+    (selectedDayKey !== "today" ? 1 : 0) +
+    (sortBy !== "default" ? 1 : 0);
 
   // Slot Selection Handler
   const handleSlotSelect = (courtId: string, slot: string) => {
@@ -161,14 +202,16 @@ export default function CourtsCatalogPage() {
     setSearchQuery("");
     setSelectedSport("all");
     setSelectedDayKey("today");
+    setSelectedDistrict("all");
+    setSortBy("default");
   };
 
   return (
-    <div className="w-full min-h-screen bg-background text-foreground py-8 md:py-12">
+    <div className="w-full min-h-screen bg-background text-foreground py-6 md:py-10">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
         {/* Breadcrumb Navigation */}
-        <nav aria-label="مسار التنقل" className="flex items-center gap-2 text-xs text-muted-foreground mb-6">
+        <nav aria-label="مسار التنقل" className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
           <Link href="/" className="hover:text-primary transition-colors">
             الرئيسية
           </Link>
@@ -176,32 +219,21 @@ export default function CourtsCatalogPage() {
           <span className="text-white font-bold">دليل ملاعب دمنهور والبحيرة</span>
         </nav>
 
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 border-b border-border/30 pb-8">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md w-fit mb-3">
-              <Navigation className="h-3.5 w-3.5 text-emerald-400" strokeWidth={1.5} />
-              <span>دليل الملاعب المعتمدة • دمنهور</span>
-            </div>
-
-            <h1 className="font-display text-2xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
-              كافة ملاعب دمنهور والبحيرة
-            </h1>
-            <p className="text-muted-foreground text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
-              ابحث عن ملعبك المفضل، قارن الأسعار، واعرف المسافة بالكيلومتر مع تأكيد حجزك الفوري بالعربون.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-zinc-400 bg-[#1c1c1f] border border-white/[0.06] rounded-2xl px-4 py-2.5 w-fit">
-            <ShieldCheck className="h-4 w-4 text-primary" strokeWidth={1.5} />
-            <span>حجز مؤمن ومحمي من التضارب</span>
-          </div>
+        {/* Page Title & Intro */}
+        <div className="mb-6">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-tight">
+            دليل ملاعب دمنهور والبحيرة
+          </h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">
+            قارن بين ملاعب البادل والخماسي في دمنهور، اعرف المسافة، واحجز ميعادك فوراً.
+          </p>
         </div>
 
-        {/* Interactive Search & Filters Bar */}
-        <div className="rounded-2xl bg-[#18181c] border border-white/[0.06] p-4 sm:p-6 mb-8 space-y-4 shadow-sm">
-          {/* Row 1: Search Input & GPS Locator */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        {/* Modern Mobile-First Search & Filter Suite (Airbnb / Yalla Hagz style) */}
+        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-xl -mx-4 px-4 sm:mx-0 sm:px-0 py-3 mb-6 border-y sm:border sm:rounded-2xl border-white/[0.08] shadow-sm space-y-3">
+          
+          {/* Top Row: Search Input + Filter Drawer Button */}
+          <div className="flex items-center gap-2">
             {/* Search Input */}
             <div className="relative flex-1">
               <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" strokeWidth={1.5} />
@@ -209,7 +241,7 @@ export default function CourtsCatalogPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="ابحث باسم الملعب أو المنطقة (الشاذلي، شبرا، المعهد الديني...)"
+                placeholder="ابحث باسم الملعب أو المنطقة (الشاذلي، شبرا...)"
                 className="w-full min-h-[46px] rounded-xl bg-[#242427] border border-white/[0.08] pr-10 pl-10 text-xs sm:text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-primary transition-all"
               />
               {searchQuery && (
@@ -223,117 +255,122 @@ export default function CourtsCatalogPage() {
               )}
             </div>
 
-            {/* GPS Locator Button */}
+            {/* Filter Drawer Trigger Button */}
+            <button
+              type="button"
+              onClick={() => setIsFilterDrawerOpen(true)}
+              className={`inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl px-4 text-xs font-bold transition-all border shrink-0 ${
+                activeFiltersCount > 0
+                  ? "bg-primary text-black border-primary shadow-[0_2px_12px_rgba(16,185,129,0.3)] font-black"
+                  : "bg-[#242427] border-white/[0.08] text-white hover:bg-[#2c2c30]"
+              }`}
+            >
+              <SlidersHorizontal className={`h-4 w-4 ${activeFiltersCount > 0 ? "text-black" : "text-primary"}`} strokeWidth={1.5} />
+              <span>فلاتر</span>
+              {activeFiltersCount > 0 && (
+                <span className="h-5 w-5 rounded-full bg-black text-white text-[10px] font-black flex items-center justify-center">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Quick-Filter Horizontal Scrollable Chip Rail */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none text-xs">
+            {/* Quick Sport Pills */}
+            <button
+              type="button"
+              onClick={() => setSelectedSport("all")}
+              className={`inline-flex min-h-[36px] items-center justify-center rounded-lg px-3.5 font-bold transition-all whitespace-nowrap shrink-0 border ${
+                selectedSport === "all"
+                  ? "bg-primary text-black border-primary font-black"
+                  : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white"
+              }`}
+            >
+              كل الرياضات
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedSport("padel")}
+              className={`inline-flex min-h-[36px] items-center justify-center rounded-lg px-3.5 font-bold transition-all whitespace-nowrap shrink-0 border ${
+                selectedSport === "padel"
+                  ? "bg-primary text-black border-primary font-black"
+                  : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white"
+              }`}
+            >
+              بادل
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedSport("football")}
+              className={`inline-flex min-h-[36px] items-center justify-center rounded-lg px-3.5 font-bold transition-all whitespace-nowrap shrink-0 border ${
+                selectedSport === "football"
+                  ? "bg-primary text-black border-primary font-black"
+                  : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white"
+              }`}
+            >
+              كرة قدم
+            </button>
+
+            <span className="h-4 w-px bg-white/10 shrink-0" />
+
+            {/* Quick Day Selector Pills */}
+            {availableDays.map((day) => {
+              const isSelected = selectedDayKey === day.key;
+              return (
+                <button
+                  key={day.key}
+                  type="button"
+                  onClick={() => setSelectedDayKey(day.key)}
+                  className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-3 font-bold transition-all whitespace-nowrap shrink-0 border ${
+                    isSelected
+                      ? "bg-white text-black border-white font-black"
+                      : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:text-white"
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-black" : "bg-primary"}`} />
+                  <span>{day.label}</span>
+                </button>
+              );
+            })}
+
+            <span className="h-4 w-px bg-white/10 shrink-0" />
+
+            {/* Quick GPS Locator Chip */}
             <button
               type="button"
               onClick={requestLocation}
               disabled={isLocating}
-              className={`inline-flex min-h-[46px] min-w-[46px] items-center justify-center gap-2 rounded-xl px-5 text-xs sm:text-sm font-bold transition-all border shrink-0 ${
+              className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-3 font-bold transition-all whitespace-nowrap shrink-0 border ${
                 locationStatus === "located"
                   ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
-                  : "bg-[#242427] border-white/[0.08] text-zinc-300 hover:text-white hover:bg-[#2c2c30]"
+                  : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white"
               }`}
             >
-              <Navigation
-                className={`h-4 w-4 text-primary ${isLocating ? "animate-spin" : ""}`}
-                strokeWidth={1.5}
-              />
-              <span>
-                {isLocating
-                  ? "بنحدد مكانك..."
-                  : locationStatus === "located"
-                  ? "الأقرب إليك أولاً"
-                  : "رتّب حسب موقعي"}
-              </span>
+              <Navigation className={`h-3.5 w-3.5 text-primary ${isLocating ? "animate-spin" : ""}`} strokeWidth={1.5} />
+              <span>{isLocating ? "بنحدد موقعك..." : locationStatus === "located" ? "الأقرب إليك" : "الأقرب بالـ GPS"}</span>
             </button>
           </div>
 
-          {/* Row 2: Sport Category Filters & Day Selector */}
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-2 border-t border-white/[0.04]">
-            {/* Sport Filter Tabs */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
-              <button
-                type="button"
-                onClick={() => setSelectedSport("all")}
-                className={`inline-flex min-h-[42px] items-center justify-center rounded-xl px-4 text-xs font-bold transition-all whitespace-nowrap border ${
-                  selectedSport === "all"
-                    ? "bg-primary text-black border-primary font-black shadow-[0_2px_10px_rgba(16,185,129,0.25)]"
-                    : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white hover:bg-[#2c2c30]"
-                }`}
-              >
-                كل الملاعب ({venues.length})
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedSport("padel")}
-                className={`inline-flex min-h-[42px] items-center justify-center rounded-xl px-4 text-xs font-bold transition-all whitespace-nowrap border ${
-                  selectedSport === "padel"
-                    ? "bg-primary text-black border-primary font-black shadow-[0_2px_10px_rgba(16,185,129,0.25)]"
-                    : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white hover:bg-[#2c2c30]"
-                }`}
-              >
-                ملاعب البادل
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedSport("football")}
-                className={`inline-flex min-h-[42px] items-center justify-center rounded-xl px-4 text-xs font-bold transition-all whitespace-nowrap border ${
-                  selectedSport === "football"
-                    ? "bg-primary text-black border-primary font-black shadow-[0_2px_10px_rgba(16,185,129,0.25)]"
-                    : "bg-[#242427] border-white/[0.06] text-zinc-300 hover:text-white hover:bg-[#2c2c30]"
-                }`}
-              >
-                كرة قدم خماسي
-              </button>
-            </div>
-
-            {/* Day Selector */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
-              <span className="text-xs text-zinc-400 font-bold hidden sm:inline shrink-0">
-                يوم الماتش:
-              </span>
-              {availableDays.map((day) => {
-                const isSelected = selectedDayKey === day.key;
-                return (
-                  <button
-                    key={day.key}
-                    type="button"
-                    onClick={() => setSelectedDayKey(day.key)}
-                    className={`inline-flex min-h-[42px] items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-bold transition-all whitespace-nowrap shrink-0 border ${
-                      isSelected
-                        ? "bg-white text-black border-white shadow-sm font-black"
-                        : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30] hover:text-white"
-                    }`}
-                  >
-                    <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-black" : "bg-primary"}`} />
-                    <span>{day.label}</span>
-                    <span className={`text-[10px] ${isSelected ? "text-black/80 font-bold" : "text-zinc-500 font-normal"}`}>
-                      ({day.displayDate})
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         </div>
 
-        {/* Results Count Banner */}
+        {/* Results Banner & Active Filter Reset */}
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-6 px-1">
           <span>
-            يتم عرض <strong className="text-white font-bold tabular-nums">{filteredVenues.length}</strong> ملاعب متاحة
-            {searchQuery && ` مطابقة لبحثك: "${searchQuery}"`}
+            يتم عرض <strong className="text-white font-bold tabular-nums">{filteredVenues.length}</strong> ملاعب في دمنهور
+            {searchQuery && ` مطابقة لـ "${searchQuery}"`}
           </span>
 
-          {(searchQuery || selectedSport !== "all") && (
+          {activeFiltersCount > 0 && (
             <button
               type="button"
               onClick={handleClearFilters}
               className="text-primary hover:underline font-bold flex items-center gap-1"
             >
               <RotateCcw className="h-3 w-3" strokeWidth={1.5} />
-              <span>إعادة ضبط الفلاتر</span>
+              <span>إعادة ضبط ({activeFiltersCount})</span>
             </button>
           )}
         </div>
@@ -557,6 +594,200 @@ export default function CourtsCatalogPage() {
         )}
 
       </div>
+
+      {/* Modern Mobile Filter Bottom Sheet Drawer (Airbnb / Yalla Hagz style) */}
+      {isFilterDrawerOpen && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsFilterDrawerOpen(false)}
+          />
+
+          {/* Bottom Sheet Drawer Container */}
+          <div className="relative w-full sm:max-w-md bg-[#18181c] border-t sm:border border-white/10 rounded-t-[28px] sm:rounded-2xl max-h-[88vh] flex flex-col z-10 shadow-2xl animate-in slide-in-from-bottom duration-300">
+            
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between p-5 border-b border-white/[0.08]">
+              <div>
+                <h3 className="font-display text-lg font-black text-white">
+                  فلاتر البحث والملاعب
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  خصص بحثك في دمنهور عشان تلاقي أنسب ملعب لفرقتك
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsFilterDrawerOpen(false)}
+                className="h-10 w-10 rounded-xl bg-[#242427] hover:bg-[#2e2e33] flex items-center justify-center text-zinc-300 transition-colors"
+              >
+                <X className="h-5 w-5" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            {/* Scrollable Drawer Body */}
+            <div className="p-5 space-y-6 overflow-y-auto max-h-[60vh] scrollbar-none">
+              
+              {/* Section 1: نوع الرياضة */}
+              <div>
+                <span className="text-xs font-bold text-white block mb-2.5">
+                  نوع الرياضة:
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSport("all")}
+                    className={`min-h-[44px] rounded-xl text-xs font-bold transition-all border ${
+                      selectedSport === "all"
+                        ? "bg-primary text-black border-primary font-black shadow-sm"
+                        : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30]"
+                    }`}
+                  >
+                    كل الرياضات
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSport("padel")}
+                    className={`min-h-[44px] rounded-xl text-xs font-bold transition-all border ${
+                      selectedSport === "padel"
+                        ? "bg-primary text-black border-primary font-black shadow-sm"
+                        : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30]"
+                    }`}
+                  >
+                    بادل
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSport("football")}
+                    className={`min-h-[44px] rounded-xl text-xs font-bold transition-all border ${
+                      selectedSport === "football"
+                        ? "bg-primary text-black border-primary font-black shadow-sm"
+                        : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30]"
+                    }`}
+                  >
+                    كرة قدم
+                  </button>
+                </div>
+              </div>
+
+              {/* Section 2: يوم الماتش */}
+              <div>
+                <span className="text-xs font-bold text-white block mb-2.5">
+                  يوم الحجز:
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  {availableDays.map((day) => {
+                    const isSelected = selectedDayKey === day.key;
+                    return (
+                      <button
+                        key={day.key}
+                        type="button"
+                        onClick={() => setSelectedDayKey(day.key)}
+                        className={`min-h-[44px] flex flex-col items-center justify-center py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                          isSelected
+                            ? "bg-white text-black border-white font-black shadow-sm"
+                            : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30]"
+                        }`}
+                      >
+                        <span>{day.label}</span>
+                        <span className={`text-[10px] ${isSelected ? "text-black/80" : "text-zinc-500"}`}>
+                          {day.displayDate.split(" ")[0]}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section 3: المنطقة داخل دمنهور */}
+              <div>
+                <span className="text-xs font-bold text-white block mb-2.5">
+                  المنطقة في دمنهور:
+                </span>
+                <div className="flex flex-col gap-2">
+                  {DAMANHOUR_DISTRICTS.map((district) => {
+                    const isSelected = selectedDistrict === district.key;
+                    return (
+                      <button
+                        key={district.key}
+                        type="button"
+                        onClick={() => setSelectedDistrict(district.key)}
+                        className={`min-h-[44px] flex items-center justify-between px-4 rounded-xl text-xs font-bold transition-all border ${
+                          isSelected
+                            ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400 font-black"
+                            : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30]"
+                        }`}
+                      >
+                        <span>{district.label}</span>
+                        {isSelected && <Check className="h-4 w-4 text-primary" strokeWidth={2.5} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section 4: الترتيب */}
+              <div>
+                <span className="text-xs font-bold text-white block mb-2.5">
+                  ترتيب النتائج:
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSortBy("default");
+                      setLocationStatus("idle");
+                    }}
+                    className={`min-h-[44px] rounded-xl text-xs font-bold transition-all border ${
+                      sortBy === "default"
+                        ? "bg-primary text-black border-primary font-black"
+                        : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30]"
+                    }`}
+                  >
+                    الافتراضي (الأعلى تقييماً)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={requestLocation}
+                    className={`min-h-[44px] rounded-xl text-xs font-bold transition-all border ${
+                      sortBy === "distance"
+                        ? "bg-primary text-black border-primary font-black"
+                        : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30]"
+                    }`}
+                  >
+                    الأقرب جغرافياً (GPS)
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Fixed Drawer Footer */}
+            <div className="p-4 pb-8 sm:pb-4 border-t border-white/[0.08] bg-[#141418] flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleClearFilters}
+                className="min-h-[48px] px-5 rounded-xl border border-white/[0.08] text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.04] transition-all"
+              >
+                مسح الكل
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsFilterDrawerOpen(false)}
+                className="flex-1 min-h-[48px] rounded-xl bg-primary hover:bg-primary-hover px-5 text-xs font-black text-black transition-all shadow-[0_2px_12px_rgba(16,185,129,0.3)] active:scale-98"
+              >
+                عرض ({filteredVenues.length}) ملاعب
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
