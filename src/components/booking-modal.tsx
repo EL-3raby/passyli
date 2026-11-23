@@ -19,6 +19,9 @@ import {
   FileCheck2,
   Trash2,
   Share2,
+  Download,
+  Eye,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   lockCourtSlot,
@@ -30,6 +33,7 @@ import {
   type LockSlotResult,
 } from "@/lib/api/bookings";
 import type { VenueWithCourts, VenueCourt } from "@/lib/api/venues";
+import { generateMatchBillBlob, downloadBillImage } from "@/lib/match-bill";
 
 export interface BookingModalData {
   venue: VenueWithCourts;
@@ -112,8 +116,13 @@ export default function BookingModal({
   const [receiptError, setReceiptError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Step 3: Digital Pass
+  // Step 3: Digital Pass & Squad Bill Image Sharing
   const [confirmedRef, setConfirmedRef] = useState<string>("");
+  const [isGeneratingBill, setIsGeneratingBill] = useState(false);
+  const [billPreviewUrl, setBillPreviewUrl] = useState<string | null>(null);
+  const [billBlob, setBillBlob] = useState<Blob | null>(null);
+  const [shareSuccessToast, setShareSuccessToast] = useState("");
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionIdRef = useRef<string>("");
@@ -156,6 +165,11 @@ export default function BookingModal({
       setReferenceNumber("");
       setReceiptError("");
       setIsSubmitting(false);
+      setIsGeneratingBill(false);
+      setBillPreviewUrl(null);
+      setBillBlob(null);
+      setShareSuccessToast("");
+      setIsPreviewModalOpen(false);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
     }
@@ -220,6 +234,9 @@ export default function BookingModal({
   const totalPrice = isEvening ? court.price_evening : court.price_morning;
   const depositRequired = venue.deposit_amount || 100;
   const cashRemaining = Math.max(totalPrice - depositRequired, 0);
+  const playersCount = court.sport === "padel" ? 4 : 10;
+  const perPlayerTotal = Math.ceil(totalPrice / playersCount);
+  const perPlayerCash = Math.ceil(cashRemaining / playersCount);
 
   // Convert slot to 24-hour start/end times
   const parseSlotTimes = (slot: string, durationMinutes: number) => {
@@ -418,13 +435,107 @@ export default function BookingModal({
 
   // Squad WhatsApp Share (Broadcast to your team's group with per-player split cost)
   const generateSquadShareUrl = () => {
-    const playersCount = court.sport === "padel" ? 4 : 10;
-    const perPlayerTotal = Math.ceil(totalPrice / playersCount);
-    const perPlayerCash = Math.ceil(cashRemaining / playersCount);
-
     const msg = `يا رجالة، حجزنا الماتش خلاص عبر منصة باصيلي!\nالملعب: ${venue.name} (${court.name})\nاليوم: ${dayLabel} (${displayDate})\nالساعة: ${slotTime} (المدة: ${court.slot_duration_minutes || 60} دقيقة)\nكود الحجز: ${confirmedRef}\nالعربون اتحوّل خلاص (${depositRequired} ج.م)، والمتبقي كاش في الملعب: ${cashRemaining} ج.م\nنصيب كل لاعب كاش في الملعب: ${perPlayerCash} ج.م (الإجمالي ${perPlayerTotal} ج.م)\nياريت نتجمع قبل الميعاد بربع ساعة عشان التسخين!`;
 
     return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  };
+
+  // Generate and Share Match Bill Image directly to WhatsApp Squad Group
+  const handleShareSquadBill = async () => {
+    try {
+      setIsGeneratingBill(true);
+      const refCode = confirmedRef || lockData?.bookingReference || "PAS-CONFIRMED";
+
+      const billData = {
+        venueName: venue.name,
+        courtName: court.name,
+        sport: court.sport,
+        bookerName: bookerName || "كابتن الفرقة",
+        bookerPhone: bookerPhone,
+        displayDate,
+        dayLabel,
+        slotTime,
+        durationMinutes: court.slot_duration_minutes || 60,
+        totalPrice,
+        depositPaid: depositRequired,
+        cashRemaining,
+        playersCount,
+        cashPerPlayer: perPlayerCash,
+        totalPerPlayer: perPlayerTotal,
+        bookingRef: refCode,
+      };
+
+      const result = await generateMatchBillBlob(billData);
+      setBillBlob(result.blob);
+      setBillPreviewUrl(result.dataUrl);
+
+      // Check for Mobile Web Share API support with files
+      if (
+        typeof navigator !== "undefined" &&
+        navigator.canShare &&
+        navigator.canShare({ files: [result.file] })
+      ) {
+        await navigator.share({
+          title: `فاتورة حساب ماتش ${venue.name} — باصيلي`,
+          text: `يا رجالة، دي صورة فاتورة حساب الماتش في ${venue.name} وحسبة نصيب كل واحد: مطلوب ${perPlayerCash} ج.م كاش في الملعب.`,
+          files: [result.file],
+        });
+        setShareSuccessToast("تم فتح تطبيق المشاركة بنجاح لإرسال صورة الفاتورة!");
+        setTimeout(() => setShareSuccessToast(""), 5000);
+      } else {
+        // Desktop / Unsupported Fallback:
+        // 1. Download the generated bill image
+        downloadBillImage(result.blob, refCode);
+        // 2. Open WhatsApp Web to attach the downloaded bill
+        window.open(generateSquadShareUrl(), "_blank");
+        setShareSuccessToast("تم تحميل صورة الفاتورة لجهازك وفتح واتساب لمشاركتها مع الفرقة!");
+        setTimeout(() => setShareSuccessToast(""), 6000);
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name !== "AbortError") {
+        console.error("Bill share error:", err);
+      }
+    } finally {
+      setIsGeneratingBill(false);
+    }
+  };
+
+  // Direct download of the bill image
+  const handleDownloadBillOnly = async () => {
+    try {
+      setIsGeneratingBill(true);
+      const refCode = confirmedRef || lockData?.bookingReference || "PAS-CONFIRMED";
+
+      const billData = {
+        venueName: venue.name,
+        courtName: court.name,
+        sport: court.sport,
+        bookerName: bookerName || "كابتن الفرقة",
+        bookerPhone: bookerPhone,
+        displayDate,
+        dayLabel,
+        slotTime,
+        durationMinutes: court.slot_duration_minutes || 60,
+        totalPrice,
+        depositPaid: depositRequired,
+        cashRemaining,
+        playersCount,
+        cashPerPlayer: perPlayerCash,
+        totalPerPlayer: perPlayerTotal,
+        bookingRef: refCode,
+      };
+
+      const result = await generateMatchBillBlob(billData);
+      setBillBlob(result.blob);
+      setBillPreviewUrl(result.dataUrl);
+      downloadBillImage(result.blob, refCode);
+      setShareSuccessToast("تم تحميل صورة الفاتورة بنجاح!");
+      setTimeout(() => setShareSuccessToast(""), 4000);
+    } catch (err) {
+      console.error("Download bill error:", err);
+    } finally {
+      setIsGeneratingBill(false);
+    }
   };
 
   const handleSafeClose = () => {
@@ -1015,6 +1126,75 @@ export default function BookingModal({
                   </div>
                 </div>
 
+                {/* Squad Cost-Split Highlight Card */}
+                <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold text-white block">
+                      نصيب كل لاعب كاش في الملعب:
+                    </span>
+                    <span className="text-[10px] text-muted-foreground block">
+                      ({playersCount} لاعبين • الإجمالي {perPlayerTotal} ج.م شامل العربون)
+                    </span>
+                  </div>
+
+                  <div className="text-left">
+                    <span className="font-display font-black text-xl text-primary tabular-nums">
+                      {perPlayerCash} <span className="text-xs font-normal">ج.م</span>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Squad Bill Image Card */}
+                <div className="rounded-xl bg-[#141416] border border-white/[0.08] p-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                      <ImageIcon className="h-4.5 w-4.5" strokeWidth={1.5} />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-white block">
+                        صورة فاتورة الحساب للفرقة
+                      </span>
+                      <span className="text-[10px] text-zinc-400 block">
+                        فاتورة جاهزة بالمبالغ المقسمة للمشاركة المباشرة
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!billPreviewUrl) {
+                        const refCode = confirmedRef || lockData?.bookingReference || "PAS-CONFIRMED";
+                        const res = await generateMatchBillBlob({
+                          venueName: venue.name,
+                          courtName: court.name,
+                          sport: court.sport,
+                          bookerName: bookerName || "كابتن الفرقة",
+                          bookerPhone: bookerPhone,
+                          displayDate,
+                          dayLabel,
+                          slotTime,
+                          durationMinutes: court.slot_duration_minutes || 60,
+                          totalPrice,
+                          depositPaid: depositRequired,
+                          cashRemaining,
+                          playersCount,
+                          cashPerPlayer: perPlayerCash,
+                          totalPerPlayer: perPlayerTotal,
+                          bookingRef: refCode,
+                        });
+                        setBillPreviewUrl(res.dataUrl);
+                        setBillBlob(res.blob);
+                      }
+                      setIsPreviewModalOpen(true);
+                    }}
+                    className="inline-flex min-h-[32px] items-center gap-1.5 text-[11px] font-bold text-primary hover:text-primary-hover px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors shrink-0"
+                  >
+                    <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    <span>معاينة الفاتورة</span>
+                  </button>
+                </div>
+
                 {/* Barcode visual indicator */}
                 <div className="pt-1 text-center">
                   <div className="h-5 w-full max-w-xs mx-auto bg-white/10 rounded flex items-center justify-around px-2 opacity-50">
@@ -1035,42 +1215,124 @@ export default function BookingModal({
             </div>
 
             {/* 3. Sticky Action Footer for Pass */}
-            <div className="shrink-0 p-4 border-t border-white/[0.08] bg-[#141416] space-y-2.5 pb-[max(1rem,env(safe-area-inset-bottom))]">
-              {/* Send to Venue WhatsApp */}
+            <div className="shrink-0 p-4 border-t border-white/[0.08] bg-[#141416] space-y-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              {shareSuccessToast && (
+                <div className="rounded-xl bg-emerald-500/15 border border-emerald-500/30 p-2.5 text-center text-xs font-bold text-emerald-400 flex items-center justify-center gap-2 animate-in fade-in">
+                  <Check className="h-4 w-4" strokeWidth={2} />
+                  <span>{shareSuccessToast}</span>
+                </div>
+              )}
+
+              {/* Primary: Share Match Bill Image with Squad on WhatsApp */}
+              <button
+                type="button"
+                onClick={handleShareSquadBill}
+                disabled={isGeneratingBill}
+                className="w-full min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] active:scale-98 disabled:opacity-50"
+              >
+                {isGeneratingBill ? (
+                  <>
+                    <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    <span>بنجهز صورة الفاتورة للمشاركة...</span>
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="h-4 w-4 text-black" strokeWidth={2.2} />
+                    <span>مشاركة صورة الفاتورة وحسبة الفلوس مع الفرقة</span>
+                  </>
+                )}
+              </button>
+
+              {/* Secondary: Send to Venue WhatsApp */}
               <a
                 href={generateWhatsAppUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] active:scale-98"
+                className="w-full min-h-[42px] rounded-xl bg-[#242427] hover:bg-[#2c2c30] border border-white/10 hover:border-primary/40 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 active:scale-98"
               >
-                <MessageSquare className="h-4 w-4" strokeWidth={2} />
+                <MessageSquare className="h-4 w-4 text-primary" strokeWidth={2} />
                 <span>إرسال بيانات التذكرة لإدارة الملعب على واتساب</span>
               </a>
 
-              {/* Squad WhatsApp Share with Cost Split */}
-              <a
-                href={generateSquadShareUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full min-h-[44px] rounded-xl bg-[#242427] hover:bg-[#2c2c30] border border-white/10 hover:border-primary/40 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 active:scale-98"
-              >
-                <Share2 className="h-4 w-4 text-primary" strokeWidth={2} />
-                <span>مشاركة تفاصيل الماتش وحسبة الفلوس مع الفرقة</span>
-              </a>
+              {/* Tertiary Row: Download Image + Close */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleDownloadBillOnly}
+                  disabled={isGeneratingBill}
+                  className="flex-1 min-h-[38px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-300 hover:text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Download className="h-3.5 w-3.5 text-zinc-400" strokeWidth={2} />
+                  <span>تحميل صورة الفاتورة</span>
+                </button>
 
-              <button
-                type="button"
-                onClick={handleSafeClose}
-                className="w-full min-h-[40px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white font-bold text-xs transition-colors"
-              >
-                إغلاق وتصفح ملاعب أخرى
-              </button>
+                <button
+                  type="button"
+                  onClick={handleSafeClose}
+                  className="flex-1 min-h-[38px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white font-bold text-xs transition-colors"
+                >
+                  إغلاق وتصفح ملاعب أخرى
+                </button>
+              </div>
             </div>
 
           </div>
         )}
 
       </div>
+
+      {/* Bill Image Full-Screen Preview Overlay Modal */}
+      {isPreviewModalOpen && billPreviewUrl && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative max-w-sm w-full bg-[#18181c] border border-white/10 rounded-2xl p-4 flex flex-col items-center space-y-4 max-h-[90dvh] overflow-y-auto">
+            <div className="flex items-center justify-between w-full border-b border-white/10 pb-3">
+              <span className="font-display font-black text-sm text-white">معاينة صورة الفاتورة</span>
+              <button
+                type="button"
+                onClick={() => setIsPreviewModalOpen(false)}
+                className="h-8 w-8 rounded-lg bg-white/10 flex items-center justify-center text-zinc-300 hover:text-white transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Bill Image */}
+            <div className="w-full rounded-xl overflow-hidden border border-white/10 shadow-2xl bg-[#111114]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={billPreviewUrl}
+                alt="فاتورة حساب الماتش"
+                className="w-full h-auto object-contain"
+              />
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center gap-2 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsPreviewModalOpen(false);
+                  handleShareSquadBill();
+                }}
+                className="flex-1 min-h-[42px] rounded-xl bg-primary text-black font-black text-xs flex items-center justify-center gap-2 hover:bg-primary-hover transition-all"
+              >
+                <Share2 className="h-4 w-4" strokeWidth={2} />
+                <span>مشاركة الآن</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDownloadBillOnly}
+                className="min-h-[42px] px-4 rounded-xl bg-[#242427] text-white font-bold text-xs flex items-center justify-center gap-1.5 hover:bg-[#2e2e33] transition-all border border-white/10"
+              >
+                <Download className="h-4 w-4 text-primary" strokeWidth={2} />
+                <span>تحميل</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
