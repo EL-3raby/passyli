@@ -22,6 +22,8 @@ import {
   Download,
   Eye,
   Image as ImageIcon,
+  Link2,
+  ExternalLink,
 } from "lucide-react";
 import {
   lockCourtSlot,
@@ -438,11 +440,14 @@ export default function BookingModal({
     return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
   };
 
-  // Squad WhatsApp Share (Broadcast to your team's group with per-player split cost)
-  const generateSquadShareUrl = () => {
-    const msg = `يا رجالة، حجزنا الماتش خلاص عبر منصة باصيلي!\nالملعب: ${venue.name} (${court.name})\nاليوم: ${dayLabel} (${displayDate})\nالساعة: ${slotTime} (المدة: ${court.slot_duration_minutes || 60} دقيقة)\nكود الحجز: ${confirmedRef}\nالعربون اتحوّل خلاص (${depositRequired} ج.م)، والمتبقي كاش في الملعب: ${cashRemaining} ج.م\nنصيب كل لاعب كاش في الملعب: ${perPlayerCash} ج.م (الإجمالي ${perPlayerTotal} ج.م)\nياريت نتجمع قبل الميعاد بربع ساعة عشان التسخين!`;
+  const activeRefCode = confirmedRef || lockData?.bookingReference || "PAS-CONFIRMED";
+  const ticketUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/ticket/${activeRefCode}`
+    : `https://passyli.com/ticket/${activeRefCode}`;
 
-    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  // Squad WhatsApp Share (Broadcasts only the direct ticket URL, with zero pre-composed text)
+  const generateSquadShareUrl = () => {
+    return `https://wa.me/?text=${encodeURIComponent(ticketUrl)}`;
   };
 
   // Generate and Share Match Bill Image directly to WhatsApp Squad Group
@@ -1149,55 +1154,57 @@ export default function BookingModal({
                   </div>
                 </div>
 
-                {/* Squad Bill Image Card */}
-                <div className="rounded-xl bg-[#141416] border border-white/[0.08] p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-                      <ImageIcon className="h-4.5 w-4.5" strokeWidth={1.5} />
+                {/* Squad Direct Ticket Link Card */}
+                <div className="rounded-xl bg-[#141416] border border-white/[0.08] p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+                        <Link2 className="h-4 w-4" strokeWidth={2} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-white block">
+                          رابط فاتورة وتذكرة الماتش للفرقة
+                        </span>
+                        <span className="text-[10px] text-zinc-400 block">
+                          يفتح تفاصيل الماتش وحسبة نصيب كل لاعب واللوكيشن
+                        </span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-xs font-bold text-white block">
-                        صورة فاتورة الحساب للفرقة
-                      </span>
-                      <span className="text-[10px] text-zinc-400 block">
-                        فاتورة جاهزة بالمبالغ المقسمة للمشاركة المباشرة
-                      </span>
-                    </div>
+
+                    <a
+                      href={`/ticket/${activeRefCode}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline shrink-0"
+                    >
+                      <span>عرض</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!billPreviewUrl) {
-                        const refCode = confirmedRef || lockData?.bookingReference || "PAS-CONFIRMED";
-                        const res = await generateMatchBillBlob({
-                          venueName: venue.name,
-                          courtName: court.name,
-                          sport: court.sport,
-                          bookerName: bookerName || "كابتن الفرقة",
-                          bookerPhone: bookerPhone,
-                          displayDate,
-                          dayLabel,
-                          slotTime,
-                          durationMinutes: court.slot_duration_minutes || 60,
-                          totalPrice,
-                          depositPaid: depositRequired,
-                          cashRemaining,
-                          playersCount,
-                          cashPerPlayer: perPlayerCash,
-                          totalPerPlayer: perPlayerTotal,
-                          bookingRef: refCode,
-                        });
-                        setBillPreviewUrl(res.dataUrl);
-                        setBillBlob(res.blob);
-                      }
-                      setIsPreviewModalOpen(true);
-                    }}
-                    className="inline-flex min-h-[32px] items-center gap-1.5 text-[11px] font-bold text-primary hover:text-primary-hover px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 transition-colors shrink-0"
-                  >
-                    <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
-                    <span>معاينة الفاتورة</span>
-                  </button>
+                  <div className="flex items-center justify-between gap-2 bg-[#242427] rounded-xl p-2 border border-white/[0.06]">
+                    <span className="font-mono text-xs text-zinc-300 truncate select-all px-1" dir="ltr">
+                      {ticketUrl}
+                    </span>
+
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard(ticketUrl, "ticket_link")}
+                      className="inline-flex min-h-[32px] items-center gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary px-3 text-xs font-bold transition-colors shrink-0"
+                    >
+                      {isCopied === "ticket_link" ? (
+                        <>
+                          <Check className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
+                          <span>تم النسخ</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          <span>نسخ الرابط</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Barcode visual indicator */}
@@ -1228,25 +1235,16 @@ export default function BookingModal({
                 </div>
               )}
 
-              {/* Primary: Share Match Bill Image with Squad on WhatsApp */}
-              <button
-                type="button"
-                onClick={handleShareSquadBill}
-                disabled={isGeneratingBill}
-                className="w-full min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] active:scale-98 disabled:opacity-50"
+              {/* Primary: Share Ticket Link directly to WhatsApp (URL only, no canned text) */}
+              <a
+                href={generateSquadShareUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] active:scale-98"
               >
-                {isGeneratingBill ? (
-                  <>
-                    <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                    <span>بنجهز صورة الفاتورة للمشاركة...</span>
-                  </>
-                ) : (
-                  <>
-                    <Share2 className="h-4 w-4 text-black" strokeWidth={2.2} />
-                    <span>مشاركة صورة الفاتورة وحسبة الفلوس مع الفرقة</span>
-                  </>
-                )}
-              </button>
+                <Share2 className="h-4 w-4 text-black" strokeWidth={2.2} />
+                <span>مشاركة رابط الفاتورة على واتساب</span>
+              </a>
 
               {/* Secondary: Send to Venue WhatsApp */}
               <a

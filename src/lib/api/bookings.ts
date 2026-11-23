@@ -368,3 +368,98 @@ export function isSlotMatchingTime(slotLabel: string, dbStartTime: string): bool
   return h === lh && m === lm;
 }
 
+export interface BookingDetails {
+  id: string;
+  booking_reference: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  total_price: number;
+  deposit_required: number;
+  deposit_paid: number;
+  cash_remaining: number;
+  status: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
+  booker_name: string;
+  booker_phone: string;
+  created_at: string;
+  court: {
+    id: string;
+    name: string;
+    sport: "padel" | "football";
+    surface: string;
+    slot_duration_minutes: number;
+  };
+  venue: {
+    id: string;
+    name: string;
+    city: string;
+    district: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+    phone: string;
+    whatsapp_number: string;
+    images: string[];
+  };
+}
+
+/**
+ * Fetches full booking details and relations by booking reference (e.g. PAS-20261123-5B99)
+ */
+export async function getBookingByReference(reference: string): Promise<BookingDetails | null> {
+  const supabase = createClient();
+  try {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("*, courts(*, venues(*))")
+      .eq("booking_reference", reference.trim().toUpperCase())
+      .maybeSingle();
+
+    if (error || !data || !data.courts) {
+      return null;
+    }
+
+    const c = data.courts as any;
+    const v = c.venues as any;
+    if (!v) return null;
+
+    return {
+      id: data.id,
+      booking_reference: data.booking_reference,
+      booking_date: data.booking_date,
+      start_time: data.start_time,
+      end_time: data.end_time,
+      total_price: data.total_price,
+      deposit_required: data.deposit_required,
+      deposit_paid: data.deposit_paid,
+      cash_remaining: data.cash_remaining,
+      status: data.status,
+      booker_name: data.booker_name,
+      booker_phone: data.booker_phone,
+      created_at: data.created_at,
+      court: {
+        id: c.id,
+        name: c.name,
+        sport: c.sport,
+        surface: c.surface,
+        slot_duration_minutes: c.slot_duration_minutes || 60,
+      },
+      venue: {
+        id: v.id,
+        name: v.name,
+        city: v.city,
+        district: v.district,
+        address: v.address,
+        latitude: v.latitude,
+        longitude: v.longitude,
+        phone: v.phone,
+        whatsapp_number: v.whatsapp_number,
+        images: Array.isArray(v.images) && v.images.length > 0 ? v.images : ["/images/hero-court.jpg"],
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
+
