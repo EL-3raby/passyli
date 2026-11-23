@@ -53,17 +53,22 @@ interface BookingModalProps {
 
 type BookingStep = "details" | "payment" | "pass";
 
-function InstaPayIcon({ className = "h-5 w-5" }: { className?: string }) {
+function InstaPayIcon({
+  theme = "dark",
+  className = "h-[18px] w-auto",
+}: {
+  theme?: "light" | "dark";
+  className?: string;
+}) {
   return (
-    <span className={`relative inline-flex items-center justify-center overflow-hidden rounded-md shrink-0 shadow-sm ${className}`}>
-      <Image
-        src="/images/instapay.png"
-        alt="InstaPay"
-        width={24}
-        height={24}
-        className="w-full h-full object-cover"
-      />
-    </span>
+    <Image
+      src={theme === "light" ? "/images/instapay-light.png" : "/images/instapay-dark.png"}
+      alt="InstaPay"
+      width={28}
+      height={18}
+      className={`shrink-0 object-contain select-none ${className}`}
+      priority
+    />
   );
 }
 
@@ -73,7 +78,7 @@ function VodafoneCashIcon({ className = "h-5 w-5" }: { className?: string }) {
       viewBox="4.6 18.3 34.8 34.8"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={`${className} shrink-0`}
+      className={`${className} shrink-0 select-none`}
       aria-label="Vodafone Cash"
     >
       <circle cx="22" cy="35.7" r="17.4" fill="#E60000" />
@@ -810,7 +815,7 @@ export default function BookingModal({
                             : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30] hover:text-white"
                         }`}
                       >
-                        <InstaPayIcon className="h-5 w-5" />
+                        <InstaPayIcon theme={paymentMethod === "instapay" ? "light" : "dark"} />
                         <span>إنستاباي (InstaPay)</span>
                       </button>
 
@@ -833,7 +838,7 @@ export default function BookingModal({
                   <div className="rounded-xl bg-[#141416] border border-white/[0.08] p-4 space-y-2.5">
                     <div className="flex items-center gap-2">
                       {paymentMethod === "instapay" ? (
-                        <InstaPayIcon className="h-4 w-4" />
+                        <InstaPayIcon theme="dark" className="h-4 w-auto" />
                       ) : (
                         <VodafoneCashIcon className="h-4 w-4" />
                       )}
