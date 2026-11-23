@@ -17,7 +17,7 @@ export default function Footer() {
               </span>
               <span className="h-5 w-[2px] bg-white/35 rounded-full shrink-0" aria-hidden="true" />
               <span className="font-display text-xl font-extrabold text-white leading-none">
-                باصـ<span className="text-primary">يلي</span>
+                باصي&zwj;<span className="text-primary">&zwj;لي</span>
               </span>
             </Link>
 

@@ -77,15 +77,15 @@ export async function generateMatchBillBlob(data: MatchBillData): Promise<Genera
   ctx.textAlign = "center";
   ctx.fillText("P", W - 58, 83);
 
-  // Passyli Arabic Wordmark (باصـيلي)
+  // Passyli Arabic Wordmark (باصيلي)
   ctx.direction = "rtl";
   ctx.textAlign = "right";
   ctx.font = "900 30px var(--font-alexandria), Alexandria, sans-serif";
   ctx.fillStyle = "#ffffff";
-  ctx.fillText("باصـ", W - 95, 83);
-  const wordWidth = ctx.measureText("باصـ").width;
+  ctx.fillText("باصي\u200D", W - 95, 83);
+  const wordWidth = ctx.measureText("باصي\u200D").width;
   ctx.fillStyle = "#10b981";
-  ctx.fillText("يلي", W - 95 - wordWidth, 83);
+  ctx.fillText("\u200Dلي", W - 95 - wordWidth, 83);
 
   // Official Status Badge (Left Side)
   ctx.textAlign = "left";

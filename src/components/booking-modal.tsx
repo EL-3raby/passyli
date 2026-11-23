@@ -1043,7 +1043,7 @@ export default function BookingModal({
                 <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
                   <div>
                     <span className="font-display font-black text-base sm:text-lg text-white">
-                      باصـ<span className="text-primary">يلي</span>
+                      باصي&zwj;<span className="text-primary">&zwj;لي</span>
                     </span>
                     <span className="text-[10px] text-muted-foreground block">
                       Passyli Digital Match Pass

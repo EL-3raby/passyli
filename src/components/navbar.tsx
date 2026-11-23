@@ -14,7 +14,7 @@ export default function Navbar() {
         {/* Pure Arabic Brand Wordmark */}
         <Link href="/" className="flex items-center group py-1">
           <span className="font-display text-2xl sm:text-[26px] font-black tracking-normal text-white leading-none">
-            باصـ<span className="text-primary">يلي</span>
+            باصي&zwj;<span className="text-primary">&zwj;لي</span>
           </span>
         </Link>
 
