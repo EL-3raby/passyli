@@ -80,6 +80,51 @@ export default function CourtsCatalogPage() {
   const [selectedDistrict, setSelectedDistrict] = useState<string>("all");
   const [sortBy, setSortBy] = useState<"default" | "distance" | "price_asc">("default");
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+
+  // Smart Auto-Hiding Scroll Effect (Hides on scroll-down, reveals on scroll-up)
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    let ticking = false;
+    const threshold = 10; // minimum scroll delta to prevent jitter
+
+    const updateScrollDirection = () => {
+      const currentScrollY = window.scrollY;
+
+      // Always visible near top of page
+      if (currentScrollY < 90) {
+        setIsHeaderVisible(true);
+        lastScrollY = currentScrollY;
+        ticking = false;
+        return;
+      }
+
+      const diff = currentScrollY - lastScrollY;
+
+      if (Math.abs(diff) >= threshold) {
+        if (diff > 0) {
+          // Scrolling down -> hide
+          setIsHeaderVisible(false);
+        } else {
+          // Scrolling up -> reveal
+          setIsHeaderVisible(true);
+        }
+        lastScrollY = currentScrollY;
+      }
+
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateScrollDirection);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -229,8 +274,14 @@ export default function CourtsCatalogPage() {
           </p>
         </div>
 
-        {/* Modern Frameless Search & Filter Suite */}
-        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-xl py-2 mb-6 space-y-3">
+        {/* Modern Frameless Search & Filter Suite with Smart Auto-Hiding Scroll */}
+        <div
+          className={`sticky top-16 z-30 bg-background/95 backdrop-blur-xl py-2 mb-6 space-y-3 transition-all duration-300 ease-in-out ${
+            isHeaderVisible
+              ? "translate-y-0 opacity-100 pointer-events-auto"
+              : "-translate-y-28 opacity-0 pointer-events-none"
+          }`}
+        >
           
           {/* Top Row: Search Input + Filter Drawer Button */}
           <div className="flex items-center gap-2">
