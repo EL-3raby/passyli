@@ -78,8 +78,15 @@ export async function lockCourtSlot(params: LockSlotParams): Promise<LockSlotRes
     });
 
     if (error) {
-      console.error("lock_court_slot error:", error);
-      return { success: false, error: error.message || "تعذر حجز الميعاد، يرجى المحاولة مرة أخرى" };
+      const errorMsg = error.message || error.details || (typeof error === "object" ? JSON.stringify(error) : String(error));
+      console.error("lock_court_slot error:", errorMsg);
+      const isConflict = error.code === "23505" || errorMsg.includes("idx_unique_active_court_slot");
+      return {
+        success: false,
+        error: isConflict
+          ? "الميعاد محجوز بالفعل أو قيد الدفع من لاعب آخر حالياً"
+          : (error.message || "تعذر حجز الميعاد، يرجى المحاولة مرة أخرى"),
+      };
     }
 
     const res = data as {
@@ -120,7 +127,7 @@ export async function cancelBookingLock(bookingId: string, sessionId?: string): 
     });
 
     if (error) {
-      console.error("cancel_booking_lock error:", error);
+      console.error("cancel_booking_lock error:", error.message || error.details || error);
       return { success: false, error: error.message };
     }
 
@@ -240,7 +247,7 @@ export async function uploadReceiptScreenshot(
       });
 
     if (uploadError) {
-      console.error("Storage upload error:", uploadError);
+      console.error("Storage upload error:", uploadError.message || uploadError);
       return { url: null, error: "تعذر رفع صورة الإيصال للسحابة، تأكد من الاتصال بالإنترنت" };
     }
 
@@ -273,7 +280,7 @@ export async function submitBookingReceipt(params: SubmitReceiptParams): Promise
     });
 
     if (error) {
-      console.error("submit_booking_receipt error:", error);
+      console.error("submit_booking_receipt error:", error.message || error.details || error);
       return { success: false, error: error.message || "تعذر تسجيل الإيصال، تأكد من صحة البيانات" };
     }
 
