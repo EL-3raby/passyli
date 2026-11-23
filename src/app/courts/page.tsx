@@ -229,8 +229,8 @@ export default function CourtsCatalogPage() {
           </p>
         </div>
 
-        {/* Modern Mobile-First Search & Filter Suite (Airbnb / Yalla Hagz style) */}
-        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-xl -mx-4 px-4 sm:mx-0 sm:px-0 py-3 mb-6 border-y sm:border sm:rounded-2xl border-white/[0.08] shadow-sm space-y-3">
+        {/* Modern Frameless Search & Filter Suite */}
+        <div className="sticky top-16 z-30 bg-background/95 backdrop-blur-xl py-2 mb-6 space-y-3">
           
           {/* Top Row: Search Input + Filter Drawer Button */}
           <div className="flex items-center gap-2">
