@@ -161,9 +161,21 @@ export async function getVenues(userLat?: number, userLon?: number): Promise<Ven
       return sortAndEnrichVenues(DAMANHOUR_SEED_VENUES, userLat, userLon);
     }
 
+    const defaultPadelSlots = ["06:00 م", "07:30 م", "09:00 م", "10:30 م"];
+    const defaultFootballSlots = ["07:00 م", "08:00 م", "09:00 م", "10:00 م", "11:00 م"];
+
     const enriched = venues.map((v: any) => ({
       ...v,
-      courts: v.courts || [],
+      images: Array.isArray(v.images) && v.images.length > 0 ? v.images : ["/images/hero-court.jpg"],
+      courts: (v.courts || []).map((c: any) => ({
+        ...c,
+        available_slots:
+          Array.isArray(c.available_slots) && c.available_slots.length > 0
+            ? c.available_slots
+            : c.sport === "padel"
+            ? defaultPadelSlots
+            : defaultFootballSlots,
+      })),
       distance_km:
         userLat && userLon
           ? calculateDistanceKm(userLat, userLon, Number(v.latitude), Number(v.longitude))
