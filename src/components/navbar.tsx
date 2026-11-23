@@ -1,6 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
+  const pathname = usePathname();
+  const isCourtsActive = pathname?.startsWith("/courts");
+
   return (
     <header className="sticky top-0 z-50 w-full bg-background/60 backdrop-blur-xl transition-all">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
@@ -16,7 +22,11 @@ export default function Navbar() {
         <nav className="hidden md:flex items-center gap-1.5 text-sm font-medium">
           <Link
             href="/courts"
-            className="px-3.5 py-1.5 rounded-full text-white font-bold bg-white/[0.06] hover:text-primary transition-all"
+            className={`px-3.5 py-1.5 rounded-full transition-all ${
+              isCourtsActive
+                ? "text-white font-bold bg-white/[0.08]"
+                : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
+            }`}
           >
             الملاعب
           </Link>
