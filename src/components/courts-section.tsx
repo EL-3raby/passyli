@@ -8,9 +8,8 @@ import {
   Navigation,
   Clock,
   ChevronLeft,
-  Check,
+  Calendar,
   RotateCcw,
-  Sparkles,
 } from "lucide-react";
 import {
   getVenues,
@@ -20,16 +19,58 @@ import {
 } from "@/lib/api/venues";
 import type { SportType } from "@/lib/supabase/types";
 
+interface DayOption {
+  key: string;
+  label: string;
+  dateStr: string;
+  displayDate: string;
+}
+
+function getEgyptianDays(): DayOption[] {
+  const days = [
+    { key: "today", label: "النهاردة" },
+    { key: "tomorrow", label: "بكره" },
+    { key: "after_tomorrow", label: "بعد بكره" },
+  ];
+
+  const arabicDays = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+  const arabicMonths = [
+    "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+    "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+  ];
+
+  const now = new Date();
+
+  return days.map((day, idx) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() + idx);
+    const dayName = arabicDays[d.getDay()];
+    const dayNum = d.getDate();
+    const monthName = arabicMonths[d.getMonth()];
+    const isoDate = d.toISOString().split("T")[0];
+
+    return {
+      ...day,
+      dateStr: isoDate,
+      displayDate: `${dayName} ${dayNum} ${monthName}`,
+    };
+  });
+}
+
 export default function CourtsSection() {
   const [venues, setVenues] = useState<VenueWithCourts[]>(DAMANHOUR_SEED_VENUES);
   const [selectedSport, setSelectedSport] = useState<"all" | SportType>("all");
+  const [availableDays] = useState<DayOption[]>(getEgyptianDays());
+  const [selectedDayKey, setSelectedDayKey] = useState<string>("today");
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState<"idle" | "located" | "denied">("idle");
   const [selectedSlots, setSelectedSlots] = useState<{ [courtId: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+
+  const selectedDay = availableDays.find((d) => d.key === selectedDayKey) || availableDays[0];
 
   // Load venues on mount
   useEffect(() => {
@@ -100,19 +141,19 @@ export default function CourtsSection() {
     <section id="courts" className="py-16 md:py-24 bg-background relative">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         
-        {/* Section Header & Interactive Controls */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md w-fit mb-3">
               <Navigation className="h-3.5 w-3.5 text-emerald-400" strokeWidth={1.5} />
-              <span>ملاعب دمنهور المتاحة • حجز فوري</span>
+              <span>ملاعب دمنهور الحية • حجز فوري</span>
             </div>
             
             <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white">
-              أقرب الملاعب ليك
+              أقرب الملاعب ليك في دمنهور
             </h2>
             <p className="text-muted-foreground text-sm mt-1">
-              مواعيد حية، أسعار مباشرة، وتأكيد حجز بالعربون بالثانية
+              مواعيد حية، أسعار واضحة، وحجزك مقفول لفرقتك بالعربون
             </p>
           </div>
 
@@ -172,12 +213,44 @@ export default function CourtsSection() {
               />
               <span>
                 {isLocating
-                  ? "جاري تحديد موقعك..."
+                  ? "بنحدد مكانك..."
                   : locationStatus === "located"
-                  ? "الأقرب إليك أولاً"
+                  ? "الأقرب ليك أولاً"
                   : "رتّب حسب موقعي"}
               </span>
             </button>
+          </div>
+        </div>
+
+        {/* Egyptian Day Selector Bar */}
+        <div className="mb-8 p-3 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-xs text-zinc-300 px-1">
+            <Calendar className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
+            <span className="font-bold">يوم الماتش:</span>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+            {availableDays.map((day) => {
+              const isSelected = selectedDayKey === day.key;
+              return (
+                <button
+                  key={day.key}
+                  type="button"
+                  onClick={() => setSelectedDayKey(day.key)}
+                  className={`inline-flex min-h-[44px] items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all whitespace-nowrap shrink-0 border ${
+                    isSelected
+                      ? "bg-primary text-black border-primary shadow-[0_2px_10px_rgba(16,185,129,0.25)] font-black"
+                      : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30] hover:text-white"
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-black" : "bg-primary"}`} />
+                  <span>{day.label}</span>
+                  <span className={`text-[11px] ${isSelected ? "text-black/80 font-bold" : "text-zinc-400 font-normal"}`}>
+                    ({day.displayDate})
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -207,10 +280,10 @@ export default function CourtsSection() {
             </span>
             <div>
               <h3 className="font-display text-base font-bold text-white mb-1">
-                تعذر تحميل الملاعب
+                مش عارفين نحمل الملاعب دلوقتي
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                حدث خطأ أثناء الاتصال بقاعدة البيانات. يمكنك المحاولة مرة أخرى.
+                حصلت مشكلة في الاتصال بالخادم. جرب تاني وهتشتغل معاك.
               </p>
             </div>
             <button
@@ -218,7 +291,7 @@ export default function CourtsSection() {
               onClick={() => window.location.reload()}
               className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary px-6 text-xs font-bold text-black hover:bg-primary-hover transition-all"
             >
-              إعادة المحاولة
+              جرّب تاني
             </button>
           </div>
         )}
@@ -231,10 +304,10 @@ export default function CourtsSection() {
             </span>
             <div>
               <h3 className="font-display text-base font-bold text-white mb-1">
-                لا توجد ملاعب بهذا التصنيف حالياً
+                مفيش ملاعب بالتصنيف ده دلوقتي
               </h3>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                جرب اختيار تصنيف آخر أو استعرض كل ملاعب دمنهور المعتمدة.
+                جرّب تختار رياضة تانية أو اتفرج على كل ملاعب دمنهور.
               </p>
             </div>
             <button
@@ -314,7 +387,7 @@ export default function CourtsSection() {
                           <div className="flex items-center justify-between text-xs mb-2">
                             <span className="text-muted-foreground flex items-center gap-1">
                               <Clock className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                              المواعيد المتاحة اليوم:
+                              <span>مواعيدك {selectedDay.label}:</span>
                             </span>
                             <span className="font-bold text-primary flex items-center gap-1">
                               <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
@@ -331,7 +404,7 @@ export default function CourtsSection() {
                                   key={index}
                                   type="button"
                                   onClick={() => handleSlotSelect(primaryCourt.id, slot)}
-                                  className={`min-h-[36px] rounded-lg px-2.5 py-1 text-xs font-bold tabular-nums transition-all ${
+                                  className={`min-h-[38px] rounded-lg px-2.5 py-1 text-xs font-bold tabular-nums transition-all ${
                                     isSelected
                                       ? "bg-primary text-black font-extrabold shadow-[0_2px_10px_rgba(16,185,129,0.35)] scale-105"
                                       : "bg-[#2e2e33] text-primary hover:bg-[#383840]"
@@ -344,9 +417,14 @@ export default function CourtsSection() {
                           </div>
 
                           {selectedSlot && (
-                            <div className="mt-2.5 pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-primary font-bold">
-                              <span>الميعاد المختار: {selectedSlot}</span>
-                              <span className="text-white/60 font-normal">قفل 8 دقائق عند المتابعة</span>
+                            <div className="mt-2.5 pt-2 border-t border-white/[0.06] flex flex-col gap-1 text-[11px]">
+                              <div className="flex items-center justify-between text-primary font-bold">
+                                <span>الميعاد: {selectedSlot} ({selectedDay.label})</span>
+                                <span className="text-white/70 font-normal">عربون {venue.deposit_amount || 100} ج.م</span>
+                              </div>
+                              <span className="text-zinc-400 text-[10px]">
+                                قفل 8 دقايق عشان تلحق تحول العربون ومحدش يسبقك
+                              </span>
                             </div>
                           )}
                         </div>
@@ -367,10 +445,10 @@ export default function CourtsSection() {
                     </div>
 
                     <Link
-                      href={`#book?venue=${venue.slug}&slot=${encodeURIComponent(selectedSlot || "")}`}
+                      href={`#book?venue=${venue.slug}&date=${selectedDay.dateStr}&slot=${encodeURIComponent(selectedSlot || "")}`}
                       className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_2px_10px_rgba(16,185,129,0.2)]"
                     >
-                      <span>{selectedSlot ? `تأكيد ${selectedSlot}` : "احجز الآن"}</span>
+                      <span>{selectedSlot ? `أكّد ${selectedSlot}` : "احجز ميعادك"}</span>
                       <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
                     </Link>
                   </div>
