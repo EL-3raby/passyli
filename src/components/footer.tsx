@@ -86,6 +86,10 @@ export default function Footer() {
             <span className="font-display text-sm font-bold text-white mb-1">
               أصحاب الملاعب والسياسات
             </span>
+            <Link href="/dashboard" className="text-xs text-primary font-bold hover:underline flex items-center gap-1">
+              <span>لوحة إدارة الملاعب والموظفين</span>
+              <ArrowUpRight className="h-3 w-3" strokeWidth={1.5} />
+            </Link>
             <Link href="#partner" className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
               <span>انضم كشريك ملعب</span>
               <ArrowUpRight className="h-3 w-3 text-primary" strokeWidth={1.5} />

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 export default function Navbar() {
   const pathname = usePathname();
   const isCourtsActive = pathname?.startsWith("/courts");
+  const isDashboardActive = pathname?.startsWith("/dashboard");
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/60 backdrop-blur-xl transition-all">
@@ -41,6 +42,16 @@ export default function Navbar() {
             className="px-3.5 py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-white/[0.04] transition-all"
           >
             أضف ملعبك
+          </Link>
+          <Link
+            href="/dashboard"
+            className={`px-3.5 py-1.5 rounded-full transition-all ${
+              isDashboardActive
+                ? "text-white font-bold bg-white/[0.08]"
+                : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
+            }`}
+          >
+            إدارة الملاعب
           </Link>
           <Link
             href="/#courts"

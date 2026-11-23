@@ -453,6 +453,41 @@ export type Database = {
         }
         Returns: Json
       }
+      create_walkin_booking: {
+        Args: {
+          p_court_id: string
+          p_booking_date: string
+          p_start_time: string
+          p_end_time: string
+          p_booker_name: string
+          p_booker_phone: string
+          p_total_price: number
+          p_amount_paid?: number
+        }
+        Returns: Json
+      }
+      review_booking_receipt: {
+        Args: {
+          p_receipt_id: string
+          p_action: string
+          p_adjusted_amount?: number | null
+          p_rejection_reason?: string | null
+        }
+        Returns: Json
+      }
+      complete_booking_attendance: {
+        Args: {
+          p_booking_id: string
+        }
+        Returns: Json
+      }
+      toggle_court_maintenance: {
+        Args: {
+          p_court_id: string
+          p_is_active: boolean
+        }
+        Returns: Json
+      }
     }
     Enums: {
       booking_status:
