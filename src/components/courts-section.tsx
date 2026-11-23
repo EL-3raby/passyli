@@ -320,10 +320,10 @@ export default function CourtsSection() {
           </div>
         )}
 
-        {/* 4. Loaded State: Mobile Horizontal Snap Rail & Desktop Grid */}
+        {/* 4. Loaded State: Mobile Horizontal Snap Rail & Desktop 3-Col Grid */}
         {!isLoading && !hasError && filteredVenues.length > 0 && (
           <div>
-            <div className="flex md:grid overflow-x-auto md:overflow-visible pb-4 md:pb-0 snap-x snap-mandatory md:snap-none scrollbar-none gap-4 md:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 overflow-x-auto md:overflow-visible pb-4 md:pb-0 snap-x snap-mandatory md:snap-none scrollbar-none gap-4 md:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0">
               {filteredVenues.map((venue) => {
                 const primaryCourt = venue.courts[0];
                 const selectedSlot = primaryCourt ? selectedSlots[primaryCourt.id] : "";
