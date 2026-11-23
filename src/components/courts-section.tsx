@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   Calendar,
   RotateCcw,
+  Lock,
 } from "lucide-react";
 import {
   getVenues,
@@ -19,6 +20,12 @@ import {
 } from "@/lib/api/venues";
 import type { SportType } from "@/lib/supabase/types";
 import BookingModal, { type BookingModalData } from "@/components/booking-modal";
+import {
+  getActiveBookingsForDate,
+  isSlotMatchingTime,
+  type ActiveSlotLock,
+} from "@/lib/api/bookings";
+import { createClient } from "@/lib/supabase/client";
 
 interface DayOption {
   key: string;
@@ -75,7 +82,74 @@ export default function CourtsSection() {
   const [bookingModalData, setBookingModalData] = useState<BookingModalData | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
+  // Active Realtime Slot Locks State
+  const [activeBookings, setActiveBookings] = useState<ActiveSlotLock[]>([]);
+
   const selectedDay = availableDays.find((d) => d.key === selectedDayKey) || availableDays[0];
+
+  // Supabase Realtime Subscription for Slot Availability Sync
+  useEffect(() => {
+    const supabase = createClient();
+    getActiveBookingsForDate(selectedDay.dateStr).then(setActiveBookings);
+
+    const channel = supabase
+      .channel(`courts_section_bookings_${selectedDay.dateStr}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings" },
+        () => {
+          getActiveBookingsForDate(selectedDay.dateStr).then(setActiveBookings);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedDay.dateStr]);
+
+  // Deep Linking Hash Listener (#book?venue=...&date=...&slot=...)
+  useEffect(() => {
+    const handleHash = () => {
+      if (typeof window === "undefined") return;
+      const hash = window.location.hash;
+      if (!hash.startsWith("#book?")) return;
+
+      const params = new URLSearchParams(hash.substring(6));
+      const venueSlug = params.get("venue");
+      const dateParam = params.get("date");
+      const slotParam = params.get("slot");
+
+      if (!venueSlug) return;
+      const targetVenue = venues.find((v) => v.slug === venueSlug);
+      if (!targetVenue || !targetVenue.courts[0]) return;
+
+      const primaryCourt = targetVenue.courts[0];
+      const day = availableDays.find((d) => d.dateStr === dateParam) || availableDays[0];
+      const slot = slotParam || primaryCourt.available_slots[0] || "08:00 م";
+
+      setBookingModalData({
+        venue: targetVenue,
+        court: primaryCourt,
+        bookingDate: day.dateStr,
+        displayDate: day.displayDate,
+        dayLabel: day.label,
+        slotTime: slot,
+      });
+      setIsBookingModalOpen(true);
+    };
+
+    handleHash();
+    window.addEventListener("hashchange", handleHash);
+    return () => window.removeEventListener("hashchange", handleHash);
+  }, [venues, availableDays]);
+
+  // Check if a slot is locked / taken
+  const isSlotLocked = (courtId: string, slot: string) => {
+    return activeBookings.some(
+      (b) => b.courtId === courtId && isSlotMatchingTime(slot, b.startTime)
+    );
+  };
 
   // Load venues on mount
   useEffect(() => {
@@ -381,7 +455,7 @@ export default function CourtsSection() {
                             </span>
                             <span className="font-bold text-primary flex items-center gap-1">
                               <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                              {(primaryCourt.available_slots || []).length} فترات
+                              {(primaryCourt.available_slots || []).filter((s) => !isSlotLocked(primaryCourt.id, s)).length} فترات متاحة
                             </span>
                           </div>
 
@@ -389,6 +463,23 @@ export default function CourtsSection() {
                           <div className="flex flex-wrap gap-2">
                             {(primaryCourt.available_slots || []).map((slot, index) => {
                               const isSelected = selectedSlot === slot;
+                              const locked = isSlotLocked(primaryCourt.id, slot);
+
+                              if (locked) {
+                                return (
+                                  <button
+                                    key={index}
+                                    type="button"
+                                    disabled
+                                    className="min-h-[38px] rounded-lg px-2.5 py-1 text-xs font-bold tabular-nums transition-all bg-white/[0.03] text-zinc-600 border border-white/[0.04] cursor-not-allowed flex items-center gap-1 line-through"
+                                    title="الميعاد محجوز أو قيد الدفع حالياً"
+                                  >
+                                    <Lock className="h-3 w-3 text-zinc-600" />
+                                    <span>{slot}</span>
+                                  </button>
+                                );
+                              }
+
                               return (
                                 <button
                                   key={index}
@@ -437,7 +528,8 @@ export default function CourtsSection() {
                     <button
                       type="button"
                       onClick={() => {
-                        const slotToBook = selectedSlot || (primaryCourt?.available_slots?.[0] || "08:00 م");
+                        const available = (primaryCourt?.available_slots || []).filter((s) => !isSlotLocked(primaryCourt.id, s));
+                        const slotToBook = selectedSlot && !isSlotLocked(primaryCourt.id, selectedSlot) ? selectedSlot : (available[0] || "08:00 م");
                         if (primaryCourt) {
                           setBookingModalData({
                             venue,

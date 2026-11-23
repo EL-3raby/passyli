@@ -18,6 +18,7 @@ import {
   Building2,
   FileCheck2,
   Trash2,
+  Share2,
 } from "lucide-react";
 import {
   lockCourtSlot,
@@ -364,12 +365,30 @@ export default function BookingModal({
     return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
   };
 
-  // WhatsApp Share URL for Confirmed Pass
+  // WhatsApp Share URL for Confirmed Pass (Direct to Venue Management)
   const generateWhatsAppUrl = () => {
     const phone = venue.whatsapp_number.replace(/[^0-9]/g, "");
     const formattedPhone = phone.startsWith("0") ? `2${phone}` : phone;
     const msg = `مرحباً إدارة ${venue.name}، تم حجز ${court.name} عبر منصة باصيلي.\nكود الحجز: ${confirmedRef}\nالاسم: ${bookerName}\nالميعاد: ${dayLabel} (${displayDate}) - الساعة ${slotTime}\nالعربون المحول: ${depositRequired} ج.م (${paymentMethod === "instapay" ? "إنستاباي" : "فودافون كاش"})\nالرقم المرجعي: ${referenceNumber}\nالمتبقي كاش في الملعب: ${cashRemaining} ج.م`;
     return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(msg)}`;
+  };
+
+  // Squad WhatsApp Share (Broadcast to your team's group with per-player split cost)
+  const generateSquadShareUrl = () => {
+    const playersCount = court.sport === "padel" ? 4 : 10;
+    const perPlayerTotal = Math.ceil(totalPrice / playersCount);
+    const perPlayerCash = Math.ceil(cashRemaining / playersCount);
+
+    const msg = `يا رجالة، حجزنا الماتش خلاص عبر منصة باصيلي!\nالملعب: ${venue.name} (${court.name})\nاليوم: ${dayLabel} (${displayDate})\nالساعة: ${slotTime} (المدة: ${court.slot_duration_minutes || 60} دقيقة)\nكود الحجز: ${confirmedRef}\nالعربون اتحوّل خلاص (${depositRequired} ج.م)، والمتبقي كاش في الملعب: ${cashRemaining} ج.م\nنصيب كل لاعب كاش في الملعب: ${perPlayerCash} ج.م (الإجمالي ${perPlayerTotal} ج.م)\nياريت نتجمع قبل الميعاد بربع ساعة عشان التسخين!`;
+
+    return `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  };
+
+  const handleSafeClose = () => {
+    if (typeof window !== "undefined" && window.location.hash.startsWith("#book")) {
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    onClose();
   };
 
   return (
@@ -392,7 +411,7 @@ export default function BookingModal({
 
           <button
             type="button"
-            onClick={step === "payment" ? handleCancelHold : onClose}
+            onClick={step === "payment" ? handleCancelHold : handleSafeClose}
             className="h-9 w-9 rounded-xl bg-white/[0.05] hover:bg-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
           >
             <X className="h-4 w-4" strokeWidth={1.5} />
@@ -941,20 +960,32 @@ export default function BookingModal({
 
               {/* Action Buttons */}
               <div className="space-y-2.5">
+                {/* 1. Send pass directly to venue WhatsApp */}
                 <a
                   href={generateWhatsAppUrl()}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full min-h-[48px] rounded-xl bg-emerald-500 hover:bg-emerald-600 text-black font-black text-sm transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)]"
+                  className="w-full min-h-[48px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-sm transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] active:scale-98"
                 >
                   <MessageSquare className="h-4 w-4" strokeWidth={2} />
                   <span>إرسال بيانات التذكرة لإدارة الملعب على واتساب</span>
                 </a>
 
+                {/* 2. Viral Squad WhatsApp Share with Cost Split */}
+                <a
+                  href={generateSquadShareUrl()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full min-h-[46px] rounded-xl bg-[#242427] hover:bg-[#2c2c30] border border-white/10 hover:border-primary/40 text-white font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 active:scale-98"
+                >
+                  <Share2 className="h-4 w-4 text-primary" strokeWidth={2} />
+                  <span>مشاركة تفاصيل الماتش وحسبة الفلوس مع الفرقة</span>
+                </a>
+
                 <button
                   type="button"
-                  onClick={onClose}
-                  className="w-full min-h-[44px] rounded-xl bg-white/[0.05] hover:bg-white/10 text-white font-bold text-xs transition-colors"
+                  onClick={handleSafeClose}
+                  className="w-full min-h-[44px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white font-bold text-xs transition-colors"
                 >
                   إغلاق وتصفح ملاعب أخرى
                 </button>

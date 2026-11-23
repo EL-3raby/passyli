@@ -298,3 +298,66 @@ export async function submitBookingReceipt(params: SubmitReceiptParams): Promise
     return { success: false, error: message };
   }
 }
+
+export interface ActiveSlotLock {
+  courtId: string;
+  startTime: string;
+  status: "pending_payment" | "confirmed";
+  lockedUntil?: string | null;
+}
+
+/**
+ * Fetches actively held or booked slots for a specific date
+ */
+export async function getActiveBookingsForDate(dateStr: string): Promise<ActiveSlotLock[]> {
+  const supabase = createClient();
+  try {
+    const { data, error } = await supabase
+      .from("bookings")
+      .select("court_id, start_time, status, locked_until")
+      .eq("booking_date", dateStr)
+      .not("status", "in", '("cancelled","expired")');
+
+    if (error || !data) return [];
+
+    const now = new Date();
+    return data
+      .filter((b) => {
+        if (b.status === "pending_payment" && b.locked_until) {
+          return new Date(b.locked_until) > now;
+        }
+        return b.status === "confirmed";
+      })
+      .map((b) => ({
+        courtId: b.court_id,
+        startTime: b.start_time,
+        status: b.status as "pending_payment" | "confirmed",
+        lockedUntil: b.locked_until,
+      }));
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Checks whether a display slot (e.g. "06:00 م") matches a DB time (e.g. "18:00:00")
+ */
+export function isSlotMatchingTime(slotLabel: string, dbStartTime: string): boolean {
+  if (!dbStartTime || !slotLabel) return false;
+  const [hStr, mStr] = dbStartTime.split(":");
+  const h = parseInt(hStr, 10);
+  const m = parseInt(mStr || "0", 10);
+
+  const isPM = slotLabel.includes("م");
+  const isAM = slotLabel.includes("ص");
+  const clean = slotLabel.replace(/[^0-9:]/g, "");
+  const [lhStr, lmStr] = clean.split(":");
+  let lh = parseInt(lhStr, 10);
+  const lm = parseInt(lmStr || "0", 10);
+
+  if (isPM && lh < 12) lh += 12;
+  if (isAM && lh === 12) lh = 0;
+
+  return h === lh && m === lm;
+}
+
