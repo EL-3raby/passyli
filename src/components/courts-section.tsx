@@ -146,14 +146,14 @@ export default function CourtsSection() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5 text-xs font-medium text-zinc-200 backdrop-blur-md w-fit mb-3">
               <Navigation className="h-3.5 w-3.5 text-emerald-400" strokeWidth={1.5} />
-              <span>ملاعب دمنهور الحية • حجز فوري</span>
+              <span>ملاعب دمنهور المميزة • واجهة باصيلي المختارة</span>
             </div>
             
             <h2 className="font-display text-2xl sm:text-4xl font-extrabold text-white">
-              أقرب الملاعب ليك في دمنهور
+              أقوى ملاعب دمنهور المختارة
             </h2>
             <p className="text-muted-foreground text-sm mt-1">
-              مواعيد حية، أسعار واضحة، وحجزك مقفول لفرقتك بالعربون
+              الملاعب الأكثر طلباً وتقييماً في دمنهور، احجز ميعادك فوراً بالعربون
             </p>
           </div>
 
@@ -463,6 +463,20 @@ export default function CourtsSection() {
               <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
               <span>اسحب لتصفح باقي الملاعب</span>
               <ChevronLeft className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
+            </div>
+
+            {/* Explore All Courts Marketplace CTA Button */}
+            <div className="mt-10 pt-4 flex flex-col sm:flex-row items-center justify-center gap-4 text-center">
+              <Link
+                href="/courts"
+                className="inline-flex min-h-[48px] items-center justify-center gap-3 rounded-full bg-[#242427] hover:bg-[#2c2c30] border border-white/[0.08] hover:border-primary/50 px-7 sm:px-9 text-xs sm:text-sm font-bold text-white transition-all group shadow-sm active:scale-98"
+              >
+                <span>استعرض كافة ملاعب دمنهور والبحيرة</span>
+                <span className="rounded-full bg-primary/15 border border-primary/25 px-2.5 py-0.5 text-xs font-black text-primary tabular-nums">
+                  {venues.length} ملاعب متاحة
+                </span>
+                <ChevronLeft className="h-4 w-4 text-primary group-hover:-translate-x-1 transition-transform" strokeWidth={2.5} />
+              </Link>
             </div>
           </div>
         )}

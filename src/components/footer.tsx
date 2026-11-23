@@ -67,8 +67,8 @@ export default function Footer() {
             <span className="font-display text-sm font-bold text-white mb-1">
               تصفح المنصة
             </span>
-            <Link href="#courts" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-              ملاعب دمنهور
+            <Link href="/courts" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+              كافة ملاعب دمنهور
             </Link>
             <Link href="#padel" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               ملاعب البادل
