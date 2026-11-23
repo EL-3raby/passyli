@@ -1,0 +1,305 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "باصـيلي" [ref=e4] [cursor=pointer]:
+        - /url: /
+      - navigation [ref=e6]:
+        - link "الملاعب" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - link "التقسيمات المفتوحة" [ref=e8] [cursor=pointer]:
+          - /url: "#matchmaking"
+        - link "أضف ملعبك" [ref=e9] [cursor=pointer]:
+          - /url: "#partner"
+        - link "عن المنصة" [ref=e10] [cursor=pointer]:
+          - /url: "#courts"
+      - link "احجز الآن" [ref=e12] [cursor=pointer]:
+        - /url: "#courts"
+  - main [ref=e13]:
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - img "ملاعب باصيلي المعتمدة في دمنهور" [ref=e17]
+        - generic [ref=e21]:
+          - generic [ref=e22]: حجز ملاعب فوري ومضمون • دمنهور
+          - heading "احجز ملعبك في ثواني، وكمّل ماتشك على طول." [level=1] [ref=e25]:
+            - text: احجز ملعبك في ثواني،
+            - generic [ref=e26]: وكمّل ماتشك على طول.
+          - paragraph [ref=e27]: احجز ملعبك المفضل في دمنهور بضغطة زر، واقفل ميعادك فوراً بدون مكالمات.
+          - generic [ref=e28]:
+            - link "تصفح كل الملاعب" [ref=e29] [cursor=pointer]:
+              - /url: "#courts"
+            - link "ملاعب البادل" [ref=e33] [cursor=pointer]:
+              - /url: "#padel"
+            - link "كرة قدم خماسي" [ref=e34] [cursor=pointer]:
+              - /url: "#football"
+            - link "كمّل ماتشك" [ref=e35] [cursor=pointer]:
+              - /url: "#matchmaking"
+      - generic [ref=e44]:
+        - generic [ref=e45]:
+          - generic [ref=e46]: "+15"
+          - generic [ref=e47]: ملعب معتمد في دمنهور
+        - generic [ref=e48]:
+          - generic [ref=e49]: 100%
+          - generic [ref=e50]: حجز موثق ومضمون بالثانية
+        - generic [ref=e51]:
+          - generic [ref=e52]: 0%
+          - generic [ref=e53]: تضارب أو حجز مزدوج للمواعيد
+        - generic [ref=e54]:
+          - generic [ref=e55]: فوري
+          - generic [ref=e56]: تأكيد رقمي وتذكرة على الواتساب
+      - generic [ref=e58]:
+        - generic [ref=e60]:
+          - generic [ref=e61]: ملاعب دمنهور المتاحة
+          - heading "أقرب الملاعب ليك" [level=2] [ref=e65]
+          - paragraph [ref=e66]: مواعيد حية وأسعار مباشرة للحجز الفوري
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - generic [ref=e69]:
+              - generic [ref=e70]:
+                - generic [ref=e71]: يبعد 1.4 كم عنك
+                - generic [ref=e75]: بادل بانوراما
+                - generic [ref=e76]: معاينة حية للملعب
+              - generic [ref=e79]:
+                - heading "نادي دمنهور للبادل (Padel Club)" [level=3] [ref=e81]
+                - paragraph [ref=e82]: شارع عبد السلام الشاذلي، دمنهور • زجاج بانوراما وإضاءة احترافية
+                - generic [ref=e83]:
+                  - generic [ref=e84]:
+                    - generic [ref=e85]: "المواعيد المتاحة اليوم:"
+                    - generic [ref=e89]: 4 فترات
+                  - generic [ref=e91]:
+                    - generic [ref=e92]: 08:00 م
+                    - generic [ref=e93]: 09:30 م
+                    - generic [ref=e94]: 11:00 م
+            - generic [ref=e95]:
+              - generic [ref=e96]:
+                - generic [ref=e97]: سعر الساعة
+                - generic [ref=e98]: 280 ج.م
+              - link "احجز الآن" [ref=e99] [cursor=pointer]:
+                - /url: "#book"
+          - generic [ref=e103]:
+            - generic [ref=e104]:
+              - generic [ref=e105]:
+                - generic [ref=e106]: يبعد 2.1 كم عنك
+                - generic [ref=e110]: خماسي ترتان
+                - generic [ref=e111]: معاينة حية للملعب
+              - generic [ref=e114]:
+                - heading "ملعب الأبطال الخماسي" [level=3] [ref=e115]
+                - paragraph [ref=e116]: طريق شبرا، دمنهور • نجيل صناعي تركي من الجيل الثالث وكشافات LED
+                - generic [ref=e117]:
+                  - generic [ref=e118]:
+                    - generic [ref=e119]: "المواعيد المتاحة اليوم:"
+                    - generic [ref=e123]: 3 ساعات
+                  - generic [ref=e125]:
+                    - generic [ref=e126]: 07:00 م
+                    - generic [ref=e127]: 08:00 م
+                    - generic [ref=e128]: 09:00 م
+            - generic [ref=e129]:
+              - generic [ref=e130]:
+                - generic [ref=e131]: سعر الساعة
+                - generic [ref=e132]: 200 ج.م
+              - link "احجز الآن" [ref=e133] [cursor=pointer]:
+                - /url: "#book"
+          - generic [ref=e137]:
+            - generic [ref=e138]:
+              - generic [ref=e139]:
+                - generic [ref=e140]: يبعد 3.2 كم عنك
+                - generic [ref=e144]: بادل مغطى
+                - generic [ref=e145]: معاينة حية للملعب
+              - generic [ref=e148]:
+                - heading "أكاديمية النصر للبادل" [level=3] [ref=e149]
+                - paragraph [ref=e150]: شارع المعهد الديني، دمنهور • أرضية معتمدة دولياً وموقف سيارات خاص
+                - generic [ref=e151]:
+                  - generic [ref=e152]:
+                    - generic [ref=e153]: "المواعيد المتاحة اليوم:"
+                    - generic [ref=e157]: 5 فترات
+                  - generic [ref=e159]:
+                    - generic [ref=e160]: 06:30 م
+                    - generic [ref=e161]: 10:00 م
+                    - generic [ref=e162]: 11:30 م
+            - generic [ref=e163]:
+              - generic [ref=e164]:
+                - generic [ref=e165]: سعر الساعة
+                - generic [ref=e166]: 250 ج.م
+              - link "احجز الآن" [ref=e167] [cursor=pointer]:
+                - /url: "#book"
+      - generic [ref=e172]:
+        - generic [ref=e173]:
+          - generic [ref=e174]: طرق اللعب
+          - heading "3 طرق تضمن لك ماتشك" [level=2] [ref=e177]
+          - paragraph [ref=e178]: العب بالطريقة اللي تريحك وبدون أي تعقيد.
+        - generic [ref=e179]:
+          - generic [ref=e180]:
+            - generic [ref=e181]:
+              - generic [ref=e185]: حجز المجموعات
+              - heading "احجز ملعب لفرقتك" [level=3] [ref=e186]
+              - paragraph [ref=e187]: اختر الساعة المناسبة، ادفع العربون، وميعادك اتقفل لفرقتك فوراً.
+            - link "احجز ملعب الآن" [ref=e188] [cursor=pointer]:
+              - /url: "#courts"
+          - generic [ref=e192]:
+            - generic [ref=e193]:
+              - generic [ref=e200]: بدون فرقة
+              - heading "كمّل ماتشك أو انزل تقسيمة" [level=3] [ref=e201]
+              - paragraph [ref=e202]: ناقصك لعيب أو عايز تلعب لوحدك؟ انشر تقسيمة وانزل ماتشك دلوقتي.
+            - link "استكشف التقسيمات" [ref=e203] [cursor=pointer]:
+              - /url: "#matchmaking"
+          - generic [ref=e207]:
+            - generic [ref=e208]:
+              - generic [ref=e216]: تنافس وتحدي
+              - heading "بطولات ومنافسات رسمية" [level=3] [ref=e217]
+              - paragraph [ref=e218]: منافسات وجداول مباريات رسمية وجوائز لأبطال ملاعب دمنهور.
+            - generic [ref=e219]: قريباً في الصيف القادم
+      - generic [ref=e222]:
+        - generic [ref=e223]:
+          - generic [ref=e224]: خطوات الحجز
+          - heading "احجز ماتشك في أقل من دقيقة" [level=2] [ref=e227]
+          - paragraph [ref=e228]: 3 خطوات سريعة وماتشك في جيبك.
+        - generic [ref=e229]:
+          - generic [ref=e230]:
+            - generic [ref=e231]: "01"
+            - heading "اختر الملعب والميعاد" [level=3] [ref=e236]
+            - paragraph [ref=e237]: استعرض ملاعب دمنهور، قارن الأسعار، واختر ساعتك المفضلة.
+          - generic [ref=e238]:
+            - generic [ref=e239]: "02"
+            - heading "تأكيد الحجز والدفع" [level=3] [ref=e244]
+            - paragraph [ref=e245]: حوّل العربون بسهولة عن طريق إنستاباي أو محفظتك لتأكيد الحجز فوراً.
+          - generic [ref=e246]:
+            - generic [ref=e247]: "03"
+            - heading "تذكرتك على الواتساب" [level=3] [ref=e252]
+            - paragraph [ref=e253]: تصلك تذكرة رسمية ولوكيشن الملعب على الواتساب تشيرها مع فرقتك.
+      - generic [ref=e256]:
+        - generic [ref=e257]:
+          - generic [ref=e258]: خاصية كمّل ماتشك • Matchmaking
+          - heading "ناقصك لاعب لماتشك؟ أو عايز تنزل تلعب دلوقتي؟" [level=2] [ref=e265]:
+            - text: ناقصك لاعب لماتشك؟
+            - generic [ref=e266]: أو عايز تنزل تلعب دلوقتي؟
+          - paragraph [ref=e267]: مفيش ماتش هيتلغي تاني عشان اتنين اعتذروا. انشر مركزك الناقص، كمّل فرقتك في دقايق، أو انزل تقسيمة جاهزة.
+          - generic [ref=e268]:
+            - link "استعرض التقسيمات المفتوحة" [ref=e269] [cursor=pointer]:
+              - /url: "#matchmaking-posts"
+            - link "انشر تقسيمة جديدة" [ref=e273] [cursor=pointer]:
+              - /url: "#create-post"
+        - generic [ref=e274]:
+          - generic [ref=e275]:
+            - generic [ref=e276]:
+              - generic [ref=e277]: ماتش خماسي • مطلوب لاعبين
+              - generic [ref=e280]: اليوم 09:00 م
+            - generic [ref=e281]:
+              - generic [ref=e282]: ملعب الأبطال الخماسي — طريق شبرا
+              - generic [ref=e283]: 35 ج.م / للاعب
+            - generic [ref=e284]:
+              - generic [ref=e285]: "المركز المطلوب: دفاع أو وسط"
+              - button "طلب انضمام" [ref=e286] [cursor=pointer]
+          - generic [ref=e290]:
+            - generic [ref=e291]:
+              - generic [ref=e292]: مباراة بادل زوجي • مطلوب لاعب رابع
+              - generic [ref=e295]: غداً 08:30 م
+            - generic [ref=e296]:
+              - generic [ref=e297]: نادي دمنهور للبادل — عبد السلام الشاذلي
+              - generic [ref=e298]: 65 ج.م / للاعب
+            - generic [ref=e299]:
+              - generic [ref=e300]: "المستوى: متوسط (Intermediate)"
+              - button "طلب انضمام" [ref=e301] [cursor=pointer]
+      - generic [ref=e307]:
+        - generic [ref=e308]:
+          - generic [ref=e309]: شراكة الملاعب
+          - heading "عندك ملعب في دمنهور؟ زوّد حجوزاتك واضمن عربونك." [level=2] [ref=e312]:
+            - text: عندك ملعب في دمنهور؟
+            - generic [ref=e313]: زوّد حجوزاتك واضمن عربونك.
+          - paragraph [ref=e314]: سجّل ملعبك مجاناً، واستقبل حجوزات مؤكدة بعربون فوري على إنستاباي أو محفظتك.
+        - generic [ref=e315]:
+          - generic [ref=e316]:
+            - heading "عربون فوري" [level=3] [ref=e321]
+            - paragraph [ref=e322]: تحويل كاش أو إنستاباي لحسابك قبل بداية كل ماتش.
+          - generic [ref=e323]:
+            - heading "بدون حجز مزدوج" [level=3] [ref=e328]
+            - paragraph [ref=e329]: الساعة بتتقفل آلياً بمجرد تأكيد الحجز ومستحيل ميعاد يتلغى.
+          - generic [ref=e330]:
+            - heading "انضمام مجاني" [level=3] [ref=e334]
+            - paragraph [ref=e335]: بدون أي اشتراكات أو مصاريف تسجيل شهرية لملعبك.
+        - generic [ref=e336]:
+          - link "سجّل ملعبك مجاناً" [ref=e337] [cursor=pointer]:
+            - /url: "#register-venue"
+          - link "تواصل واتساب" [ref=e341] [cursor=pointer]:
+            - /url: https://wa.me/201000000000
+      - generic [ref=e346]:
+        - generic [ref=e347]:
+          - generic [ref=e348]: ليه باصيلي؟
+          - heading "إيه اللي بيميزنا؟ حجز ملاعب بدون وجع دماغ." [level=3] [ref=e351]:
+            - text: إيه اللي بيميزنا؟
+            - generic [ref=e352]: حجز ملاعب بدون وجع دماغ.
+          - paragraph [ref=e353]: مفيش مكالمات ولا كشاكيل.. كل حاجة بتخلص من موبايلك في ثواني.
+        - generic [ref=e354]:
+          - generic [ref=e360]:
+            - heading "ماتشك مضمون بالثانية" [level=4] [ref=e361]
+            - paragraph [ref=e362]: الساعة بتتقفل باسمك فوراً ومستحيل ميعادك يتلغى أو يروح لغيرك.
+          - generic [ref=e368]:
+            - heading "تذكرتك على الواتساب" [level=4] [ref=e369]
+            - paragraph [ref=e370]: رسالة رسمية فيها كل تفاصيل الماتش واللوكيشن تشيرها مع فرقتك.
+          - generic [ref=e375]:
+            - heading "خفيفة وسريعة" [level=4] [ref=e376]
+            - paragraph [ref=e377]: تفتح في ثانية وتحجز ميعادك بدون أي استهلاك لباقة الموبايل.
+          - generic [ref=e382]:
+            - heading "فريق دعم في ضهرك" [level=4] [ref=e383]
+            - paragraph [ref=e384]: دعم مباشر بالواتساب والتليفون لمساعدتك خطوة بخطوة، بدون رد آلي.
+      - generic [ref=e387]:
+        - generic [ref=e388]:
+          - generic [ref=e389]: قريباً على الموبايل
+          - heading "تطبيق باصيلي على موبايلك.. حجزك أسرع وإشعاراتك حية." [level=3] [ref=e392]:
+            - text: تطبيق باصيلي على موبايلك..
+            - generic [ref=e393]: حجزك أسرع وإشعاراتك حية.
+          - paragraph [ref=e394]: تابع حجوزاتك وماتشاتك واطلب لعيبة بلمسة واحدة من موبايلك.
+        - generic [ref=e395]:
+          - generic [ref=e399]:
+            - generic [ref=e400]: قريباً على
+            - generic [ref=e401]: App Store
+          - generic [ref=e408]:
+            - generic [ref=e409]: قريباً على
+            - generic [ref=e410]: Google Play
+  - contentinfo [ref=e411]:
+    - generic [ref=e412]:
+      - generic [ref=e413]:
+        - generic [ref=e414]:
+          - link "Passyli باصـيلي" [ref=e415] [cursor=pointer]:
+            - /url: /
+            - generic [ref=e416]: Passyli
+            - generic [ref=e417]: باصـيلي
+          - paragraph [ref=e418]: المنصة الرياضية الأولى لحجز ملاعب كرة القدم الخماسي وملاعب البادل في دمنهور والبحيرة. نظام حجز فوري موثق يمنع التضارب ويضمن جاهزية ملعبك.
+          - generic [ref=e419]: تغطية حية لكافة ملاعب دمنهور والمراكز المجاورة
+          - generic [ref=e421]:
+            - link "صفحتنا على فيسبوك" [ref=e422] [cursor=pointer]:
+              - /url: https://facebook.com
+            - link "حسابنا على إنستجرام" [ref=e425] [cursor=pointer]:
+              - /url: https://instagram.com
+            - link "راسلنا عبر البريد الإلكتروني" [ref=e429] [cursor=pointer]:
+              - /url: mailto:contact@passyli.com
+        - generic [ref=e433]:
+          - generic [ref=e434]: تصفح المنصة
+          - link "ملاعب دمنهور" [ref=e435] [cursor=pointer]:
+            - /url: "#courts"
+          - link "ملاعب البادل" [ref=e436] [cursor=pointer]:
+            - /url: "#padel"
+          - link "ملاعب كرة القدم الخماسي" [ref=e437] [cursor=pointer]:
+            - /url: "#football"
+          - link "التقسيمات المفتوحة (كمّل ماتشك)" [ref=e438] [cursor=pointer]:
+            - /url: "#matchmaking"
+        - generic [ref=e439]:
+          - generic [ref=e440]: أصحاب الملاعب والسياسات
+          - link "انضم كشريك ملعب" [ref=e441] [cursor=pointer]:
+            - /url: "#partner"
+          - link "شروط وأحكام الحجز" [ref=e446] [cursor=pointer]:
+            - /url: "#terms"
+          - link "سياسة الإلغاء واسترداد العربون" [ref=e447] [cursor=pointer]:
+            - /url: "#cancellation"
+          - link "الخصوصية وسرية البيانات" [ref=e448] [cursor=pointer]:
+            - /url: "#privacy"
+        - generic [ref=e449]:
+          - generic [ref=e450]: الدعم ووسائل الدفع
+          - link "دعم واتساب الفوري" [ref=e451] [cursor=pointer]:
+            - /url: https://wa.me/201000000000
+          - generic [ref=e455]:
+            - generic [ref=e456]: دفع مؤمن وموثق
+            - paragraph [ref=e461]: إنستاباي (InstaPay) • فودافون كاش • أورانج كاش • إيصال معتمد
+      - generic [ref=e462]:
+        - paragraph [ref=e463]: جميع الحقوق محفوظة © 2026 منصة باصيلي (Passyli). صُنعت لرياضيي دمنهور.
+        - generic [ref=e464]:
+          - generic [ref=e465]: الخوادم تعمل بكفاءة 100%
+          - generic [ref=e468]: نظام تشفير وحماية المواعيد
