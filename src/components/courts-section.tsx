@@ -18,6 +18,7 @@ import {
   type VenueWithCourts,
 } from "@/lib/api/venues";
 import type { SportType } from "@/lib/supabase/types";
+import BookingModal, { type BookingModalData } from "@/components/booking-modal";
 
 interface DayOption {
   key: string;
@@ -69,6 +70,10 @@ export default function CourtsSection() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [, startTransition] = useTransition();
+
+  // Booking Modal State
+  const [bookingModalData, setBookingModalData] = useState<BookingModalData | null>(null);
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
   const selectedDay = availableDays.find((d) => d.key === selectedDayKey) || availableDays[0];
 
@@ -429,13 +434,27 @@ export default function CourtsSection() {
                       </span>
                     </div>
 
-                    <Link
-                      href={`#book?venue=${venue.slug}&date=${selectedDay.dateStr}&slot=${encodeURIComponent(selectedSlot || "")}`}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const slotToBook = selectedSlot || (primaryCourt?.available_slots?.[0] || "08:00 م");
+                        if (primaryCourt) {
+                          setBookingModalData({
+                            venue,
+                            court: primaryCourt,
+                            bookingDate: selectedDay.dateStr,
+                            displayDate: selectedDay.displayDate,
+                            dayLabel: selectedDay.label,
+                            slotTime: slotToBook,
+                          });
+                          setIsBookingModalOpen(true);
+                        }
+                      }}
                       className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_2px_10px_rgba(16,185,129,0.2)]"
                     >
                       <span>{selectedSlot ? `أكّد ${selectedSlot}` : "احجز ميعادك"}</span>
                       <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
-                    </Link>
+                    </button>
                   </div>
                 </div>
               );
@@ -466,6 +485,13 @@ export default function CourtsSection() {
         )}
 
       </div>
+
+      {/* Interactive Booking & Hold Modal */}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        data={bookingModalData}
+        onClose={() => setIsBookingModalOpen(false)}
+      />
     </section>
   );
 }

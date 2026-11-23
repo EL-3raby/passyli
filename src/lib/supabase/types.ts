@@ -4,343 +4,642 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[];
+  | Json[]
 
-export type UserRole = "player" | "venue_owner" | "receptionist" | "super_admin";
-export type SportType = "football" | "padel";
-export type SurfaceType = "turf_3g" | "panoramic_glass" | "covered_padel" | "natural_grass";
-export type BookingStatus = "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
-export type PaymentMethod = "instapay" | "vodafone_cash" | "orange_cash" | "cash";
-export type PaymentStatus = "pending" | "submitted" | "verified" | "rejected" | "paid_cash_on_pitch";
-export type MatchmakingStatus = "open" | "filled" | "cancelled";
-
-export interface Database {
+export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.18"
+  }
   public: {
     Tables: {
-      profiles: {
-        Row: {
-          id: string;
-          phone: string;
-          full_name: string;
-          role: UserRole;
-          avatar_url: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id: string;
-          phone: string;
-          full_name: string;
-          role?: UserRole;
-          avatar_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          phone?: string;
-          full_name?: string;
-          role?: UserRole;
-          avatar_url?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      venues: {
-        Row: {
-          id: string;
-          owner_id: string | null;
-          name: string;
-          slug: string;
-          city: string;
-          district: string;
-          address: string;
-          latitude: number;
-          longitude: number;
-          phone: string;
-          whatsapp_number: string;
-          instapay_address: string | null;
-          vodafone_cash_number: string | null;
-          backup_wallet_number: string | null;
-          deposit_amount: number;
-          images: string[];
-          amenities: string[];
-          opening_time: string;
-          closing_time: string;
-          is_active: boolean;
-          is_verified: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          owner_id?: string | null;
-          name: string;
-          slug: string;
-          city?: string;
-          district: string;
-          address: string;
-          latitude: number;
-          longitude: number;
-          phone: string;
-          whatsapp_number: string;
-          instapay_address?: string | null;
-          vodafone_cash_number?: string | null;
-          backup_wallet_number?: string | null;
-          deposit_amount?: number;
-          images?: string[];
-          amenities?: string[];
-          opening_time?: string;
-          closing_time?: string;
-          is_active?: boolean;
-          is_verified?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          owner_id?: string | null;
-          name?: string;
-          slug?: string;
-          city?: string;
-          district?: string;
-          address?: string;
-          latitude?: number;
-          longitude?: number;
-          phone?: string;
-          whatsapp_number?: string;
-          instapay_address?: string | null;
-          vodafone_cash_number?: string | null;
-          backup_wallet_number?: string | null;
-          deposit_amount?: number;
-          images?: string[];
-          amenities?: string[];
-          opening_time?: string;
-          closing_time?: string;
-          is_active?: boolean;
-          is_verified?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      courts: {
-        Row: {
-          id: string;
-          venue_id: string;
-          name: string;
-          sport: SportType;
-          surface: SurfaceType;
-          slot_duration_minutes: number;
-          price_morning: number;
-          price_evening: number;
-          peak_hour_start: string;
-          buffer_minutes: number;
-          is_active: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          venue_id: string;
-          name: string;
-          sport: SportType;
-          surface: SurfaceType;
-          slot_duration_minutes?: number;
-          price_morning: number;
-          price_evening: number;
-          peak_hour_start?: string;
-          buffer_minutes?: number;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          venue_id?: string;
-          name?: string;
-          sport?: SportType;
-          surface?: SurfaceType;
-          slot_duration_minutes?: number;
-          price_morning?: number;
-          price_evening?: number;
-          peak_hour_start?: string;
-          buffer_minutes?: number;
-          is_active?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
       bookings: {
         Row: {
-          id: string;
-          booking_reference: string;
-          court_id: string;
-          booker_id: string | null;
-          booker_name: string;
-          booker_phone: string;
-          booking_date: string;
-          start_time: string;
-          end_time: string;
-          total_price: number;
-          deposit_required: number;
-          deposit_paid: number;
-          cash_remaining: number;
-          status: BookingStatus;
-          locked_until: string | null;
-          locked_by_session: string | null;
-          is_walkin: boolean;
-          cancellation_reason: string | null;
-          created_at: string;
-          updated_at: string;
-        };
+          booker_id: string | null
+          booker_name: string
+          booker_phone: string
+          booking_date: string
+          booking_reference: string
+          cancellation_reason: string | null
+          cash_remaining: number
+          court_id: string
+          created_at: string
+          deposit_paid: number
+          deposit_required: number
+          end_time: string
+          id: string
+          is_walkin: boolean
+          locked_by_session: string | null
+          locked_until: string | null
+          start_time: string
+          status: Database["public"]["Enums"]["booking_status"]
+          total_price: number
+          updated_at: string
+        }
         Insert: {
-          id?: string;
-          booking_reference: string;
-          court_id: string;
-          booker_id?: string | null;
-          booker_name: string;
-          booker_phone: string;
-          booking_date: string;
-          start_time: string;
-          end_time: string;
-          total_price: number;
-          deposit_required?: number;
-          deposit_paid?: number;
-          cash_remaining: number;
-          status?: BookingStatus;
-          locked_until?: string | null;
-          locked_by_session?: string | null;
-          is_walkin?: boolean;
-          cancellation_reason?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
+          booker_id?: string | null
+          booker_name: string
+          booker_phone: string
+          booking_date: string
+          booking_reference: string
+          cancellation_reason?: string | null
+          cash_remaining: number
+          court_id: string
+          created_at?: string
+          deposit_paid?: number
+          deposit_required?: number
+          end_time: string
+          id?: string
+          is_walkin?: boolean
+          locked_by_session?: string | null
+          locked_until?: string | null
+          start_time: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_price: number
+          updated_at?: string
+        }
         Update: {
-          id?: string;
-          booking_reference?: string;
-          court_id?: string;
-          booker_id?: string | null;
-          booker_name?: string;
-          booker_phone?: string;
-          booking_date?: string;
-          start_time?: string;
-          end_time?: string;
-          total_price?: number;
-          deposit_required?: number;
-          deposit_paid?: number;
-          cash_remaining?: number;
-          status?: BookingStatus;
-          locked_until?: string | null;
-          locked_by_session?: string | null;
-          is_walkin?: boolean;
-          cancellation_reason?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-      receipts: {
+          booker_id?: string | null
+          booker_name?: string
+          booker_phone?: string
+          booking_date?: string
+          booking_reference?: string
+          cancellation_reason?: string | null
+          cash_remaining?: number
+          court_id?: string
+          created_at?: string
+          deposit_paid?: number
+          deposit_required?: number
+          end_time?: string
+          id?: string
+          is_walkin?: boolean
+          locked_by_session?: string | null
+          locked_until?: string | null
+          start_time?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_booker_id_fkey"
+            columns: ["booker_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_court_id_fkey"
+            columns: ["court_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courts: {
         Row: {
-          id: string;
-          booking_id: string;
-          sender_name: string;
-          sender_phone: string;
-          payment_method: PaymentMethod;
-          reference_number: string;
-          amount_paid: number;
-          image_url: string;
-          status: PaymentStatus;
-          rejection_reason: string | null;
-          verified_by: string | null;
-          verified_at: string | null;
-          created_at: string;
-        };
+          buffer_minutes: number
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          peak_hour_start: string
+          price_evening: number
+          price_morning: number
+          slot_duration_minutes: number
+          sport: Database["public"]["Enums"]["sport_type"]
+          surface: Database["public"]["Enums"]["surface_type"]
+          updated_at: string
+          venue_id: string
+        }
         Insert: {
-          id?: string;
-          booking_id: string;
-          sender_name: string;
-          sender_phone: string;
-          payment_method?: PaymentMethod;
-          reference_number: string;
-          amount_paid: number;
-          image_url: string;
-          status?: PaymentStatus;
-          rejection_reason?: string | null;
-          verified_by?: string | null;
-          verified_at?: string | null;
-          created_at?: string;
-        };
+          buffer_minutes?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          peak_hour_start?: string
+          price_evening: number
+          price_morning: number
+          slot_duration_minutes?: number
+          sport: Database["public"]["Enums"]["sport_type"]
+          surface: Database["public"]["Enums"]["surface_type"]
+          updated_at?: string
+          venue_id: string
+        }
         Update: {
-          id?: string;
-          booking_id?: string;
-          sender_name?: string;
-          sender_phone?: string;
-          payment_method?: PaymentMethod;
-          reference_number?: string;
-          amount_paid?: number;
-          image_url?: string;
-          status?: PaymentStatus;
-          rejection_reason?: string | null;
-          verified_by?: string | null;
-          verified_at?: string | null;
-          created_at?: string;
-        };
-      };
+          buffer_minutes?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          peak_hour_start?: string
+          price_evening?: number
+          price_morning?: number
+          slot_duration_minutes?: number
+          sport?: Database["public"]["Enums"]["sport_type"]
+          surface?: Database["public"]["Enums"]["surface_type"]
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courts_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matchmaking_posts: {
         Row: {
-          id: string;
-          booking_id: string | null;
-          creator_id: string;
-          court_id: string;
-          sport: SportType;
-          match_date: string;
-          start_time: string;
-          players_needed: number;
-          current_players: number;
-          cost_per_player: number;
-          required_position: string;
-          skill_level: string;
-          notes: string | null;
-          status: MatchmakingStatus;
-          created_at: string;
-          updated_at: string;
-        };
+          booking_id: string | null
+          cost_per_player: number
+          court_id: string
+          created_at: string
+          creator_id: string
+          current_players: number
+          id: string
+          match_date: string
+          notes: string | null
+          players_needed: number
+          required_position: string
+          skill_level: string
+          sport: Database["public"]["Enums"]["sport_type"]
+          start_time: string
+          status: Database["public"]["Enums"]["matchmaking_status"]
+          updated_at: string
+        }
         Insert: {
-          id?: string;
-          booking_id?: string | null;
-          creator_id: string;
-          court_id: string;
-          sport: SportType;
-          match_date: string;
-          start_time: string;
-          players_needed: number;
-          current_players?: number;
-          cost_per_player: number;
-          required_position?: string;
-          skill_level?: string;
-          notes?: string | null;
-          status?: MatchmakingStatus;
-          created_at?: string;
-          updated_at?: string;
-        };
+          booking_id?: string | null
+          cost_per_player: number
+          court_id: string
+          created_at?: string
+          creator_id: string
+          current_players?: number
+          id?: string
+          match_date: string
+          notes?: string | null
+          players_needed: number
+          required_position?: string
+          skill_level?: string
+          sport: Database["public"]["Enums"]["sport_type"]
+          start_time: string
+          status?: Database["public"]["Enums"]["matchmaking_status"]
+          updated_at?: string
+        }
         Update: {
-          id?: string;
-          booking_id?: string | null;
-          creator_id?: string;
-          court_id?: string;
-          sport?: SportType;
-          match_date?: string;
-          start_time?: string;
-          players_needed?: number;
-          current_players?: number;
-          cost_per_player?: number;
-          required_position?: string;
-          skill_level?: string;
-          notes?: string | null;
-          status?: MatchmakingStatus;
-          created_at?: string;
-          updated_at?: string;
-        };
-      };
-    };
-  };
+          booking_id?: string | null
+          cost_per_player?: number
+          court_id?: string
+          created_at?: string
+          creator_id?: string
+          current_players?: number
+          id?: string
+          match_date?: string
+          notes?: string | null
+          players_needed?: number
+          required_position?: string
+          skill_level?: string
+          sport?: Database["public"]["Enums"]["sport_type"]
+          start_time?: string
+          status?: Database["public"]["Enums"]["matchmaking_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matchmaking_posts_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matchmaking_posts_court_id_fkey"
+            columns: ["court_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matchmaking_posts_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name: string
+          id: string
+          phone: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      receipts: {
+        Row: {
+          amount_paid: number
+          booking_id: string
+          created_at: string
+          id: string
+          image_url: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          reference_number: string
+          rejection_reason: string | null
+          sender_name: string
+          sender_phone: string
+          status: Database["public"]["Enums"]["payment_status"]
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          amount_paid: number
+          booking_id: string
+          created_at?: string
+          id?: string
+          image_url: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          reference_number: string
+          rejection_reason?: string | null
+          sender_name: string
+          sender_phone: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          amount_paid?: number
+          booking_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          reference_number?: string
+          rejection_reason?: string | null
+          sender_name?: string
+          sender_phone?: string
+          status?: Database["public"]["Enums"]["payment_status"]
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "receipts_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "receipts_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venues: {
+        Row: {
+          address: string
+          amenities: string[]
+          backup_wallet_number: string | null
+          city: string
+          closing_time: string
+          created_at: string
+          deposit_amount: number
+          district: string
+          id: string
+          images: string[]
+          instapay_address: string | null
+          is_active: boolean
+          is_verified: boolean
+          latitude: number
+          longitude: number
+          name: string
+          opening_time: string
+          owner_id: string | null
+          phone: string
+          slug: string
+          updated_at: string
+          vodafone_cash_number: string | null
+          whatsapp_number: string
+        }
+        Insert: {
+          address: string
+          amenities?: string[]
+          backup_wallet_number?: string | null
+          city?: string
+          closing_time?: string
+          created_at?: string
+          deposit_amount?: number
+          district: string
+          id?: string
+          images?: string[]
+          instapay_address?: string | null
+          is_active?: boolean
+          is_verified?: boolean
+          latitude: number
+          longitude: number
+          name: string
+          opening_time?: string
+          owner_id?: string | null
+          phone: string
+          slug: string
+          updated_at?: string
+          vodafone_cash_number?: string | null
+          whatsapp_number: string
+        }
+        Update: {
+          address?: string
+          amenities?: string[]
+          backup_wallet_number?: string | null
+          city?: string
+          closing_time?: string
+          created_at?: string
+          deposit_amount?: number
+          district?: string
+          id?: string
+          images?: string[]
+          instapay_address?: string | null
+          is_active?: boolean
+          is_verified?: boolean
+          latitude?: number
+          longitude?: number
+          name?: string
+          opening_time?: string
+          owner_id?: string | null
+          phone?: string
+          slug?: string
+          updated_at?: string
+          vodafone_cash_number?: string | null
+          whatsapp_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venues_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      calculate_distance_km: {
+        Args: { lat1: number; lat2: number; lon1: number; lon2: number }
+        Returns: number
+      }
+      cancel_booking_lock: {
+        Args: { p_booking_id: string; p_session_id?: string }
+        Returns: Json
+      }
+      lock_court_slot: {
+        Args: {
+          p_booker_name: string
+          p_booker_phone: string
+          p_booking_date: string
+          p_cash_remaining: number
+          p_court_id: string
+          p_deposit_required: number
+          p_end_time: string
+          p_session_id: string
+          p_start_time: string
+          p_total_price: number
+        }
+        Returns: Json
+      }
+      release_expired_booking_locks: { Args: never; Returns: number }
+      submit_booking_receipt: {
+        Args: {
+          p_amount_paid: number
+          p_booking_id: string
+          p_image_url: string
+          p_payment_method: Database["public"]["Enums"]["payment_method"]
+          p_reference_number: string
+          p_sender_name: string
+          p_sender_phone: string
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      booking_status:
+        | "pending_payment"
+        | "confirmed"
+        | "completed"
+        | "cancelled"
+        | "expired"
+      matchmaking_status: "open" | "filled" | "cancelled"
+      payment_method: "instapay" | "vodafone_cash" | "orange_cash" | "cash"
+      payment_status:
+        | "pending"
+        | "submitted"
+        | "verified"
+        | "rejected"
+        | "paid_cash_on_pitch"
+      sport_type: "football" | "padel"
+      surface_type:
+        | "turf_3g"
+        | "panoramic_glass"
+        | "covered_padel"
+        | "natural_grass"
+      user_role: "player" | "venue_owner" | "receptionist" | "super_admin"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never) = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never) = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never) = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      booking_status: [
+        "pending_payment",
+        "confirmed",
+        "completed",
+        "cancelled",
+        "expired",
+      ],
+      matchmaking_status: ["open", "filled", "cancelled"],
+      payment_method: ["instapay", "vodafone_cash", "orange_cash", "cash"],
+      payment_status: [
+        "pending",
+        "submitted",
+        "verified",
+        "rejected",
+        "paid_cash_on_pitch",
+      ],
+      sport_type: ["football", "padel"],
+      surface_type: [
+        "turf_3g",
+        "panoramic_glass",
+        "covered_padel",
+        "natural_grass",
+      ],
+      user_role: ["player", "venue_owner", "receptionist", "super_admin"],
+    },
+  },
+} as const
+
+export type SportType = Database["public"]["Enums"]["sport_type"];
+export type SurfaceType = Database["public"]["Enums"]["surface_type"];
+export type BookingStatus = Database["public"]["Enums"]["booking_status"];
+export type PaymentMethod = Database["public"]["Enums"]["payment_method"];
+export type PaymentStatus = Database["public"]["Enums"]["payment_status"];
+export type UserRole = Database["public"]["Enums"]["user_role"];
+export type MatchmakingStatus = Database["public"]["Enums"]["matchmaking_status"];
+
+export type Venue = Database["public"]["Tables"]["venues"]["Row"];
+export type Court = Database["public"]["Tables"]["courts"]["Row"];
+export type Booking = Database["public"]["Tables"]["bookings"]["Row"];
+export type Receipt = Database["public"]["Tables"]["receipts"]["Row"];

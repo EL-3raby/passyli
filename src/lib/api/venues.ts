@@ -1,6 +1,18 @@
 import { createClient } from "@/lib/supabase/client";
 import type { SportType, SurfaceType } from "@/lib/supabase/types";
 
+export type VenueCourt = {
+  id: string;
+  name: string;
+  sport: SportType;
+  surface: SurfaceType;
+  slot_duration_minutes: number;
+  price_morning: number;
+  price_evening: number;
+  peak_hour_start: string;
+  available_slots: string[];
+};
+
 export interface VenueWithCourts {
   id: string;
   name: string;
@@ -18,17 +30,7 @@ export interface VenueWithCourts {
   images: string[];
   amenities: string[];
   distance_km?: number;
-  courts: {
-    id: string;
-    name: string;
-    sport: SportType;
-    surface: SurfaceType;
-    slot_duration_minutes: number;
-    price_morning: number;
-    price_evening: number;
-    peak_hour_start: string;
-    available_slots: string[];
-  }[];
+  courts: VenueCourt[];
 }
 
 // Fallback Seed Data for Damanhour (Used when offline or during initial Supabase configuration)
