@@ -49,6 +49,38 @@ interface BookingModalProps {
 
 type BookingStep = "details" | "payment" | "pass";
 
+function InstaPayIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <span className={`relative inline-flex items-center justify-center overflow-hidden rounded-md shrink-0 shadow-sm ${className}`}>
+      <Image
+        src="/images/instapay.png"
+        alt="InstaPay"
+        width={24}
+        height={24}
+        className="w-full h-full object-cover"
+      />
+    </span>
+  );
+}
+
+function VodafoneCashIcon({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="4.6 18.3 34.8 34.8"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`${className} shrink-0`}
+      aria-label="Vodafone Cash"
+    >
+      <circle cx="22" cy="35.7" r="17.4" fill="#E60000" />
+      <path
+        fill="#FFFFFF"
+        d="m12.3 34.8c0.1 6.6 5 10.7 9.8 10.7 5.9-0.1 9.4-4.9 9.3-9.4 0-4.4-2.4-7.6-7.7-8.9 0 0 0-0.1 0-0.3 0-3.3 2.5-6.3 5.7-6.9-0.3-0.1-0.8-0.2-1.3-0.2-3.6 0.1-7.6 1.6-10.5 4-2.9 2.5-5.3 6.7-5.3 11z"
+      />
+    </svg>
+  );
+}
+
 export default function BookingModal({
   isOpen,
   data,
@@ -661,38 +693,45 @@ export default function BookingModal({
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("instapay")}
-                        className={`min-h-[44px] rounded-xl px-3 text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+                        className={`min-h-[46px] rounded-xl px-3.5 text-xs font-bold transition-all border flex items-center justify-center gap-2.5 ${
                           paymentMethod === "instapay"
-                            ? "bg-white text-black border-white font-black"
-                            : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2a2a2e]"
+                            ? "bg-white text-black border-white font-black shadow-md shadow-white/10"
+                            : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30] hover:text-white"
                         }`}
                       >
-                        <span className="h-2 w-2 rounded-full bg-purple-500" />
+                        <InstaPayIcon className="h-5 w-5" />
                         <span>إنستاباي (InstaPay)</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => setPaymentMethod("vodafone_cash")}
-                        className={`min-h-[44px] rounded-xl px-3 text-xs font-bold transition-all border flex items-center justify-center gap-2 ${
+                        className={`min-h-[46px] rounded-xl px-3.5 text-xs font-bold transition-all border flex items-center justify-center gap-2.5 ${
                           paymentMethod === "vodafone_cash"
-                            ? "bg-white text-black border-white font-black"
-                            : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2a2a2e]"
+                            ? "bg-white text-black border-white font-black shadow-md shadow-white/10"
+                            : "bg-[#242427] text-zinc-300 border-white/[0.06] hover:bg-[#2c2c30] hover:text-white"
                         }`}
                       >
-                        <span className="h-2 w-2 rounded-full bg-red-500" />
+                        <VodafoneCashIcon className="h-5 w-5" />
                         <span>فودافون كاش ومحافظ</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Account / Handle Copy Box */}
-                  <div className="rounded-xl bg-[#141416] border border-white/[0.08] p-4 space-y-2">
-                    <span className="text-[11px] text-muted-foreground block">
-                      {paymentMethod === "instapay"
-                        ? "عنوان InstaPay المباشر لإدارة الملعب:"
-                        : "رقم محفظة فودافون كاش لإدارة الملعب:"}
-                    </span>
+                  <div className="rounded-xl bg-[#141416] border border-white/[0.08] p-4 space-y-2.5">
+                    <div className="flex items-center gap-2">
+                      {paymentMethod === "instapay" ? (
+                        <InstaPayIcon className="h-4 w-4" />
+                      ) : (
+                        <VodafoneCashIcon className="h-4 w-4" />
+                      )}
+                      <span className="text-[11px] text-zinc-300 font-bold">
+                        {paymentMethod === "instapay"
+                          ? "عنوان InstaPay المباشر لإدارة الملعب:"
+                          : "رقم محفظة فودافون كاش لإدارة الملعب:"}
+                      </span>
+                    </div>
 
                     <div className="flex items-center justify-between gap-2 bg-[#242427] rounded-xl p-2.5 border border-white/[0.06]">
                       <span className="font-mono text-sm font-bold text-white tabular-nums tracking-wide select-all" dir="ltr">
