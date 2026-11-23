@@ -90,6 +90,22 @@ export default function CourtsCatalogPage() {
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
+  // Strict Body Scroll Lock when Filter Drawer is open
+  useEffect(() => {
+    if (!isFilterDrawerOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [isFilterDrawerOpen]);
+
   // Smart Auto-Hiding Scroll Effect (Hides on scroll-down, reveals on scroll-up)
   useEffect(() => {
     let lastScrollY = window.scrollY;
@@ -757,25 +773,30 @@ export default function CourtsCatalogPage() {
 
       </div>
 
-      {/* Modern Mobile Filter Bottom Sheet Drawer (Airbnb / Yalla Hagz style) */}
+      {/* Modern Mobile Filter Bottom Sheet Drawer */}
       {isFilterDrawerOpen && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center p-0 sm:p-4">
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 bg-black/85 backdrop-blur-md transition-opacity animate-in fade-in duration-200"
             onClick={() => setIsFilterDrawerOpen(false)}
           />
 
           {/* Bottom Sheet Drawer Container */}
-          <div className="relative w-full sm:max-w-md bg-[#18181c] border-t sm:border border-white/10 rounded-t-[28px] sm:rounded-2xl max-h-[88vh] flex flex-col z-10 shadow-2xl animate-in slide-in-from-bottom duration-300">
+          <div className="relative w-full sm:max-w-md bg-[#18181c] border-t sm:border border-white/10 rounded-t-[28px] sm:rounded-2xl h-[90dvh] sm:h-auto sm:max-h-[85dvh] flex flex-col z-10 shadow-2xl animate-in slide-in-from-bottom duration-300 overflow-hidden">
             
-            {/* Drawer Header */}
-            <div className="flex items-center justify-between p-5 border-b border-white/[0.08]">
+            {/* Mobile Drag Pill Handle */}
+            <div className="sm:hidden flex items-center justify-center pt-2.5 pb-1 shrink-0 bg-[#141418]">
+              <div className="h-1.5 w-12 rounded-full bg-white/20" />
+            </div>
+
+            {/* Fixed Drawer Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-white/[0.08] bg-[#141418] shrink-0">
               <div>
-                <h3 className="font-display text-lg font-black text-white">
+                <h3 className="font-display text-base sm:text-lg font-black text-white">
                   فلاتر البحث والملاعب
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[11px] sm:text-xs text-muted-foreground">
                   خصص بحثك في دمنهور عشان تلاقي أنسب ملعب لفرقتك
                 </p>
               </div>
@@ -783,14 +804,14 @@ export default function CourtsCatalogPage() {
               <button
                 type="button"
                 onClick={() => setIsFilterDrawerOpen(false)}
-                className="h-10 w-10 rounded-xl bg-[#242427] hover:bg-[#2e2e33] flex items-center justify-center text-zinc-300 transition-colors"
+                className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-[#242427] hover:bg-[#2e2e33] flex items-center justify-center text-zinc-300 transition-colors shrink-0"
               >
                 <X className="h-5 w-5" strokeWidth={1.5} />
               </button>
             </div>
 
-            {/* Scrollable Drawer Body */}
-            <div className="p-5 space-y-6 overflow-y-auto max-h-[60vh] scrollbar-none">
+            {/* Scrollable Drawer Body with overscroll-contain */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 space-y-6">
               
               {/* Section 1: نوع الرياضة */}
               <div>
@@ -927,8 +948,8 @@ export default function CourtsCatalogPage() {
 
             </div>
 
-            {/* Fixed Drawer Footer */}
-            <div className="p-4 pb-8 sm:pb-4 border-t border-white/[0.08] bg-[#141418] flex items-center gap-3">
+            {/* Sticky Action Footer */}
+            <div className="sticky bottom-0 bg-[#141418] border-t border-white/[0.08] p-4 flex items-center gap-3 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-8px_20px_rgba(0,0,0,0.5)]">
               <button
                 type="button"
                 onClick={handleClearFilters}

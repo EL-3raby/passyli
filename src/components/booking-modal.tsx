@@ -91,6 +91,22 @@ export default function BookingModal({
     sessionIdRef.current = getOrCreateBookingSessionId();
   }, []);
 
+  // Strict Body Scroll Lock: Prevent background page from scrolling when modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [isOpen]);
+
   // Reset state when modal opens or closes
   useEffect(() => {
     if (isOpen) {
@@ -117,7 +133,6 @@ export default function BookingModal({
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (lockData?.bookingId && step === "payment" && !isExpired) {
-        // Send async beacon or fetch to release lock
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
         if (supabaseUrl && supabaseAnonKey) {
@@ -125,9 +140,7 @@ export default function BookingModal({
             p_booking_id: lockData.bookingId,
             p_session_id: sessionIdRef.current,
           });
-          const headers = {
-            type: "application/json",
-          };
+          const headers = { type: "application/json" };
           const blob = new Blob([payload], headers);
           navigator.sendBeacon?.(
             `${supabaseUrl}/rest/v1/rpc/cancel_booking_lock`,
@@ -171,14 +184,13 @@ export default function BookingModal({
   const { venue, court, bookingDate, displayDate, dayLabel, slotTime } = data;
 
   // Calculate pricing breakdown
-  const isEvening = true; // Most booking slots are evening
+  const isEvening = true;
   const totalPrice = isEvening ? court.price_evening : court.price_morning;
   const depositRequired = venue.deposit_amount || 100;
   const cashRemaining = Math.max(totalPrice - depositRequired, 0);
 
   // Convert slot to 24-hour start/end times
   const parseSlotTimes = (slot: string, durationMinutes: number) => {
-    // slot could be "09:00 م" or "08:30"
     let hours = 20;
     let minutes = 0;
     const clean = slot.replace(/[^0-9:]/g, "");
@@ -194,7 +206,6 @@ export default function BookingModal({
     const startM = String(minutes).padStart(2, "0");
     const startTime = `${startH}:${startM}:00`;
 
-    // Compute end time
     const endTotalMinutes = hours * 60 + minutes + durationMinutes;
     const endH = String(Math.floor(endTotalMinutes / 60) % 24).padStart(2, "0");
     const endM = String(endTotalMinutes % 60).padStart(2, "0");
@@ -257,7 +268,7 @@ export default function BookingModal({
     if (lockData?.bookingId) {
       await cancelBookingLock(lockData.bookingId, sessionIdRef.current);
     }
-    onClose();
+    handleSafeClose();
   };
 
   // Step 2: Image Compression & Selection
@@ -392,17 +403,30 @@ export default function BookingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+      
+      {/* Backdrop Click Dismiss */}
       <div
-        className="relative w-full max-w-xl rounded-2xl border border-white/10 bg-[#1e1e22] text-foreground shadow-2xl overflow-hidden my-auto"
+        className="fixed inset-0"
+        onClick={step === "payment" ? undefined : handleSafeClose}
+      />
+
+      {/* Native Mobile Bottom Sheet / Desktop Centered Card */}
+      <div
+        className="relative z-10 w-full sm:max-w-xl bg-[#1a1a1d] text-foreground border-t sm:border border-white/10 rounded-t-[28px] sm:rounded-2xl shadow-2xl flex flex-col h-[92dvh] sm:h-auto sm:max-h-[85dvh] overflow-hidden animate-in slide-in-from-bottom duration-250 sm:slide-in-from-bottom-0 sm:zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
         
-        {/* Header Bar */}
-        <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-4 bg-[#18181b]">
+        {/* Mobile Drag Pill Handle */}
+        <div className="sm:hidden flex items-center justify-center pt-2.5 pb-1 shrink-0 bg-[#141416]">
+          <div className="h-1.5 w-12 rounded-full bg-white/20" />
+        </div>
+
+        {/* 1. Fixed Header Bar */}
+        <div className="flex items-center justify-between border-b border-white/[0.08] px-5 py-3.5 bg-[#141416] shrink-0">
           <div className="flex items-center gap-2.5">
             <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-            <h2 className="font-display font-black text-base sm:text-lg text-white">
+            <h2 className="font-display font-black text-sm sm:text-base text-white">
               {step === "details" && "تأكيد ميعاد الحجز وقفل الساعة"}
               {step === "payment" && "مهلة قفل الحجز 8 دقائق • تحويل العربون"}
               {step === "pass" && "التذكرة الرقمية المعتمدة"}
@@ -418,12 +442,12 @@ export default function BookingModal({
           </button>
         </div>
 
-        {/* Modal Body */}
-        <div className="p-5 sm:p-6 max-h-[80vh] overflow-y-auto scrollbar-none space-y-5">
-          
-          {/* STEP 1: Details & Start 8-Min Hold */}
-          {step === "details" && (
-            <form onSubmit={handleStartHold} className="space-y-5">
+        {/* STEP 1: Details & Start 8-Min Hold (Wrapped in flex-col form with sticky footer) */}
+        {step === "details" && (
+          <form onSubmit={handleStartHold} className="flex flex-col flex-1 overflow-hidden">
+            
+            {/* Scrollable Form Body */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6 space-y-4 scrollbar-none">
               
               {/* Match Snapshot Card */}
               <div className="rounded-xl bg-[#242427] border border-white/[0.06] p-4 space-y-3">
@@ -460,21 +484,21 @@ export default function BookingModal({
               <div className="grid grid-cols-3 gap-2.5 text-center">
                 <div className="rounded-xl bg-[#242427] border border-white/[0.06] p-3">
                   <span className="text-[10px] text-muted-foreground block mb-1">سعر الماتش</span>
-                  <span className="font-display font-black text-base text-white tabular-nums">
+                  <span className="font-display font-black text-sm sm:text-base text-white tabular-nums">
                     {totalPrice} <span className="text-[10px] font-normal text-muted-foreground">ج.م</span>
                   </span>
                 </div>
 
                 <div className="rounded-xl bg-primary/10 border border-primary/30 p-3">
-                  <span className="text-[10px] text-primary font-bold block mb-1">العربون لتثبيت الحجز</span>
-                  <span className="font-display font-black text-base text-primary tabular-nums">
+                  <span className="text-[10px] text-primary font-bold block mb-1">العربون المطلوب</span>
+                  <span className="font-display font-black text-sm sm:text-base text-primary tabular-nums">
                     {depositRequired} <span className="text-[10px] font-normal">ج.م</span>
                   </span>
                 </div>
 
                 <div className="rounded-xl bg-[#242427] border border-white/[0.06] p-3">
-                  <span className="text-[10px] text-muted-foreground block mb-1">المتبقي كاش في الملعب</span>
-                  <span className="font-display font-black text-base text-zinc-200 tabular-nums">
+                  <span className="text-[10px] text-muted-foreground block mb-1">المتبقي كاش</span>
+                  <span className="font-display font-black text-sm sm:text-base text-zinc-200 tabular-nums">
                     {cashRemaining} <span className="text-[10px] font-normal text-muted-foreground">ج.م</span>
                   </span>
                 </div>
@@ -530,7 +554,10 @@ export default function BookingModal({
                 </p>
               </div>
 
-              {/* Submit CTA */}
+            </div>
+
+            {/* 3. Sticky Action Footer (Always pinned at bottom of mobile screen) */}
+            <div className="shrink-0 p-4 border-t border-white/[0.08] bg-[#141416] pb-[max(1rem,env(safe-area-inset-bottom))]">
               <button
                 type="submit"
                 disabled={isPending}
@@ -548,13 +575,17 @@ export default function BookingModal({
                   </>
                 )}
               </button>
+            </div>
 
-            </form>
-          )}
+          </form>
+        )}
 
-          {/* STEP 2: 8-Minute Hold & Deposit Payment Flow */}
-          {step === "payment" && (
-            <div className="space-y-5">
+        {/* STEP 2: 8-Minute Hold & Deposit Payment Flow */}
+        {step === "payment" && (
+          <div className="flex flex-col flex-1 overflow-hidden">
+            
+            {/* Scrollable Payment Body */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6 space-y-4 scrollbar-none">
               
               {/* Active Countdown Header */}
               <div className={`rounded-xl border p-4 text-center transition-all ${
@@ -584,7 +615,7 @@ export default function BookingModal({
 
               {isExpired ? (
                 /* Expired Alert & Retry */
-                <div className="space-y-4 text-center py-4">
+                <div className="space-y-4 text-center py-6">
                   <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
                     نظراً لانتهاء المهلة دون إرفاق إيصال التحويل، تم تحرير الميعاد تلقائياً ليكون متاحاً لجميع اللاعبين منعاً لتعليق الملاعب.
                   </p>
@@ -602,14 +633,13 @@ export default function BookingModal({
                   </button>
                 </div>
               ) : (
-                /* Payment Instructions Form */
-                <form onSubmit={handleSubmitReceipt} className="space-y-5">
-                  
+                /* Payment Details */
+                <div className="space-y-4">
                   {/* Amount to transfer banner */}
                   <div className="flex items-center justify-between rounded-xl bg-[#242427] border border-white/[0.06] p-3.5">
                     <div>
                       <span className="text-xs text-muted-foreground block">مبلغ العربون المطلوب تحويله</span>
-                      <span className="font-display font-black text-xl text-primary tabular-nums">
+                      <span className="font-display font-black text-lg text-primary tabular-nums">
                         {depositRequired} <span className="text-xs font-normal">ج.م</span>
                       </span>
                     </div>
@@ -657,7 +687,7 @@ export default function BookingModal({
                   </div>
 
                   {/* Account / Handle Copy Box */}
-                  <div className="rounded-xl bg-[#18181b] border border-white/[0.08] p-4 space-y-2">
+                  <div className="rounded-xl bg-[#141416] border border-white/[0.08] p-4 space-y-2">
                     <span className="text-[11px] text-muted-foreground block">
                       {paymentMethod === "instapay"
                         ? "عنوان InstaPay المباشر لإدارة الملعب:"
@@ -698,7 +728,7 @@ export default function BookingModal({
                     </div>
 
                     <p className="text-[11px] text-zinc-400">
-                      افتح تطبيق {paymentMethod === "instapay" ? "InstaPay" : "أنا فودافون / المحفظة"} وحوّل {depositRequired} ج.م، ثم خذ سكرين شوت للإيصال.
+                      افتح تطبيق {paymentMethod === "instapay" ? "InstaPay" : "المحفظة"} وحوّل {depositRequired} ج.م، ثم ارفع سكرين شوت الإيصال.
                     </p>
                   </div>
 
@@ -793,44 +823,52 @@ export default function BookingModal({
                     </div>
                   )}
 
-                  {/* Actions Bar */}
-                  <div className="space-y-2 pt-2">
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || isCompressing || !compressedBlob || !referenceNumber.trim()}
-                      className="w-full min-h-[48px] rounded-xl bg-primary text-black font-black text-sm hover:bg-primary-hover active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] disabled:opacity-50"
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                          <span>بنرفع الإيصال ونؤكد الحجز...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Check className="h-4 w-4" strokeWidth={2.5} />
-                          <span>أرسل الإيصال وأكّد الحجز</span>
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={handleCancelHold}
-                      className="w-full min-h-[42px] rounded-xl bg-white/[0.03] hover:bg-white/[0.06] text-zinc-400 hover:text-white text-xs font-bold transition-colors"
-                    >
-                      إلغاء الحجز وتحرير الميعاد فوراً
-                    </button>
-                  </div>
-
-                </form>
+                </div>
               )}
 
             </div>
-          )}
 
-          {/* STEP 3: The Digital Booking Pass */}
-          {step === "pass" && (
-            <div className="space-y-5 py-2">
+            {/* 3. Sticky Action Footer for Payment */}
+            {!isExpired && (
+              <div className="shrink-0 p-4 border-t border-white/[0.08] bg-[#141416] space-y-2 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <button
+                  type="button"
+                  onClick={handleSubmitReceipt}
+                  disabled={isSubmitting || isCompressing || !compressedBlob || !referenceNumber.trim()}
+                  className="w-full min-h-[48px] rounded-xl bg-primary text-black font-black text-sm hover:bg-primary-hover active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      <span>بنرفع الإيصال ونؤكد الحجز...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="h-4 w-4" strokeWidth={2.5} />
+                      <span>أرسل الإيصال وأكّد الحجز</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCancelHold}
+                  className="w-full min-h-[40px] rounded-xl bg-white/[0.03] hover:bg-white/[0.06] text-zinc-400 hover:text-white text-xs font-bold transition-colors"
+                >
+                  إلغاء الحجز وتحرير الميعاد فوراً
+                </button>
+              </div>
+            )}
+
+          </div>
+        )}
+
+        {/* STEP 3: The Digital Booking Pass */}
+        {step === "pass" && (
+          <div className="flex flex-col flex-1 overflow-hidden">
+            
+            {/* Scrollable Pass Body */}
+            <div className="flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6 space-y-4 scrollbar-none">
               
               {/* Success Badge */}
               <div className="text-center space-y-1">
@@ -838,21 +876,18 @@ export default function BookingModal({
                   <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
                   <span>تم استلام الإيصال وحجز الميعاد بنجاح</span>
                 </span>
-                <h3 className="font-display font-black text-xl sm:text-2xl text-white">
+                <h3 className="font-display font-black text-lg sm:text-xl text-white">
                   تذكرتك الرقمية جاهزة للماتش
                 </h3>
-                <p className="text-xs text-muted-foreground">
-                  احفظ كود التذكرة أو ابعتها لإدارة الملعب على واتساب بضغطة واحدة.
-                </p>
               </div>
 
               {/* Boarding Pass Container */}
-              <div className="rounded-2xl bg-gradient-to-b from-[#242427] to-[#1c1c1f] border border-white/10 p-5 space-y-4 shadow-xl relative overflow-hidden">
+              <div className="rounded-2xl bg-gradient-to-b from-[#242427] to-[#1c1c1f] border border-white/10 p-4 sm:p-5 space-y-3.5 shadow-xl relative overflow-hidden">
                 
                 {/* Pass Header */}
-                <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
+                <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
                   <div>
-                    <span className="font-display font-black text-lg text-white">
+                    <span className="font-display font-black text-base sm:text-lg text-white">
                       باصـ<span className="text-primary">يلي</span>
                     </span>
                     <span className="text-[10px] text-muted-foreground block">
@@ -864,7 +899,7 @@ export default function BookingModal({
                     <span className="text-[10px] text-muted-foreground block">حالة التذكرة</span>
                     <span className="inline-flex items-center gap-1 text-xs font-bold text-primary">
                       <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      <span>مؤكد • بانتظار الاعتماد</span>
+                      <span>مؤكد ومحجوز</span>
                     </span>
                   </div>
                 </div>
@@ -873,7 +908,7 @@ export default function BookingModal({
                 <div className="rounded-xl bg-[#141416] border border-white/[0.06] p-3 flex items-center justify-between">
                   <div>
                     <span className="text-[10px] text-muted-foreground block">كود الحجز المعتمد</span>
-                    <span className="font-mono font-black text-base sm:text-lg text-primary tracking-wider select-all" dir="ltr">
+                    <span className="font-mono font-black text-sm sm:text-base text-primary tracking-wider select-all" dir="ltr">
                       {confirmedRef}
                     </span>
                   </div>
@@ -881,7 +916,7 @@ export default function BookingModal({
                   <button
                     type="button"
                     onClick={() => copyToClipboard(confirmedRef, "pass_code")}
-                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary px-3 text-xs font-bold transition-colors"
+                    className="inline-flex min-h-[34px] items-center gap-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary px-3 text-xs font-bold transition-colors"
                   >
                     {isCopied === "pass_code" ? (
                       <>
@@ -898,16 +933,16 @@ export default function BookingModal({
                 </div>
 
                 {/* Match Details Grid */}
-                <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="grid grid-cols-2 gap-2.5 text-xs">
                   <div>
                     <span className="text-[10px] text-muted-foreground block mb-0.5">الملعب</span>
-                    <span className="font-bold text-white block">{venue.name}</span>
-                    <span className="text-[11px] text-zinc-400">{court.name}</span>
+                    <span className="font-bold text-white block truncate">{venue.name}</span>
+                    <span className="text-[11px] text-zinc-400 truncate block">{court.name}</span>
                   </div>
 
                   <div>
                     <span className="text-[10px] text-muted-foreground block mb-0.5">اسم الكابتن</span>
-                    <span className="font-bold text-white block">{bookerName}</span>
+                    <span className="font-bold text-white block truncate">{bookerName}</span>
                     <span className="text-[11px] text-zinc-400 font-mono" dir="ltr">{bookerPhone}</span>
                   </div>
 
@@ -925,29 +960,29 @@ export default function BookingModal({
                 </div>
 
                 {/* Explicit Financial Settlement Box */}
-                <div className="pt-3 border-t border-dashed border-white/10 flex items-center justify-between text-xs bg-white/[0.02] -mx-5 px-5 py-3">
+                <div className="pt-2.5 border-t border-dashed border-white/10 flex items-center justify-between text-xs bg-white/[0.02] -mx-4 sm:-mx-5 px-4 sm:px-5 py-2.5">
                   <div>
-                    <span className="text-[10px] text-muted-foreground block">العربون المدفوع إلكترونياً</span>
-                    <span className="font-bold text-emerald-400 text-sm tabular-nums">
+                    <span className="text-[10px] text-muted-foreground block">العربون المدفوع</span>
+                    <span className="font-bold text-emerald-400 text-xs sm:text-sm tabular-nums">
                       {depositRequired} ج.م (تم التحويل)
                     </span>
                   </div>
 
                   <div className="text-left">
                     <span className="text-[10px] text-muted-foreground block">المتبقي كاش في الملعب</span>
-                    <span className="font-display font-black text-base text-white tabular-nums">
+                    <span className="font-display font-black text-sm sm:text-base text-white tabular-nums">
                       {cashRemaining} ج.م
                     </span>
                   </div>
                 </div>
 
                 {/* Barcode visual indicator */}
-                <div className="pt-2 text-center">
-                  <div className="h-6 w-full max-w-xs mx-auto bg-white/10 rounded flex items-center justify-around px-2 opacity-50">
+                <div className="pt-1 text-center">
+                  <div className="h-5 w-full max-w-xs mx-auto bg-white/10 rounded flex items-center justify-around px-2 opacity-50">
                     {Array.from({ length: 32 }).map((_, i) => (
                       <span
                         key={i}
-                        className={`h-4 ${i % 3 === 0 ? "w-1 bg-white" : i % 2 === 0 ? "w-0.5 bg-white" : "w-1.5 bg-white"}`}
+                        className={`h-3.5 ${i % 3 === 0 ? "w-1 bg-white" : i % 2 === 0 ? "w-0.5 bg-white" : "w-1.5 bg-white"}`}
                       />
                     ))}
                   </div>
@@ -958,43 +993,43 @@ export default function BookingModal({
 
               </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-2.5">
-                {/* 1. Send pass directly to venue WhatsApp */}
-                <a
-                  href={generateWhatsAppUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full min-h-[48px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-sm transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] active:scale-98"
-                >
-                  <MessageSquare className="h-4 w-4" strokeWidth={2} />
-                  <span>إرسال بيانات التذكرة لإدارة الملعب على واتساب</span>
-                </a>
-
-                {/* 2. Viral Squad WhatsApp Share with Cost Split */}
-                <a
-                  href={generateSquadShareUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full min-h-[46px] rounded-xl bg-[#242427] hover:bg-[#2c2c30] border border-white/10 hover:border-primary/40 text-white font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 active:scale-98"
-                >
-                  <Share2 className="h-4 w-4 text-primary" strokeWidth={2} />
-                  <span>مشاركة تفاصيل الماتش وحسبة الفلوس مع الفرقة</span>
-                </a>
-
-                <button
-                  type="button"
-                  onClick={handleSafeClose}
-                  className="w-full min-h-[44px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white font-bold text-xs transition-colors"
-                >
-                  إغلاق وتصفح ملاعب أخرى
-                </button>
-              </div>
-
             </div>
-          )}
 
-        </div>
+            {/* 3. Sticky Action Footer for Pass */}
+            <div className="shrink-0 p-4 border-t border-white/[0.08] bg-[#141416] space-y-2.5 pb-[max(1rem,env(safe-area-inset-bottom))]">
+              {/* Send to Venue WhatsApp */}
+              <a
+                href={generateWhatsAppUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs sm:text-sm transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] active:scale-98"
+              >
+                <MessageSquare className="h-4 w-4" strokeWidth={2} />
+                <span>إرسال بيانات التذكرة لإدارة الملعب على واتساب</span>
+              </a>
+
+              {/* Squad WhatsApp Share with Cost Split */}
+              <a
+                href={generateSquadShareUrl()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full min-h-[44px] rounded-xl bg-[#242427] hover:bg-[#2c2c30] border border-white/10 hover:border-primary/40 text-white font-bold text-xs transition-all flex items-center justify-center gap-2 active:scale-98"
+              >
+                <Share2 className="h-4 w-4 text-primary" strokeWidth={2} />
+                <span>مشاركة تفاصيل الماتش وحسبة الفلوس مع الفرقة</span>
+              </a>
+
+              <button
+                type="button"
+                onClick={handleSafeClose}
+                className="w-full min-h-[40px] rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-zinc-400 hover:text-white font-bold text-xs transition-colors"
+              >
+                إغلاق وتصفح ملاعب أخرى
+              </button>
+            </div>
+
+          </div>
+        )}
 
       </div>
     </div>
