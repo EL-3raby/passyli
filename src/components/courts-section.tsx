@@ -320,18 +320,19 @@ export default function CourtsSection() {
           </div>
         )}
 
-        {/* 4. Loaded State: Interactive Courts Grid */}
+        {/* 4. Loaded State: Mobile Horizontal Snap Rail & Desktop Grid */}
         {!isLoading && !hasError && filteredVenues.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredVenues.map((venue) => {
-              const primaryCourt = venue.courts[0];
-              const selectedSlot = primaryCourt ? selectedSlots[primaryCourt.id] : "";
+          <div>
+            <div className="flex md:grid overflow-x-auto md:overflow-visible pb-4 md:pb-0 snap-x snap-mandatory md:snap-none scrollbar-none gap-4 md:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+              {filteredVenues.map((venue) => {
+                const primaryCourt = venue.courts[0];
+                const selectedSlot = primaryCourt ? selectedSlots[primaryCourt.id] : "";
 
-              return (
-                <div
-                  key={venue.id}
-                  className="group rounded-[18px] border border-white/[0.06] bg-[#242427] hover:bg-[#28282c] overflow-hidden transition-all flex flex-col justify-between shadow-sm"
-                >
+                return (
+                  <div
+                    key={venue.id}
+                    className="w-[85vw] max-w-[340px] md:w-auto md:max-w-none shrink-0 md:shrink snap-center group rounded-[18px] border border-white/[0.06] bg-[#242427] hover:bg-[#28282c] overflow-hidden transition-all flex flex-col justify-between shadow-sm"
+                  >
                   <div>
                     {/* Visual Media Header */}
                     <div className="relative h-48 w-full bg-[#1c1c1f] flex items-center justify-center overflow-hidden">
@@ -455,6 +456,14 @@ export default function CourtsSection() {
                 </div>
               );
             })}
+            </div>
+
+            {/* Mobile Swipe Guidance Indicator */}
+            <div className="flex md:hidden items-center justify-center gap-2 pt-3 text-xs text-zinc-400 font-medium">
+              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+              <span>اسحب لتصفح باقي الملاعب</span>
+              <ChevronLeft className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
+            </div>
           </div>
         )}
 
