@@ -4,6 +4,8 @@ import "./globals.css";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import BottomNav from "@/components/bottom-nav";
+import { AuthProvider } from "@/components/auth/auth-provider";
+import AuthModal from "@/components/auth/auth-modal";
 
 const alexandria = Alexandria({
   subsets: ["arabic", "latin"],
@@ -45,10 +47,13 @@ export default function RootLayout({
       <body
         className={`${alexandria.variable} ${ibmPlexArabic.variable} ${inter.variable} font-sans bg-background text-foreground antialiased selection:bg-primary selection:text-black min-h-screen flex flex-col`}
       >
-        <Navbar />
-        <main className="flex-1 pb-16 md:pb-0">{children}</main>
-        <Footer />
-        <BottomNav />
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-1 pb-16 md:pb-0">{children}</main>
+          <Footer />
+          <BottomNav />
+          <AuthModal />
+        </AuthProvider>
       </body>
     </html>
   );

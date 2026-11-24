@@ -246,27 +246,30 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string
           id: string
-          phone: string
+          phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name: string
           id: string
-          phone: string
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string
           id?: string
-          phone?: string
+          phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -537,6 +540,17 @@ export type Database = {
           p_post_id: string
           p_status: Database["public"]["Enums"]["matchmaking_status"]
         }
+        Returns: Json
+      }
+      get_player_bookings: {
+        Args: {
+          p_phone?: string | null
+          p_user_id?: string | null
+        }
+        Returns: Json
+      }
+      get_player_matchmaking_posts: {
+        Args: Record<string, never>
         Returns: Json
       }
     }

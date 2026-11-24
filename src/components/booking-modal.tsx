@@ -25,7 +25,9 @@ import {
   Link2,
   ExternalLink,
   Users,
+  Mail,
 } from "lucide-react";
+import { useAuth } from "@/components/auth/auth-provider";
 import CreatePostModal from "@/components/matchmaking/create-post-modal";
 import {
   lockCourtSlot,
@@ -100,7 +102,9 @@ export default function BookingModal({
   onClose,
   onBookingSuccess,
 }: BookingModalProps) {
+  const { user, profile, openAuthModal } = useAuth();
   const [step, setStep] = useState<BookingStep>("details");
+  const [emailSentToast, setEmailSentToast] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Step 1: Booker details
@@ -162,8 +166,8 @@ export default function BookingModal({
   useEffect(() => {
     if (isOpen) {
       setStep("details");
-      setBookerName("");
-      setBookerPhone("");
+      setBookerName(profile?.full_name || "");
+      setBookerPhone(profile?.phone || "");
       setPhoneError("");
       setLockData(null);
       setSecondsRemaining(8 * 60);
@@ -179,11 +183,24 @@ export default function BookingModal({
       setBillPreviewUrl(null);
       setBillBlob(null);
       setShareSuccessToast("");
+      setEmailSentToast(false);
       setIsPreviewModalOpen(false);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Pre-fill profile details if user signs in while modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+    if (profile?.full_name && !bookerName) {
+      setBookerName(profile.full_name);
+    }
+    if (profile?.phone && !bookerPhone) {
+      setBookerPhone(profile.phone);
+    }
+  }, [isOpen, profile?.full_name, profile?.phone, bookerName, bookerPhone]);
 
   // Handle unload / sendBeacon to release lock on tab close
   useEffect(() => {
@@ -409,11 +426,26 @@ export default function BookingModal({
         return;
       }
 
-      // 3. Move to digital pass
+      // 3. Move to digital pass & send Gmail confirmation if user has email
       const ref = submitRes.bookingReference || lockData.bookingReference || "PAS-CONFIRMED";
       setConfirmedRef(ref);
       setStep("pass");
       if (onBookingSuccess) onBookingSuccess(ref);
+
+      if (user?.email) {
+        fetch("/api/send-booking-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bookingReference: ref }),
+        })
+          .then((r) => r.json())
+          .then((resData: { success?: boolean; skipped?: boolean }) => {
+            if (resData.success && !resData.skipped) {
+              setEmailSentToast(true);
+            }
+          })
+          .catch(() => null);
+      }
     } catch {
       setReceiptError("حدث خطأ غير متوقع أثناء إرسال الإيصال");
     } finally {
@@ -709,6 +741,24 @@ export default function BookingModal({
                   <strong>نظام القفل الذكي:</strong> بمجرد الضغط هنقفل الميعاد حصرياً باسمك لمدة <strong>8 دقائق</strong>، ومحدش هيقدر يحجزه عشان تلحق تحول العربون بهدوء.
                 </p>
               </div>
+
+              {!user && (
+                <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    <Mail className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
+                    <span className="text-[11px] font-bold text-zinc-200 leading-snug">
+                      سجّل بحساب Google لحفظ تذكرتك واستلام نسخة على Gmail
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal("signin")}
+                    className="min-h-[36px] px-3 rounded-lg bg-primary text-black text-[11px] font-black shrink-0 hover:bg-primary-hover transition-colors"
+                  >
+                    دخول سريع
+                  </button>
+                </div>
+              )}
 
             </div>
 
@@ -1237,6 +1287,13 @@ export default function BookingModal({
                     <span>نشر طلب لاعبين لهذا الماتش</span>
                   </button>
                 </div>
+
+                {emailSentToast && user?.email && (
+                  <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 flex items-center gap-2 text-xs font-bold text-emerald-400">
+                    <Mail className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                    <span>تم إرسال نسخة من التذكرة إلى بريدك ({user.email})</span>
+                  </div>
+                )}
 
                 {/* Barcode visual indicator */}
                 <div className="pt-1 text-center">
