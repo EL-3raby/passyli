@@ -40,10 +40,13 @@ export default function Navbar() {
   const isMatchmakingActive = pathname?.startsWith("/matchmaking");
   const isBookingsActive = pathname?.startsWith("/my-bookings");
   const isFavoritesActive = pathname?.startsWith("/favorites");
+  const isProfileActive = pathname?.startsWith("/profile");
 
   const canManageVenues =
     Boolean(user) &&
     (role === "venue_owner" || role === "receptionist" || role === "super_admin");
+
+  const showPartnerLink = !user || canManageVenues;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -57,9 +60,9 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-white/[0.06] transition-all">
-      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 gap-2">
         {/* Pure Arabic Brand Wordmark */}
-        <Link href="/" className="flex items-center group py-1">
+        <Link href="/" className="flex items-center group py-1 shrink-0">
           <span className="font-display text-2xl sm:text-[26px] font-black tracking-normal text-white leading-none">
             باصي&zwj;<span className="text-primary">&zwj;لي</span>
           </span>
@@ -100,21 +103,28 @@ export default function Navbar() {
           {user && (
             <Link
               href="/favorites"
-              className={`px-3.5 py-1.5 rounded-full transition-all ${
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
                 isFavoritesActive
                   ? "text-white font-bold bg-white/[0.08]"
                   : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
               }`}
             >
-              المفضلة
+              <span>المفضلة</span>
+              {favoriteVenueIds.length > 0 && (
+                <span className="px-1.5 py-0.5 rounded-full bg-rose-500/15 text-rose-400 text-[10px] font-black tabular-nums leading-none">
+                  {favoriteVenueIds.length}
+                </span>
+              )}
             </Link>
           )}
-          <Link
-            href="/#partner"
-            className="px-3.5 py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-white/[0.04] transition-all"
-          >
-            أضف ملعبك
-          </Link>
+          {showPartnerLink && (
+            <Link
+              href="/#partner"
+              className="px-3.5 py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-white/[0.04] transition-all"
+            >
+              أضف ملعبك
+            </Link>
+          )}
           {canManageVenues && (
             <Link
               href="/dashboard"
@@ -130,7 +140,7 @@ export default function Navbar() {
         </nav>
 
         {/* Auth & Primary CTA */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {isLoading ? (
             <div className="h-[44px] w-24 rounded-full bg-white/[0.06] animate-pulse" />
           ) : user ? (
@@ -138,7 +148,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#18181c] hover:bg-[#222227] border border-white/10 px-3 sm:px-3.5 text-xs font-bold text-white transition-all"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#18181c] hover:bg-[#222227] border border-white/10 px-2.5 sm:px-3.5 text-xs font-bold text-white transition-all"
               >
                 <div className="h-7 w-7 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center text-primary font-black overflow-hidden shrink-0">
                   {profile?.avatar_url ? (
@@ -178,7 +188,11 @@ export default function Navbar() {
                   <Link
                     href="/profile"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    className={`flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold transition-colors ${
+                      isProfileActive
+                        ? "bg-white/[0.08] text-white"
+                        : "text-zinc-300 hover:text-white hover:bg-white/[0.06]"
+                    }`}
                   >
                     <User className="h-4 w-4 text-primary" strokeWidth={1.5} />
                     <span>ملفي الشخصي</span>
@@ -187,7 +201,11 @@ export default function Navbar() {
                   <Link
                     href="/my-bookings"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    className={`flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold transition-colors ${
+                      isBookingsActive
+                        ? "bg-white/[0.08] text-white"
+                        : "text-zinc-300 hover:text-white hover:bg-white/[0.06]"
+                    }`}
                   >
                     <Ticket className="h-4 w-4 text-primary" strokeWidth={1.5} />
                     <span>تذاكري وماتشاتي</span>
@@ -196,7 +214,11 @@ export default function Navbar() {
                   <Link
                     href="/favorites"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center justify-between px-3 min-h-[44px] rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    className={`flex items-center justify-between px-3 min-h-[44px] rounded-xl text-xs font-bold transition-colors ${
+                      isFavoritesActive
+                        ? "bg-white/[0.08] text-white"
+                        : "text-zinc-300 hover:text-white hover:bg-white/[0.06]"
+                    }`}
                   >
                     <span className="flex items-center gap-2.5">
                       <Heart className="h-4 w-4 text-rose-400" strokeWidth={1.5} />
@@ -213,7 +235,11 @@ export default function Navbar() {
                     <Link
                       href="/dashboard"
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
+                      className={`flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold transition-colors ${
+                        isDashboardActive
+                          ? "bg-white/[0.08] text-white"
+                          : "text-zinc-300 hover:text-white hover:bg-white/[0.06]"
+                      }`}
                     >
                       <Building2 className="h-4 w-4 text-emerald-400" strokeWidth={1.5} />
                       <span>إدارة الملاعب</span>
