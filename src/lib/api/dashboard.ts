@@ -377,3 +377,96 @@ export async function toggleCourtMaintenance(
 
   return data as { success: boolean; error?: string; is_active?: boolean };
 }
+
+/**
+ * Cancel a booking directly from venue administration and release the slot
+ */
+export async function cancelVenueBooking(
+  bookingId: string,
+  cancellationReason?: string
+): Promise<{ success: boolean; error?: string; booking_reference?: string }> {
+  const supabase = createClient();
+
+  const { data, error } = await supabase.rpc("cancel_venue_booking", {
+    p_booking_id: bookingId,
+    p_cancellation_reason: cancellationReason || null,
+  });
+
+  if (error) {
+    console.error("cancel_venue_booking error:", error);
+    return { success: false, error: error.message || "تعذر إلغاء الحجز، يرجى إعادة المحاولة" };
+  }
+
+  return data as any;
+}
+
+/**
+ * Search bookings across reference code, phone number, or booker name
+ */
+export async function searchBookings(
+  query: string,
+  venueId?: string
+): Promise<DashboardBooking[]> {
+  const trimmed = query.trim();
+  if (!trimmed || trimmed.length < 2) return [];
+
+  const supabase = createClient();
+
+  let req = supabase
+    .from("bookings")
+    .select(`
+      id,
+      booking_reference,
+      court_id,
+      booker_name,
+      booker_phone,
+      booking_date,
+      start_time,
+      end_time,
+      total_price,
+      deposit_required,
+      deposit_paid,
+      cash_remaining,
+      status,
+      locked_until,
+      is_walkin,
+      cancellation_reason,
+      created_at,
+      court:courts (
+        id,
+        venue_id,
+        name,
+        sport,
+        surface,
+        slot_duration_minutes,
+        price_morning,
+        price_evening,
+        peak_hour_start,
+        buffer_minutes,
+        is_active,
+        venue:venues (
+          id,
+          name,
+          address,
+          phone
+        )
+      )
+    `)
+    .or(`booking_reference.ilike.%${trimmed}%,booker_phone.ilike.%${trimmed}%,booker_name.ilike.%${trimmed}%`)
+    .order("booking_date", { ascending: false })
+    .limit(10);
+
+  const { data, error } = await req;
+
+  if (error) {
+    console.error("searchBookings error:", error);
+    return [];
+  }
+
+  let results = (data as unknown as DashboardBooking[]) || [];
+  if (venueId && venueId !== "all") {
+    results = results.filter((b) => b.court?.venue_id === venueId);
+  }
+
+  return results;
+}

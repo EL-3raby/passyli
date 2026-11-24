@@ -204,3 +204,31 @@ BEGIN
   RETURN jsonb_build_object('success', TRUE, 'is_active', p_is_active);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5. Cancel Confirmed Booking from Venue Admin (إلغاء الحجز يدوياً من إدارة الملعب وتحرير الميعاد)
+CREATE OR REPLACE FUNCTION public.cancel_venue_booking(
+  p_booking_id UUID,
+  p_cancellation_reason TEXT DEFAULT NULL
+)
+RETURNS JSONB AS $$
+DECLARE
+  v_booking RECORD;
+BEGIN
+  SELECT * INTO v_booking FROM public.bookings WHERE id = p_booking_id FOR UPDATE;
+  IF v_booking.id IS NULL THEN
+    RETURN jsonb_build_object('success', FALSE, 'error', 'بيانات الحجز غير موجودة');
+  END IF;
+
+  UPDATE public.bookings
+  SET status = 'cancelled',
+      cancellation_reason = COALESCE(p_cancellation_reason, 'تم الإلغاء بواسطة إدارة الملعب'),
+      locked_until = NULL
+  WHERE id = p_booking_id;
+
+  RETURN jsonb_build_object(
+    'success', TRUE,
+    'booking_id', p_booking_id,
+    'booking_reference', v_booking.booking_reference
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

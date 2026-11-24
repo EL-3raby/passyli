@@ -488,6 +488,13 @@ export type Database = {
         }
         Returns: Json
       }
+      cancel_venue_booking: {
+        Args: {
+          p_booking_id: string
+          p_cancellation_reason?: string | null
+        }
+        Returns: Json
+      }
     }
     Enums: {
       booking_status:

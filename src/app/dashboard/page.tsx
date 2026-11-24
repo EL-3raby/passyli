@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  XCircle,
 } from "lucide-react";
 import {
   getDashboardVenues,
@@ -33,6 +34,9 @@ import {
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import WalkinModal from "@/components/dashboard/walkin-modal";
 import MaintenanceModal from "@/components/dashboard/maintenance-modal";
+import SearchModal from "@/components/dashboard/search-modal";
+import CancelBookingModal from "@/components/dashboard/cancel-booking-modal";
+import DailyRunningSheetModal from "@/components/dashboard/daily-running-sheet-modal";
 
 export default function DashboardPage() {
   const [venues, setVenues] = useState<DashboardVenue[]>([]);
@@ -53,6 +57,9 @@ export default function DashboardPage() {
   const [walkinCourtId, setWalkinCourtId] = useState<string | undefined>(undefined);
   const [walkinStartTime, setWalkinStartTime] = useState<string | undefined>(undefined);
   const [isMaintenanceOpen, setIsMaintenanceOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [cancellingBooking, setCancellingBooking] = useState<DashboardBooking | null>(null);
 
   // Load venues on mount
   useEffect(() => {
@@ -208,6 +215,8 @@ export default function DashboardPage() {
           setIsWalkinOpen(true);
         }}
         onOpenMaintenance={() => setIsMaintenanceOpen(true)}
+        onOpenSearch={() => setIsSearchOpen(true)}
+        onOpenRunningSheet={() => setIsSheetOpen(true)}
       />
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6" dir="rtl">
@@ -625,19 +634,30 @@ export default function DashboardPage() {
                                   </span>
                                 </div>
                               ) : booking.status === "confirmed" ? (
-                                <button
-                                  type="button"
-                                  disabled={completingBookingId === booking.id}
-                                  onClick={() => handleCompleteAttendance(booking.id)}
-                                  className="w-full inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-xs font-bold text-primary hover:text-white transition-all disabled:opacity-50"
-                                >
-                                  <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-                                  <span>
-                                    {completingBookingId === booking.id
-                                      ? "جاري التسجيل..."
-                                      : `حضر واستلم المتبقي (${booking.cash_remaining} ج.م)`}
-                                  </span>
-                                </button>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    disabled={completingBookingId === booking.id}
+                                    onClick={() => handleCompleteAttendance(booking.id)}
+                                    className="flex-1 inline-flex min-h-[38px] items-center justify-center gap-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 text-xs font-bold text-primary hover:text-white transition-all disabled:opacity-50"
+                                  >
+                                    <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                                    <span>
+                                      {completingBookingId === booking.id
+                                        ? "جاري التسجيل..."
+                                        : `حضر واستلم المتبقي (${booking.cash_remaining} ج.م)`}
+                                    </span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => setCancellingBooking(booking)}
+                                    title="إلغاء الحجز وتحرير الساعة"
+                                    className="h-[38px] w-[38px] rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive flex items-center justify-center shrink-0 border border-destructive/20 transition-all"
+                                  >
+                                    <XCircle className="h-4 w-4" strokeWidth={1.5} />
+                                  </button>
+                                </div>
                               ) : (
                                 <Link
                                   href="/dashboard/receipts"
@@ -685,6 +705,33 @@ export default function DashboardPage() {
           getDashboardVenues().then((vList) => setVenues(vList));
           loadBookings();
         }}
+      />
+
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        venueId={selectedVenueId}
+        onSelectBookingDate={(d) => {
+          setSelectedDate(d);
+        }}
+      />
+
+      <CancelBookingModal
+        isOpen={!!cancellingBooking}
+        booking={cancellingBooking}
+        onClose={() => setCancellingBooking(null)}
+        onCancelSuccess={() => {
+          loadBookings();
+        }}
+      />
+
+      <DailyRunningSheetModal
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        venueName={currentVenue?.name || "الملعب"}
+        date={selectedDate}
+        bookings={bookings}
+        courts={allCourts}
       />
     </div>
   );

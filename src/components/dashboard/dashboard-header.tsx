@@ -11,6 +11,8 @@ import {
   EyeOff,
   Building2,
   ExternalLink,
+  Search,
+  Printer,
 } from "lucide-react";
 
 interface DashboardHeaderProps {
@@ -20,6 +22,8 @@ interface DashboardHeaderProps {
   onToggleStaffMode: () => void;
   onOpenWalkin: () => void;
   onOpenMaintenance: () => void;
+  onOpenSearch?: () => void;
+  onOpenRunningSheet?: () => void;
 }
 
 export default function DashboardHeader({
@@ -29,6 +33,8 @@ export default function DashboardHeader({
   onToggleStaffMode,
   onOpenWalkin,
   onOpenMaintenance,
+  onOpenSearch,
+  onOpenRunningSheet,
 }: DashboardHeaderProps) {
   const pathname = usePathname();
   const isTimelineActive = pathname === "/dashboard";
@@ -85,7 +91,31 @@ export default function DashboardHeader({
         </nav>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Quick Search */}
+          {onOpenSearch && (
+            <button
+              type="button"
+              onClick={onOpenSearch}
+              title="بحث سريع عن حجز أو كابتن"
+              className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white transition-all"
+            >
+              <Search className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
+
+          {/* Running Sheet Print */}
+          {onOpenRunningSheet && (
+            <button
+              type="button"
+              onClick={onOpenRunningSheet}
+              title="كشف تشغيل اليوم (طباعة / معاينة)"
+              className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white transition-all"
+            >
+              <Printer className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
+
           {/* Staff Mode Toggle */}
           <button
             type="button"
