@@ -1,10 +1,20 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
+import { compressImageClient } from "@/lib/api/bookings";
 import type { Database } from "@/lib/supabase/types";
 
 export type UserProfile = Database["public"]["Tables"]["profiles"]["Row"];
 export type UserRole = Database["public"]["Enums"]["user_role"];
+
+export const PLAYER_POSITIONS = [
+  "أي مركز",
+  "حارس مرمى",
+  "مدافع",
+  "خط وسط / صانع ألعاب",
+  "مهاجم",
+  "لاعب بادل",
+] as const;
 
 /**
  * Validates an Egyptian mobile number (010, 011, 012, 015 - 11 digits)
@@ -115,6 +125,37 @@ export async function signUpWithPassword(
 }
 
 /**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(email: string) {
+  const supabase = createClient();
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: `${origin}/auth/reset-password`,
+  });
+
+  if (error) {
+    return { success: false, error: "تعذر إرسال رابط استعادة كلمة المرور، تأكد من البريد الإلكتروني" };
+  }
+
+  return { success: true };
+}
+
+/**
+ * Update password for authenticated user (from reset link)
+ */
+export async function updateUserPassword(newPassword: string) {
+  const supabase = createClient();
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+
+  if (error) {
+    return { success: false, error: error.message || "تعذر تحديث كلمة المرور" };
+  }
+
+  return { success: true };
+}
+
+/**
  * Sign out current user
  */
 export async function signOut() {
@@ -145,11 +186,16 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
 }
 
 /**
- * Update editable player profile fields (name, phone, avatar)
+ * Update editable player profile fields (name, phone, preferred_position, avatar)
  */
 export async function updateUserProfile(
   userId: string,
-  updates: { full_name?: string; phone?: string | null; avatar_url?: string }
+  updates: {
+    full_name?: string;
+    phone?: string | null;
+    preferred_position?: string;
+    avatar_url?: string;
+  }
 ) {
   const supabase = createClient();
 
@@ -163,6 +209,7 @@ export async function updateUserProfile(
   const payload: {
     full_name?: string;
     phone?: string | null;
+    preferred_position?: string;
     avatar_url?: string;
     updated_at: string;
   } = {
@@ -172,6 +219,9 @@ export async function updateUserProfile(
   if (updates.full_name !== undefined) payload.full_name = updates.full_name.trim();
   if (updates.phone !== undefined) {
     payload.phone = updates.phone ? updates.phone.trim().replace(/\s+/g, "") : null;
+  }
+  if (updates.preferred_position !== undefined) {
+    payload.preferred_position = updates.preferred_position;
   }
   if (updates.avatar_url !== undefined) payload.avatar_url = updates.avatar_url;
 
@@ -191,4 +241,87 @@ export async function updateUserProfile(
   }
 
   return { success: true, profile: data };
+}
+
+/**
+ * Compress and upload player avatar photo to Supabase Storage
+ */
+export async function uploadPlayerAvatar(
+  userId: string,
+  file: File
+): Promise<{ success: boolean; avatarUrl?: string; error?: string }> {
+  const supabase = createClient();
+
+  try {
+    const { blob } = await compressImageClient(file, 140 * 1024, 600);
+    const filePath = `${userId}/avatar.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars-storage")
+      .upload(filePath, blob, {
+        contentType: "image/jpeg",
+        upsert: true,
+      });
+
+    if (uploadError) {
+      return { success: false, error: "تعذر رفع الصورة، يرجى المحاولة مرة أخرى" };
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("avatars-storage")
+      .getPublicUrl(filePath);
+
+    const cacheBustedUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+    const updateRes = await updateUserProfile(userId, { avatar_url: cacheBustedUrl });
+
+    if (!updateRes.success) {
+      return { success: false, error: updateRes.error };
+    }
+
+    return { success: true, avatarUrl: cacheBustedUrl };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "حدث خطأ أثناء معالجة الصورة";
+    return { success: false, error: msg };
+  }
+}
+
+/**
+ * Fetch current user's favorite venue IDs
+ */
+export async function getFavoriteVenueIds(userId: string): Promise<string[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("favorite_venues")
+    .select("venue_id")
+    .eq("user_id", userId);
+
+  if (error || !data) return [];
+  return data.map((row) => row.venue_id);
+}
+
+/**
+ * Toggle favorite status for a venue
+ */
+export async function toggleFavoriteVenueRecord(
+  userId: string,
+  venueId: string,
+  currentlyFavorited: boolean
+): Promise<{ success: boolean; isFavorited: boolean }> {
+  const supabase = createClient();
+
+  if (currentlyFavorited) {
+    const { error } = await supabase
+      .from("favorite_venues")
+      .delete()
+      .eq("user_id", userId)
+      .eq("venue_id", venueId);
+
+    return { success: !error, isFavorited: error ? true : false };
+  }
+
+  const { error } = await supabase
+    .from("favorite_venues")
+    .insert({ user_id: userId, venue_id: venueId });
+
+  return { success: !error, isFavorited: error ? false : true };
 }

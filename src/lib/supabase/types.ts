@@ -250,6 +250,7 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
+          preferred_position: string
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -260,6 +261,7 @@ export type Database = {
           full_name: string
           id: string
           phone?: string | null
+          preferred_position?: string
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -270,10 +272,47 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
+          preferred_position?: string
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
         Relationships: []
+      }
+      favorite_venues: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_venues_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "favorite_venues_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       receipts: {
         Row: {

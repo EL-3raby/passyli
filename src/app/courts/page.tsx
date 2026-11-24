@@ -27,6 +27,7 @@ import {
 } from "@/lib/api/venues";
 import type { SportType } from "@/lib/supabase/types";
 import BookingModal, { type BookingModalData } from "@/components/booking-modal";
+import FavoriteVenueButton from "@/components/favorite-venue-button";
 import {
   getActiveBookingsForDate,
   isSlotMatchingTime,
@@ -638,10 +639,11 @@ export default function CourtsCatalogPage() {
 
                     {/* Card Content Details */}
                     <div className="p-5">
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between gap-2 mb-2">
                         <h3 className="font-display text-lg font-bold text-white group-hover:text-primary transition-colors">
                           {venue.name}
                         </h3>
+                        <FavoriteVenueButton venueId={venue.id} />
                       </div>
 
                       <p className="text-xs text-muted-foreground mb-3 line-clamp-1">
