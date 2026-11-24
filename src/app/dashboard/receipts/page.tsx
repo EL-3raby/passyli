@@ -29,6 +29,7 @@ import {
   type DashboardVenue,
   type DashboardReceipt,
 } from "@/lib/api/dashboard";
+import { createClient } from "@/lib/supabase/client";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import WalkinModal from "@/components/dashboard/walkin-modal";
 import MaintenanceModal from "@/components/dashboard/maintenance-modal";
@@ -75,6 +76,32 @@ export default function ReceiptsReviewPage() {
 
   useEffect(() => {
     loadData();
+  }, [loadData]);
+
+  // Realtime subscription for incoming receipts
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel("receipts_realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "receipts" },
+        () => {
+          loadData();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings" },
+        () => {
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [loadData]);
 
   // Format 24h time to Arabic

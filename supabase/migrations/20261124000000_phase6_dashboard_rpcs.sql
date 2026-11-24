@@ -232,3 +232,26 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 6. Update Venue Wallets (إدارة أرقام إنستاباي وفودافون كاش والعربون للملعب)
+CREATE OR REPLACE FUNCTION public.update_venue_wallets(
+  p_venue_id UUID,
+  p_instapay_address TEXT DEFAULT NULL,
+  p_vodafone_cash_number TEXT DEFAULT NULL,
+  p_backup_wallet_number TEXT DEFAULT NULL,
+  p_deposit_amount INTEGER DEFAULT NULL
+)
+RETURNS JSONB AS $$
+BEGIN
+  UPDATE public.venues
+  SET 
+    instapay_address = COALESCE(p_instapay_address, instapay_address),
+    vodafone_cash_number = COALESCE(p_vodafone_cash_number, vodafone_cash_number),
+    backup_wallet_number = COALESCE(p_backup_wallet_number, backup_wallet_number),
+    deposit_amount = COALESCE(p_deposit_amount, deposit_amount),
+    updated_at = NOW()
+  WHERE id = p_venue_id;
+
+  RETURN jsonb_build_object('success', TRUE);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

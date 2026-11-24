@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Search,
   Printer,
+  Wallet,
 } from "lucide-react";
 
 interface DashboardHeaderProps {
@@ -24,6 +25,7 @@ interface DashboardHeaderProps {
   onOpenMaintenance: () => void;
   onOpenSearch?: () => void;
   onOpenRunningSheet?: () => void;
+  onOpenWallets?: () => void;
 }
 
 export default function DashboardHeader({
@@ -35,6 +37,7 @@ export default function DashboardHeader({
   onOpenMaintenance,
   onOpenSearch,
   onOpenRunningSheet,
+  onOpenWallets,
 }: DashboardHeaderProps) {
   const pathname = usePathname();
   const isTimelineActive = pathname === "/dashboard";
@@ -151,6 +154,18 @@ export default function DashboardHeader({
           >
             <Wrench className="h-4 w-4" strokeWidth={1.5} />
           </button>
+
+          {/* Wallets Settings Trigger */}
+          {onOpenWallets && (
+            <button
+              type="button"
+              onClick={onOpenWallets}
+              title="إدارة أرقام إنستاباي وفودافون كاش للملعب"
+              className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-white transition-all"
+            >
+              <Wallet className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
 
           {/* Walk-in Fast Booking Button */}
           <button

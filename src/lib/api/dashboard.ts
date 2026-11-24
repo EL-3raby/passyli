@@ -470,3 +470,34 @@ export async function searchBookings(
 
   return results;
 }
+
+export interface UpdateWalletsParams {
+  venueId: string;
+  instapayAddress?: string;
+  vodafoneCashNumber?: string;
+  backupWalletNumber?: string;
+  depositAmount?: number;
+}
+
+/**
+ * Update venue payment wallets & deposit amount
+ */
+export async function updateVenueWallets(
+  params: UpdateWalletsParams
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("update_venue_wallets", {
+    p_venue_id: params.venueId,
+    p_instapay_address: params.instapayAddress || null,
+    p_vodafone_cash_number: params.vodafoneCashNumber || null,
+    p_backup_wallet_number: params.backupWalletNumber || null,
+    p_deposit_amount: params.depositAmount || null,
+  });
+
+  if (error) {
+    console.error("updateVenueWallets error:", error);
+    return { success: false, error: error.message || "تعذر تحديث بيانات المحافظ" };
+  }
+
+  return data as any;
+}

@@ -495,6 +495,16 @@ export type Database = {
         }
         Returns: Json
       }
+      update_venue_wallets: {
+        Args: {
+          p_venue_id: string
+          p_instapay_address?: string | null
+          p_vodafone_cash_number?: string | null
+          p_backup_wallet_number?: string | null
+          p_deposit_amount?: number | null
+        }
+        Returns: Json
+      }
     }
     Enums: {
       booking_status:

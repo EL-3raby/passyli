@@ -37,6 +37,8 @@ import MaintenanceModal from "@/components/dashboard/maintenance-modal";
 import SearchModal from "@/components/dashboard/search-modal";
 import CancelBookingModal from "@/components/dashboard/cancel-booking-modal";
 import DailyRunningSheetModal from "@/components/dashboard/daily-running-sheet-modal";
+import WalletModal from "@/components/dashboard/wallet-modal";
+import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardPage() {
   const [venues, setVenues] = useState<DashboardVenue[]>([]);
@@ -59,6 +61,7 @@ export default function DashboardPage() {
   const [isMaintenanceOpen, setIsMaintenanceOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [cancellingBooking, setCancellingBooking] = useState<DashboardBooking | null>(null);
 
   // Load venues on mount
@@ -96,6 +99,34 @@ export default function DashboardPage() {
       loadBookings();
     }
   }, [selectedVenueId, selectedDate, loadBookings]);
+
+  // Supabase Realtime WebSocket subscription for live slot & receipt updates
+  useEffect(() => {
+    if (!selectedVenueId) return;
+
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`venue_${selectedVenueId}_realtime`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bookings" },
+        () => {
+          loadBookings();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "receipts" },
+        () => {
+          loadBookings();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedVenueId, loadBookings]);
 
   // Current selected venue and courts
   const currentVenue = venues.find((v) => v.id === selectedVenueId) || venues[0];
@@ -217,6 +248,7 @@ export default function DashboardPage() {
         onOpenMaintenance={() => setIsMaintenanceOpen(true)}
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenRunningSheet={() => setIsSheetOpen(true)}
+        onOpenWallets={() => setIsWalletOpen(true)}
       />
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6" dir="rtl">
@@ -732,6 +764,15 @@ export default function DashboardPage() {
         date={selectedDate}
         bookings={bookings}
         courts={allCourts}
+      />
+
+      <WalletModal
+        isOpen={isWalletOpen}
+        onClose={() => setIsWalletOpen(false)}
+        venue={currentVenue}
+        onSuccess={() => {
+          getDashboardVenues().then((vList) => setVenues(vList));
+        }}
       />
     </div>
   );
