@@ -242,7 +242,10 @@ BEGIN
 
   SELECT phone INTO v_user_phone FROM public.profiles WHERE id = v_uid;
 
-  SELECT COALESCE(jsonb_agg(b_data ORDER BY (b_data->>'booking_date') DESC, (b_data->>'start_time') DESC), '[]'::jsonb)
+  SELECT COALESCE(
+    jsonb_agg(to_jsonb(b_data) ORDER BY b_data.booking_date DESC, b_data.start_time DESC),
+    '[]'::jsonb
+  )
   INTO v_result
   FROM (
     SELECT
@@ -304,7 +307,10 @@ BEGIN
 
   SELECT phone INTO v_user_phone FROM public.profiles WHERE id = v_uid;
 
-  SELECT COALESCE(jsonb_agg(m_data ORDER BY (m_data->>'match_date') DESC, (m_data->>'start_time') DESC), '[]'::jsonb)
+  SELECT COALESCE(
+    jsonb_agg(to_jsonb(m_data) ORDER BY m_data.match_date DESC, m_data.start_time DESC),
+    '[]'::jsonb
+  )
   INTO v_result
   FROM (
     SELECT

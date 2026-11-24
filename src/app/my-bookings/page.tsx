@@ -447,8 +447,9 @@ export default function MyBookingsPage() {
                       dir="ltr"
                       value={phoneInput}
                       onChange={(e) => setPhoneInput(e.target.value)}
-                      placeholder="01012345678 (ربط رقم الواتساب)"
-                      className="h-11 sm:w-56 rounded-xl bg-[#0e0e11] border border-primary/40 px-3 text-xs font-bold text-white text-left placeholder:text-zinc-500 focus:outline-none focus:border-primary tabular-nums"
+                      placeholder="01012345678"
+                      aria-label="رقم الموبايل لربط الحجوزات"
+                      className="h-11 sm:w-52 rounded-xl bg-[#0e0e11] border border-primary/40 px-3 text-xs font-bold text-white text-center placeholder:text-zinc-500 focus:outline-none focus:border-primary tabular-nums"
                     />
                     <div className="flex items-center gap-2">
                       <button
