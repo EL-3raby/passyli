@@ -9,6 +9,8 @@ import {
   Building2,
   ChevronDown,
   LogIn,
+  User,
+  Heart,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 
@@ -21,7 +23,15 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { user, profile, role, isLoading, openAuthModal, signOut } = useAuth();
+  const {
+    user,
+    profile,
+    role,
+    favoriteVenueIds,
+    isLoading,
+    openAuthModal,
+    signOut,
+  } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +39,11 @@ export default function Navbar() {
   const isDashboardActive = pathname?.startsWith("/dashboard");
   const isMatchmakingActive = pathname?.startsWith("/matchmaking");
   const isBookingsActive = pathname?.startsWith("/my-bookings");
+  const isFavoritesActive = pathname?.startsWith("/favorites");
+
+  const canManageVenues =
+    Boolean(user) &&
+    (role === "venue_owner" || role === "receptionist" || role === "super_admin");
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -82,22 +97,36 @@ export default function Navbar() {
           >
             تذاكري
           </Link>
+          {user && (
+            <Link
+              href="/favorites"
+              className={`px-3.5 py-1.5 rounded-full transition-all ${
+                isFavoritesActive
+                  ? "text-white font-bold bg-white/[0.08]"
+                  : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
+              }`}
+            >
+              المفضلة
+            </Link>
+          )}
           <Link
             href="/#partner"
             className="px-3.5 py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-white/[0.04] transition-all"
           >
             أضف ملعبك
           </Link>
-          <Link
-            href="/dashboard"
-            className={`px-3.5 py-1.5 rounded-full transition-all ${
-              isDashboardActive
-                ? "text-white font-bold bg-white/[0.08]"
-                : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
-            }`}
-          >
-            إدارة الملاعب
-          </Link>
+          {canManageVenues && (
+            <Link
+              href="/dashboard"
+              className={`px-3.5 py-1.5 rounded-full transition-all ${
+                isDashboardActive
+                  ? "text-white font-bold bg-white/[0.08]"
+                  : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
+              }`}
+            >
+              إدارة الملاعب
+            </Link>
+          )}
         </nav>
 
         {/* Auth & Primary CTA */}
@@ -147,6 +176,15 @@ export default function Navbar() {
                   </div>
 
                   <Link
+                    href="/profile"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
+                  >
+                    <User className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                    <span>ملفي الشخصي</span>
+                  </Link>
+
+                  <Link
                     href="/my-bookings"
                     onClick={() => setIsMenuOpen(false)}
                     className="flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
@@ -156,13 +194,31 @@ export default function Navbar() {
                   </Link>
 
                   <Link
-                    href="/dashboard"
+                    href="/favorites"
                     onClick={() => setIsMenuOpen(false)}
-                    className="flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    className="flex items-center justify-between px-3 min-h-[44px] rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
                   >
-                    <Building2 className="h-4 w-4 text-emerald-400" strokeWidth={1.5} />
-                    <span>إدارة الملاعب</span>
+                    <span className="flex items-center gap-2.5">
+                      <Heart className="h-4 w-4 text-rose-400" strokeWidth={1.5} />
+                      <span>ملاعبي المفضلة</span>
+                    </span>
+                    {favoriteVenueIds.length > 0 && (
+                      <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 text-[10px] font-black tabular-nums">
+                        {favoriteVenueIds.length}
+                      </span>
+                    )}
                   </Link>
+
+                  {canManageVenues && (
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-zinc-300 hover:text-white hover:bg-white/[0.06] transition-colors"
+                    >
+                      <Building2 className="h-4 w-4 text-emerald-400" strokeWidth={1.5} />
+                      <span>إدارة الملاعب</span>
+                    </Link>
+                  )}
 
                   <div className="border-t border-white/[0.06] my-1" />
 
