@@ -66,9 +66,19 @@ function getEgyptianDays(): DayOption[] {
   });
 }
 
-export default function CourtsSection() {
+interface CourtsSectionProps {
+  externalSport?: "all" | SportType;
+  onVenuesReady?: (venues: VenueWithCourts[]) => void;
+}
+
+export default function CourtsSection({
+  externalSport,
+  onVenuesReady,
+}: CourtsSectionProps = {}) {
   const [venues, setVenues] = useState<VenueWithCourts[]>(DAMANHOUR_SEED_VENUES);
-  const [selectedSport, setSelectedSport] = useState<"all" | SportType>("all");
+  const [selectedSport, setSelectedSport] = useState<"all" | SportType>(
+    externalSport || "all"
+  );
   const [availableDays] = useState<DayOption[]>(getEgyptianDays());
   const [selectedDayKey, setSelectedDayKey] = useState<string>("today");
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
@@ -152,6 +162,13 @@ export default function CourtsSection() {
     );
   };
 
+  // Sync external sport filter if driven from Hero buttons
+  useEffect(() => {
+    if (externalSport) {
+      setSelectedSport(externalSport);
+    }
+  }, [externalSport]);
+
   // Load venues on mount
   useEffect(() => {
     async function loadData() {
@@ -159,6 +176,7 @@ export default function CourtsSection() {
         setIsLoading(true);
         const data = await getVenues();
         setVenues(data);
+        onVenuesReady?.(data);
       } catch {
         setHasError(true);
       } finally {
@@ -166,6 +184,7 @@ export default function CourtsSection() {
       }
     }
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Request Browser GPS Location
