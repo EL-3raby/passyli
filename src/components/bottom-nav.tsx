@@ -16,9 +16,9 @@ export default function BottomNav() {
     },
     {
       label: "كمّل ماتشك",
-      href: "/#matchmaking",
+      href: "/matchmaking",
       icon: Users,
-      isActive: false,
+      isActive: pathname?.startsWith("/matchmaking") ?? false,
     },
     {
       label: "سجّل ملعبك",

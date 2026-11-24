@@ -160,7 +160,10 @@ export type Database = {
           cost_per_player: number
           court_id: string
           created_at: string
-          creator_id: string
+          creator_id: string | null
+          creator_name: string
+          creator_phone: string
+          whatsapp_number: string | null
           current_players: number
           id: string
           match_date: string
@@ -178,7 +181,10 @@ export type Database = {
           cost_per_player: number
           court_id: string
           created_at?: string
-          creator_id: string
+          creator_id?: string | null
+          creator_name?: string
+          creator_phone?: string
+          whatsapp_number?: string | null
           current_players?: number
           id?: string
           match_date: string
@@ -196,7 +202,10 @@ export type Database = {
           cost_per_player?: number
           court_id?: string
           created_at?: string
-          creator_id?: string
+          creator_id?: string | null
+          creator_name?: string
+          creator_phone?: string
+          whatsapp_number?: string | null
           current_players?: number
           id?: string
           match_date?: string
@@ -502,6 +511,31 @@ export type Database = {
           p_vodafone_cash_number?: string | null
           p_backup_wallet_number?: string | null
           p_deposit_amount?: number | null
+        }
+        Returns: Json
+      }
+      create_matchmaking_post: {
+        Args: {
+          p_court_id: string
+          p_sport: Database["public"]["Enums"]["sport_type"]
+          p_match_date: string
+          p_start_time: string
+          p_players_needed: number
+          p_cost_per_player: number
+          p_creator_name: string
+          p_creator_phone: string
+          p_whatsapp_number?: string | null
+          p_required_position?: string
+          p_skill_level?: string
+          p_notes?: string | null
+          p_booking_id?: string | null
+        }
+        Returns: Json
+      }
+      update_matchmaking_status: {
+        Args: {
+          p_post_id: string
+          p_status: Database["public"]["Enums"]["matchmaking_status"]
         }
         Returns: Json
       }

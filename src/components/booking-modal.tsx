@@ -24,7 +24,9 @@ import {
   Image as ImageIcon,
   Link2,
   ExternalLink,
+  Users,
 } from "lucide-react";
+import CreatePostModal from "@/components/matchmaking/create-post-modal";
 import {
   lockCourtSlot,
   cancelBookingLock,
@@ -130,6 +132,7 @@ export default function BookingModal({
   const [billBlob, setBillBlob] = useState<Blob | null>(null);
   const [shareSuccessToast, setShareSuccessToast] = useState("");
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isMatchmakingModalOpen, setIsMatchmakingModalOpen] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const sessionIdRef = useRef<string>("");
@@ -1207,6 +1210,34 @@ export default function BookingModal({
                   </div>
                 </div>
 
+                {/* Squad Matchmaking / Missing Players Callout */}
+                <div className="rounded-xl bg-[#141416] border border-white/[0.08] p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                        <Users className="h-4 w-4" strokeWidth={2} />
+                      </div>
+                      <div>
+                        <span className="text-xs font-bold text-white block">
+                          فرقتك ناقصة لعيبة للماتش ده؟
+                        </span>
+                        <span className="text-[10px] text-zinc-400 block">
+                          انشر طلب في «التقسيمات المفتوحة» واجمع لعيبة من دمنهور
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsMatchmakingModalOpen(true)}
+                    className="w-full min-h-[38px] rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 text-xs font-bold transition-all flex items-center justify-center gap-2 active:scale-98"
+                  >
+                    <Users className="h-3.5 w-3.5" strokeWidth={2} />
+                    <span>نشر طلب لاعبين لهذا الماتش</span>
+                  </button>
+                </div>
+
                 {/* Barcode visual indicator */}
                 <div className="pt-1 text-center">
                   <div className="h-5 w-full max-w-xs mx-auto bg-white/10 rounded flex items-center justify-around px-2 opacity-50">
@@ -1335,6 +1366,24 @@ export default function BookingModal({
           </div>
         </div>
       )}
+
+      {/* Create Matchmaking Post Modal */}
+      <CreatePostModal
+        isOpen={isMatchmakingModalOpen}
+        onClose={() => setIsMatchmakingModalOpen(false)}
+        onSuccess={() => {
+          setIsMatchmakingModalOpen(false);
+          setShareSuccessToast("تم نشر طلبك في التقسيمات المفتوحة بنجاح!");
+          setTimeout(() => setShareSuccessToast(""), 5000);
+        }}
+        initialCourtId={court.id}
+        initialDate={bookingDate}
+        initialTime={startTime.slice(0, 5)}
+        initialSport={court.sport}
+        initialCaptainName={bookerName}
+        initialCaptainPhone={bookerPhone}
+        initialCostPerPlayer={perPlayerCash || perPlayerTotal}
+      />
 
     </div>
   );
