@@ -11,6 +11,7 @@ import {
   LogIn,
   User,
   Heart,
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 
@@ -41,10 +42,12 @@ export default function Navbar() {
   const isBookingsActive = pathname?.startsWith("/my-bookings");
   const isFavoritesActive = pathname?.startsWith("/favorites");
   const isProfileActive = pathname?.startsWith("/profile");
+  const isAdminActive = pathname?.startsWith("/admin");
 
   const canManageVenues =
     Boolean(user) &&
     (role === "venue_owner" || role === "receptionist" || role === "super_admin");
+  const isSuperAdmin = Boolean(user) && role === "super_admin";
 
   const showPartnerLink = !user || canManageVenues;
 
@@ -135,6 +138,19 @@ export default function Navbar() {
               }`}
             >
               إدارة الملاعب
+            </Link>
+          )}
+          {isSuperAdmin && (
+            <Link
+              href="/admin"
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
+                isAdminActive
+                  ? "text-emerald-300 font-bold bg-emerald-500/15 border border-emerald-500/30"
+                  : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
+              }`}
+            >
+              <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
+              <span>لوحة المشرف</span>
             </Link>
           )}
         </nav>
@@ -243,6 +259,21 @@ export default function Navbar() {
                     >
                       <Building2 className="h-4 w-4 text-emerald-400" strokeWidth={1.5} />
                       <span>إدارة الملاعب</span>
+                    </Link>
+                  )}
+
+                  {isSuperAdmin && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold transition-colors ${
+                        isAdminActive
+                          ? "bg-emerald-500/15 text-emerald-300"
+                          : "text-emerald-400 hover:bg-emerald-500/10"
+                      }`}
+                    >
+                      <ShieldCheck className="h-4 w-4" strokeWidth={1.5} />
+                      <span>لوحة المشرف العام</span>
                     </Link>
                   )}
 

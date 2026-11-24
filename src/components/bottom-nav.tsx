@@ -10,6 +10,7 @@ import {
   Heart,
   User,
   LogIn,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -46,10 +47,13 @@ export default function BottomNav() {
           isActive: pathname?.startsWith("/matchmaking") ?? false,
         },
         {
-          label: "تذاكري",
-          href: "/my-bookings",
-          icon: Ticket,
-          isActive: pathname?.startsWith("/my-bookings") ?? false,
+          label: role === "super_admin" ? "المشرف" : "تذاكري",
+          href: role === "super_admin" ? "/admin" : "/my-bookings",
+          icon: role === "super_admin" ? ShieldCheck : Ticket,
+          isActive:
+            role === "super_admin"
+              ? pathname?.startsWith("/admin") ?? false
+              : pathname?.startsWith("/my-bookings") ?? false,
         },
         {
           label: "أضف ملعبك",
@@ -85,10 +89,13 @@ export default function BottomNav() {
           isActive: pathname?.startsWith("/dashboard") ?? false,
         },
         {
-          label: "تذاكري",
-          href: "/my-bookings",
-          icon: Ticket,
-          isActive: pathname?.startsWith("/my-bookings") ?? false,
+          label: role === "super_admin" ? "المشرف" : "تذاكري",
+          href: role === "super_admin" ? "/admin" : "/my-bookings",
+          icon: role === "super_admin" ? ShieldCheck : Ticket,
+          isActive:
+            role === "super_admin"
+              ? pathname?.startsWith("/admin") ?? false
+              : pathname?.startsWith("/my-bookings") ?? false,
         },
         {
           label: "ملفي",
@@ -111,10 +118,13 @@ export default function BottomNav() {
           isActive: pathname?.startsWith("/matchmaking") ?? false,
         },
         {
-          label: "تذاكري",
-          href: "/my-bookings",
-          icon: Ticket,
-          isActive: pathname?.startsWith("/my-bookings") ?? false,
+          label: role === "super_admin" ? "المشرف" : "تذاكري",
+          href: role === "super_admin" ? "/admin" : "/my-bookings",
+          icon: role === "super_admin" ? ShieldCheck : Ticket,
+          isActive:
+            role === "super_admin"
+              ? pathname?.startsWith("/admin") ?? false
+              : pathname?.startsWith("/my-bookings") ?? false,
         },
         {
           label: "المفضلة",

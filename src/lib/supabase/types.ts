@@ -384,6 +384,7 @@ export type Database = {
           backup_wallet_number: string | null
           city: string
           closing_time: string
+          commission_per_slot: number
           created_at: string
           deposit_amount: number
           district: string
@@ -398,7 +399,9 @@ export type Database = {
           opening_time: string
           owner_id: string | null
           phone: string
+          prepaid_balance: number
           slug: string
+          staff_pin: string
           updated_at: string
           vodafone_cash_number: string | null
           whatsapp_number: string
@@ -590,6 +593,67 @@ export type Database = {
       }
       get_player_matchmaking_posts: {
         Args: Record<string, never>
+        Returns: Json
+      }
+      admin_get_dashboard_overview: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      admin_approve_partner_application: {
+        Args: {
+          p_app_id: string
+          p_welcome_credit?: number
+          p_commission_per_slot?: number
+          p_owner_email?: string | null
+        }
+        Returns: Json
+      }
+      admin_reject_partner_application: {
+        Args: {
+          p_app_id: string
+          p_admin_notes?: string | null
+        }
+        Returns: Json
+      }
+      admin_update_venue_settings: {
+        Args: {
+          p_venue_id: string
+          p_is_active?: boolean | null
+          p_is_verified?: boolean | null
+          p_commission_per_slot?: number | null
+          p_owner_id?: string | null
+        }
+        Returns: Json
+      }
+      admin_adjust_venue_balance: {
+        Args: {
+          p_venue_id: string
+          p_delta: number
+          p_reason: string
+        }
+        Returns: Json
+      }
+      admin_review_recharge_request: {
+        Args: {
+          p_request_id: string
+          p_action: string
+          p_admin_notes?: string | null
+        }
+        Returns: Json
+      }
+      admin_update_user_role: {
+        Args: {
+          p_user_id: string
+          p_role: Database["public"]["Enums"]["user_role"]
+        }
+        Returns: Json
+      }
+      admin_manage_blacklist: {
+        Args: {
+          p_action: string
+          p_phone: string
+          p_reason?: string | null
+        }
         Returns: Json
       }
     }
