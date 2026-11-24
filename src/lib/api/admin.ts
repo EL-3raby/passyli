@@ -1,13 +1,23 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import type { UserRole } from "@/lib/supabase/types";
+import type {
+  BookingStatus,
+  PaymentMethod,
+  PaymentStatus,
+  SportType,
+  UserRole,
+} from "@/lib/supabase/types";
 
 export interface AdminStats {
   total_venues: number;
   active_venues: number;
+  low_balance_venues: number;
+  unlinked_venues: number;
   pending_applications: number;
   pending_recharges: number;
+  pending_receipt_bookings: number;
+  active_locked_bookings: number;
   total_bookings: number;
   today_bookings: number;
   confirmed_revenue: number;
@@ -15,6 +25,12 @@ export interface AdminStats {
   total_wallet_balances: number;
   total_players: number;
   blacklist_count: number;
+}
+
+export interface AdminDailyTrendItem {
+  day: string;
+  bookings_count: number;
+  revenue: number;
 }
 
 export interface AdminPartnerApplication {
@@ -70,6 +86,7 @@ export interface AdminRechargeRequest {
   status: "pending" | "approved" | "rejected";
   admin_notes: string | null;
   created_at: string;
+  duplicate_ref_count: number;
 }
 
 export interface AdminWalletTransaction {
@@ -101,6 +118,38 @@ export interface AdminBlacklistItem {
   created_at: string;
 }
 
+export interface AdminBookingItem {
+  id: string;
+  booking_reference: string;
+  booker_name: string;
+  booker_phone: string;
+  booking_date: string;
+  start_time: string;
+  end_time: string;
+  status: BookingStatus;
+  total_price: number;
+  deposit_required: number;
+  deposit_paid: number;
+  cash_remaining: number;
+  is_walkin: boolean;
+  locked_until: string | null;
+  cancellation_reason: string | null;
+  created_at: string;
+  court_name: string;
+  sport: SportType;
+  venue_id: string;
+  venue_name: string;
+  venue_whatsapp: string;
+  receipt_id: string | null;
+  receipt_status: PaymentStatus | null;
+  receipt_image_url: string | null;
+  receipt_reference: string | null;
+  receipt_payment_method: PaymentMethod | null;
+  receipt_sender_phone: string | null;
+  receipt_amount_paid: number | null;
+  receipt_rejection_reason: string | null;
+}
+
 export interface AdminOverviewPayload {
   success: boolean;
   error?: string;
@@ -111,6 +160,7 @@ export interface AdminOverviewPayload {
   wallet_transactions: AdminWalletTransaction[];
   users: AdminUserItem[];
   blacklist: AdminBlacklistItem[];
+  daily_trend: AdminDailyTrendItem[];
 }
 
 export async function getAdminOverview(): Promise<AdminOverviewPayload> {
@@ -129,6 +179,51 @@ export async function getAdminOverview(): Promise<AdminOverviewPayload> {
   return res;
 }
 
+export async function getAdminBookingsFeed(params?: {
+  search?: string;
+  status?: string;
+  limit?: number;
+}): Promise<AdminBookingItem[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("admin_get_bookings_feed", {
+    p_search: params?.search?.trim() || null,
+    p_status: params?.status || "all",
+    p_limit: params?.limit ?? 80,
+  });
+
+  if (error) {
+    throw new Error(error.message || "تعذر تحميل سجل الحجوزات");
+  }
+
+  const res = data as unknown as {
+    success: boolean;
+    error?: string;
+    bookings?: AdminBookingItem[];
+  };
+
+  if (!res?.success) {
+    throw new Error(res?.error || "غير مصرح لك بعرض سجل الحجوزات");
+  }
+
+  return res.bookings ?? [];
+}
+
+export async function resolveBookingDispute(params: {
+  bookingId: string;
+  action: "release_lock" | "force_confirm" | "admin_cancel";
+  reason?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("admin_resolve_booking_dispute", {
+    p_booking_id: params.bookingId,
+    p_action: params.action,
+    p_reason: params.reason?.trim() || null,
+  });
+
+  if (error) return { success: false, error: error.message };
+  return data as { success: boolean; error?: string };
+}
+
 export async function approvePartnerApp(params: {
   appId: string;
   welcomeCredit: number;
@@ -145,6 +240,25 @@ export async function approvePartnerApp(params: {
 
   if (error) return { success: false, error: error.message };
   return data as { success: boolean; venue_id?: string; error?: string };
+}
+
+export async function sendPartnerWelcomeEmail(params: {
+  ownerEmail: string;
+  venueName: string;
+  welcomeCredit: number;
+  commissionPerSlot: number;
+}): Promise<{ success: boolean; skipped?: boolean }> {
+  try {
+    const res = await fetch("/api/send-partner-welcome-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
+    if (!res.ok) return { success: false };
+    return (await res.json()) as { success: boolean; skipped?: boolean };
+  } catch {
+    return { success: false };
+  }
 }
 
 export async function rejectPartnerApp(

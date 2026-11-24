@@ -656,6 +656,22 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_get_bookings_feed: {
+        Args: {
+          p_search?: string | null
+          p_status?: string | null
+          p_limit?: number
+        }
+        Returns: Json
+      }
+      admin_resolve_booking_dispute: {
+        Args: {
+          p_booking_id: string
+          p_action: string
+          p_reason?: string | null
+        }
+        Returns: Json
+      }
     }
     Enums: {
       booking_status:

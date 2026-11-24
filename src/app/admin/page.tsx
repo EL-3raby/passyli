@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   Wallet,
   Users,
+  CalendarClock,
   RefreshCw,
   AlertTriangle,
   CheckCircle2,
@@ -18,9 +19,16 @@ import AdminOverviewCards from "@/components/admin/admin-overview-cards";
 import AdminPartnersTab from "@/components/admin/admin-partners-tab";
 import AdminVenuesTab from "@/components/admin/admin-venues-tab";
 import AdminRechargesTab from "@/components/admin/admin-recharges-tab";
+import AdminBookingsTab from "@/components/admin/admin-bookings-tab";
 import AdminUsersBlacklistTab from "@/components/admin/admin-users-blacklist-tab";
 
-type AdminTab = "overview" | "partners" | "venues" | "recharges" | "users";
+type AdminTab =
+  | "overview"
+  | "partners"
+  | "venues"
+  | "recharges"
+  | "bookings"
+  | "users";
 
 export default function SuperAdminPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>("overview");
@@ -46,7 +54,9 @@ export default function SuperAdminPage() {
       setData(payload);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "تعذر تحميل بيانات لوحة المشرف العام"
+        err instanceof Error
+          ? err.message
+          : "تعذر تحميل بيانات لوحة المشرف العام"
       );
     } finally {
       setLoading(false);
@@ -93,6 +103,13 @@ export default function SuperAdminPage() {
       )
       .on(
         "postgres_changes",
+        { event: "*", schema: "public", table: "receipts" },
+        () => {
+          void loadData(true);
+        }
+      )
+      .on(
+        "postgres_changes",
         { event: "*", schema: "public", table: "venue_wallet_transactions" },
         () => {
           void loadData(true);
@@ -114,7 +131,10 @@ export default function SuperAdminPage() {
 
   if (loading && !data) {
     return (
-      <main className="min-h-screen bg-[#09090b] pt-24 pb-24 px-4 sm:px-6" dir="rtl">
+      <main
+        className="min-h-screen bg-[#09090b] pt-24 pb-24 px-4 sm:px-6"
+        dir="rtl"
+      >
         <div className="max-w-7xl mx-auto space-y-6 animate-pulse">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-2">
@@ -143,7 +163,10 @@ export default function SuperAdminPage() {
 
   if (error && !data) {
     return (
-      <main className="min-h-screen bg-[#09090b] pt-24 pb-24 px-4 sm:px-6" dir="rtl">
+      <main
+        className="min-h-screen bg-[#09090b] pt-24 pb-24 px-4 sm:px-6"
+        dir="rtl"
+      >
         <div className="max-w-xl mx-auto rounded-3xl bg-[#141418] border border-rose-500/25 p-8 text-center space-y-4">
           <div className="h-14 w-14 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400 mx-auto">
             <AlertTriangle className="h-7 w-7" strokeWidth={1.5} />
@@ -180,12 +203,23 @@ export default function SuperAdminPage() {
       icon: ClipboardCheck,
       badge: data.stats.pending_applications,
     },
-    { id: "venues", label: "الملاعب والمحافظ", icon: Building2 },
+    {
+      id: "venues",
+      label: "الملاعب والمحافظ",
+      icon: Building2,
+      badge: data.stats.low_balance_venues,
+    },
     {
       id: "recharges",
       label: "طلبات الشحن",
       icon: Wallet,
       badge: data.stats.pending_recharges,
+    },
+    {
+      id: "bookings",
+      label: "الحجوزات والنزاعات",
+      icon: CalendarClock,
+      badge: data.stats.pending_receipt_bookings,
     },
     {
       id: "users",
@@ -196,7 +230,10 @@ export default function SuperAdminPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#09090b] pt-24 pb-28 px-4 sm:px-6" dir="rtl">
+    <main
+      className="min-h-screen bg-[#09090b] pt-24 pb-28 px-4 sm:px-6"
+      dir="rtl"
+    >
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -209,7 +246,7 @@ export default function SuperAdminPage() {
               إدارة منصة باصي&zwj;<span className="text-primary">&zwj;لي</span>
             </h1>
             <p className="text-xs sm:text-sm text-zinc-400">
-              متابعة فورية لطلبات انضمام الملاعب، أرصدة المحافظ، إيصالات الشحن، وصلاحيات الحسابات.
+              متابعة فورية لطلبات انضمام الملاعب، أرصدة المحافظ، إيصالات الشحن، الحجوزات، وصلاحيات الحسابات.
             </p>
           </div>
 
@@ -288,6 +325,8 @@ export default function SuperAdminPage() {
           {activeTab === "overview" && (
             <AdminOverviewCards
               stats={data.stats}
+              venues={data.venues}
+              dailyTrend={data.daily_trend ?? []}
               onJumpTab={(target) => setActiveTab(target)}
             />
           )}
@@ -314,6 +353,13 @@ export default function SuperAdminPage() {
             <AdminRechargesTab
               requests={data.recharge_requests}
               onRefresh={() => loadData(true)}
+              onFeedback={handleFeedback}
+            />
+          )}
+
+          {activeTab === "bookings" && (
+            <AdminBookingsTab
+              onRefreshOverview={() => loadData(true)}
               onFeedback={handleFeedback}
             />
           )}

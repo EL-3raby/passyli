@@ -12,6 +12,7 @@ import {
 import {
   approvePartnerApp,
   rejectPartnerApp,
+  sendPartnerWelcomeEmail,
   type AdminPartnerApplication,
 } from "@/lib/api/admin";
 
@@ -26,6 +27,9 @@ export default function AdminPartnersTab({
   onRefresh,
   onFeedback,
 }: AdminPartnersTabProps) {
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | AdminPartnerApplication["status"]
+  >("all");
   const [credits, setCredits] = useState<Record<string, number>>({});
   const [commissions, setCommissions] = useState<Record<string, number>>({});
   const [ownerEmails, setOwnerEmails] = useState<Record<string, string>>({});
@@ -67,13 +71,33 @@ export default function AdminPartnersTab({
       return;
     }
 
-    onFeedback(`تم اعتماد وتفعيل "${app.venue_name}" برصيد ترحيبي ${welcomeCredit} ج.م بنجاح!`);
+    const trimmedOwnerEmail = ownerEmail.trim();
+    if (trimmedOwnerEmail) {
+      void sendPartnerWelcomeEmail({
+        ownerEmail: trimmedOwnerEmail,
+        venueName: app.venue_name,
+        welcomeCredit,
+        commissionPerSlot,
+      });
+    }
+
+    onFeedback(
+      trimmedOwnerEmail
+        ? `تم اعتماد وتفعيل "${app.venue_name}" برصيد ترحيبي ${welcomeCredit} ج.م وإرسال بريد الترحيب للمالك.`
+        : `تم اعتماد وتفعيل "${app.venue_name}" برصيد ترحيبي ${welcomeCredit} ج.م بنجاح!`
+    );
     await onRefresh();
   };
 
   const handleReject = async (app: AdminPartnerApplication) => {
+    const note = (rejectNotes[app.id] || "").trim();
+    if (!note) {
+      onFeedback("يرجى كتابة سبب رفض طلب الشراكة في خانة الملاحظات أولاً.", true);
+      return;
+    }
+
     setBusyId(app.id);
-    const res = await rejectPartnerApp(app.id, rejectNotes[app.id]);
+    const res = await rejectPartnerApp(app.id, note);
     setBusyId(null);
 
     if (!res.success) {
@@ -85,9 +109,52 @@ export default function AdminPartnersTab({
     await onRefresh();
   };
 
+  const visibleApps =
+    statusFilter === "all"
+      ? applications
+      : applications.filter((a) => a.status === statusFilter);
+
   return (
     <div className="space-y-4">
-      {applications.map((app) => {
+      <div className="flex flex-wrap items-center gap-2">
+        {(
+          [
+            { id: "all", label: `الكل (${applications.length})` },
+            {
+              id: "pending",
+              label: `قيد المراجعة (${applications.filter((a) => a.status === "pending").length})`,
+            },
+            {
+              id: "approved",
+              label: `معتمد (${applications.filter((a) => a.status === "approved").length})`,
+            },
+            {
+              id: "rejected",
+              label: `مرفوض (${applications.filter((a) => a.status === "rejected").length})`,
+            },
+          ] as const
+        ).map((btn) => (
+          <button
+            key={btn.id}
+            type="button"
+            onClick={() => setStatusFilter(btn.id)}
+            className={`min-h-[44px] px-4 rounded-xl border text-xs font-bold tabular-nums transition-all ${
+              statusFilter === btn.id
+                ? "bg-primary text-black border-primary font-black"
+                : "bg-[#141418] text-zinc-300 border-white/[0.08] hover:bg-white/[0.05]"
+            }`}
+          >
+            {btn.label}
+          </button>
+        ))}
+      </div>
+
+      {visibleApps.length === 0 ? (
+        <div className="rounded-2xl bg-[#141418] border border-white/[0.08] p-8 text-center text-xs text-zinc-400">
+          لا توجد طلبات شراكة ضمن هذا التصنيف.
+        </div>
+      ) : (
+        visibleApps.map((app) => {
         const isPending = app.status === "pending";
         const creditVal = credits[app.id] ?? app.welcome_credit ?? 150;
         const commVal = commissions[app.id] ?? 15;
@@ -227,7 +294,7 @@ export default function AdminPartnersTab({
                         [app.id]: e.target.value,
                       }))
                     }
-                    placeholder="سبب الرفض (عند الرفض)..."
+                    placeholder="سبب الرفض (إلزامي عند الرفض)..."
                     className="flex-1 h-11 rounded-xl bg-[#141418] border border-white/10 px-3 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-rose-500"
                   />
 
@@ -251,7 +318,8 @@ export default function AdminPartnersTab({
             )}
           </div>
         );
-      })}
+      })
+      )}
     </div>
   );
 }
