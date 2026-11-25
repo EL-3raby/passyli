@@ -11,7 +11,6 @@ import {
   ArrowLeft,
   Loader2,
   AlertTriangle,
-  UserPlus,
   LogIn,
   Clock3,
   LayoutDashboard,
@@ -22,6 +21,8 @@ import {
   submitPartnerApplication,
   type MyPartnerApplication,
 } from "@/lib/api/dashboard";
+
+const PARTNER_DRAFT_STORAGE_KEY = "passyli_partner_form_draft";
 
 const CITIES = [
   "دمنهور",
@@ -57,10 +58,47 @@ export default function PartnerOnboardingPage() {
   const [submittedId, setSubmittedId] = useState<string | null>(null);
 
   useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(PARTNER_DRAFT_STORAGE_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as Partial<{
+        venueName: string;
+        applicantName: string;
+        phone: string;
+        whatsappNumber: string;
+        city: string;
+        district: string;
+        address: string;
+        sports: string[];
+        courtsCount: number;
+        morningPrice: number;
+        eveningPrice: number;
+      }>;
+      if (draft.venueName) setVenueName(draft.venueName);
+      if (draft.applicantName) setApplicantName(draft.applicantName);
+      if (draft.phone) setPhone(draft.phone);
+      if (draft.whatsappNumber) setWhatsappNumber(draft.whatsappNumber);
+      if (draft.city) setCity(draft.city);
+      if (draft.district) setDistrict(draft.district);
+      if (draft.address) setAddress(draft.address);
+      if (Array.isArray(draft.sports) && draft.sports.length > 0) {
+        setSports(draft.sports);
+      }
+      if (typeof draft.courtsCount === "number") setCourtsCount(draft.courtsCount);
+      if (typeof draft.morningPrice === "number") setMorningPrice(draft.morningPrice);
+      if (typeof draft.eveningPrice === "number") setEveningPrice(draft.eveningPrice);
+    } catch {
+      // Ignore malformed storage draft
+    }
+  }, []);
+
+  useEffect(() => {
     if (!user) {
       setLatestApp(null);
       return;
     }
+
+    setErrorMsg(null);
 
     if (profile?.full_name) {
       setApplicantName((prev) => prev || profile.full_name);
@@ -89,11 +127,6 @@ export default function PartnerOnboardingPage() {
     e.preventDefault();
     setErrorMsg(null);
 
-    if (!user) {
-      openAuthModal("signup", "/partner");
-      return;
-    }
-
     if (!/^01[0125][0-9]{8}$/.test(phone.trim())) {
       setErrorMsg("يرجى إدخال رقم هاتف مصري صحيح مكون من 11 رقماً.");
       return;
@@ -102,6 +135,34 @@ export default function PartnerOnboardingPage() {
     const wa = whatsappNumber.trim() || phone.trim();
     if (!/^01[0125][0-9]{8}$/.test(wa)) {
       setErrorMsg("يرجى إدخال رقم واتساب مصري صحيح مكون من 11 رقماً.");
+      return;
+    }
+
+    if (!user) {
+      try {
+        sessionStorage.setItem(
+          PARTNER_DRAFT_STORAGE_KEY,
+          JSON.stringify({
+            venueName,
+            applicantName,
+            phone,
+            whatsappNumber,
+            city,
+            district,
+            address,
+            sports,
+            courtsCount,
+            morningPrice,
+            eveningPrice,
+          })
+        );
+      } catch {
+        // Ignore storage errors
+      }
+      setErrorMsg(
+        "يلزم تسجيل حساب أو تسجيل الدخول أولاً لإرسال الطلب وربط لوحة الإدارة ببريدك الإلكتروني (بياناتك محفوظة ولن تضيع)."
+      );
+      openAuthModal("signup", "/partner");
       return;
     }
 
@@ -126,6 +187,11 @@ export default function PartnerOnboardingPage() {
       return;
     }
 
+    try {
+      sessionStorage.removeItem(PARTNER_DRAFT_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors
+    }
     setSubmittedId(res.id);
   };
 
@@ -245,46 +311,7 @@ export default function PartnerOnboardingPage() {
               <div className="h-24 w-full rounded-2xl bg-white/[0.05]" />
               <div className="h-12 w-full rounded-xl bg-white/[0.05]" />
             </div>
-          ) : !user ? (
-            /* Step 1 Mandatory Account Creation / Login Gate */
-            <div className="py-6 text-center space-y-6">
-              <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/25 text-primary flex items-center justify-center mx-auto">
-                <UserPlus className="h-8 w-8" strokeWidth={1.5} />
-              </div>
-
-              <div className="space-y-2 max-w-md mx-auto">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/25 text-amber-300 text-[11px] font-bold">
-                  الخطوة الأولى — إلزامية
-                </span>
-                <h2 className="font-display text-xl sm:text-2xl font-black text-white">
-                  أنشئ حسابك أو سجّل دخولك أولاً
-                </h2>
-                <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-                  حتى يتم تفعيل لوحة إدارة الملعب على بريدك تلقائياً فور موافقة الإدارة دون خطوات إضافية، سجّل بحساب Google أو البريد الإلكتروني وستفتح لك الاستمارة مباشرة.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => openAuthModal("signup", "/partner")}
-                  className="w-full sm:w-auto min-h-[48px] px-7 rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-sm inline-flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/15"
-                >
-                  <UserPlus className="h-4 w-4" strokeWidth={2} />
-                  <span>إنشاء حساب جديد (Google / بريد)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => openAuthModal("signin", "/partner")}
-                  className="w-full sm:w-auto min-h-[48px] px-6 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.1] text-white font-bold text-xs inline-flex items-center justify-center gap-2 transition-all"
-                >
-                  <LogIn className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                  <span>لدي حساب بالفعل</span>
-                </button>
-              </div>
-            </div>
-          ) : !allowNewForm && latestApp && latestApp.status === "pending" ? (
+          ) : user && !allowNewForm && latestApp && latestApp.status === "pending" ? (
             /* Existing Pending Application Status */
             <div className="py-6 text-center space-y-5">
               <div className="h-16 w-16 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center mx-auto">
@@ -304,7 +331,8 @@ export default function PartnerOnboardingPage() {
                 <span className="tabular-nums">{latestApp.courts_count} ملاعب</span>
               </div>
             </div>
-          ) : !allowNewForm &&
+          ) : user &&
+            !allowNewForm &&
             ((latestApp && latestApp.status === "approved") ||
               role === "venue_owner") ? (
             /* Approved Owner View */
@@ -340,9 +368,9 @@ export default function PartnerOnboardingPage() {
               </div>
             </div>
           ) : (
-            /* Authenticated Partner Form */
+            /* Partner Form (always visible first; prompts signup on submit if guest) */
             <>
-              <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-4 mb-5">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] pb-4 mb-5">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                     <Building2 className="h-5 w-5" strokeWidth={1.5} />
@@ -351,11 +379,28 @@ export default function PartnerOnboardingPage() {
                     <h2 className="font-display text-base sm:text-lg font-black text-white">
                       استمارة تسجيل منشأة رياضية
                     </h2>
-                    <p className="text-xs text-emerald-400 font-bold" dir="ltr">
-                      الحساب المربوط: {user.email}
-                    </p>
+                    {user ? (
+                      <p className="text-xs text-emerald-400 font-bold" dir="ltr">
+                        الحساب المربوط: {user.email}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-zinc-400">
+                        أدخل بيانات ملعبك الآن، وسيُطلب تسجيل حسابك عند الإرسال.
+                      </p>
+                    )}
                   </div>
                 </div>
+
+                {!user && (
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal("signin", "/partner")}
+                    className="min-h-[44px] px-3.5 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.08] text-zinc-200 font-bold text-xs inline-flex items-center gap-1.5 transition-all"
+                  >
+                    <LogIn className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                    <span>لدي حساب</span>
+                  </button>
+                )}
               </div>
 
               {latestApp?.status === "rejected" && (
