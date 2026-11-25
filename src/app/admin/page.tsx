@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   LayoutDashboard,
   Building2,
@@ -19,6 +19,7 @@ import AdminShell, {
   type AdminNavItem,
   type AdminTabId,
 } from "@/components/admin/admin-shell";
+import { type OperationalNotification } from "@/components/shared/notifications-popover";
 import AdminOverviewCards from "@/components/admin/admin-overview-cards";
 import AdminPartnersTab from "@/components/admin/admin-partners-tab";
 import AdminVenuesTab from "@/components/admin/admin-venues-tab";
@@ -187,6 +188,99 @@ export default function SuperAdminPage() {
       data.stats.pending_receipt_bookings
     : 0;
 
+  const [readAdminNotificationIds, setReadAdminNotificationIds] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = window.localStorage.getItem("passyli_admin_read_notifications");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  const adminNotifications = useMemo<OperationalNotification[]>(() => {
+    if (!data) return [];
+    const list: OperationalNotification[] = [];
+
+    // 1. Pending Partner Applications
+    const pendingApps = (data.applications || []).filter(
+      (a) => a.status === "pending"
+    );
+    pendingApps.forEach((app) => {
+      const id = `partner-${app.id}`;
+      list.push({
+        id,
+        type: "partner",
+        title: "طلب انضمام منشأة جديدة",
+        description: `المنشأة: ${app.venue_name} — المسؤول: ${app.applicant_name} (${app.phone}) في ${app.city}`,
+        timestamp: app.created_at,
+        isRead: readAdminNotificationIds.has(id),
+        actionLabel: "فحص الطلب واعتماده ⬅",
+        onAction: () => setActiveTab("partners"),
+        priority: "urgent",
+      });
+    });
+
+    // 2. Pending Wallet Recharge Requests
+    const pendingRecharges = (data.recharge_requests || []).filter(
+      (r) => r.status === "pending"
+    );
+    pendingRecharges.forEach((rec) => {
+      const id = `recharge-${rec.id}`;
+      list.push({
+        id,
+        type: "recharge",
+        title: "طلب شحن محفظة معلق",
+        description: `المنشأة: ${rec.venue_name} تطلب شحن ${rec.amount} ج.م (مرجع: ${rec.reference_number || "—"})`,
+        timestamp: rec.created_at,
+        isRead: readAdminNotificationIds.has(id),
+        actionLabel: "مراجعة إيصال الشحن ⬅",
+        onAction: () => setActiveTab("recharges"),
+        priority: "urgent",
+      });
+    });
+
+    // Sort by timestamp descending
+    return list.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [data, readAdminNotificationIds]);
+
+  const markAdminNotificationAsRead = useCallback((id: string) => {
+    setReadAdminNotificationIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      try {
+        window.localStorage.setItem(
+          "passyli_admin_read_notifications",
+          JSON.stringify(Array.from(next))
+        );
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const markAllAdminNotificationsAsRead = useCallback(() => {
+    setReadAdminNotificationIds((prev) => {
+      const next = new Set(prev);
+      adminNotifications.forEach((n) => next.add(n.id));
+      try {
+        window.localStorage.setItem(
+          "passyli_admin_read_notifications",
+          JSON.stringify(Array.from(next))
+        );
+      } catch {}
+      return next;
+    });
+  }, [adminNotifications]);
+
+  const clearAdminNotificationsHistory = useCallback(() => {
+    setReadAdminNotificationIds(new Set());
+    try {
+      window.localStorage.removeItem("passyli_admin_read_notifications");
+    } catch {}
+  }, []);
+
   return (
     <AdminShell
       activeTab={activeTab}
@@ -194,6 +288,10 @@ export default function SuperAdminPage() {
       navItems={navItems}
       onRefresh={() => void loadData(true)}
       refreshing={refreshing}
+      notifications={adminNotifications}
+      onMarkAllNotificationsAsRead={markAllAdminNotificationsAsRead}
+      onMarkNotificationAsRead={markAdminNotificationAsRead}
+      onClearNotifications={clearAdminNotificationsHistory}
       quickStats={
         data
           ? {

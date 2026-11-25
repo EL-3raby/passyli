@@ -11,6 +11,7 @@ import {
 import {
   getDashboardVenues,
   getPendingReceipts,
+  type DashboardReceipt,
   type DashboardBooking,
   type DashboardCourt,
   type DashboardVenue,
@@ -21,6 +22,7 @@ import {
   playReceiptChime,
   setDashboardSoundEnabled,
 } from "@/lib/sound";
+import { type OperationalNotification } from "@/components/shared/notifications-popover";
 import WalkinModal from "@/components/dashboard/walkin-modal";
 import SearchModal from "@/components/dashboard/search-modal";
 import RecurringBookingModal from "@/components/dashboard/recurring-booking-modal";
@@ -63,6 +65,10 @@ interface DashboardContextValue {
   openSearchModal: () => void;
   openRecurringModal: () => void;
   openRunningSheetModal: (opts: RunningSheetOptions) => void;
+  notifications: OperationalNotification[];
+  markNotificationAsRead: (id: string) => void;
+  markAllNotificationsAsRead: () => void;
+  clearNotificationsHistory: () => void;
 }
 
 const DashboardContext = createContext<DashboardContextValue | null>(null);
@@ -106,6 +112,18 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     bookings: [],
   });
 
+  const [pendingReceipts, setPendingReceipts] = useState<DashboardReceipt[]>([]);
+  const [realtimeAlerts, setRealtimeAlerts] = useState<OperationalNotification[]>([]);
+  const [readNotificationIds, setReadNotificationIds] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try {
+      const stored = window.localStorage.getItem("passyli_read_notifications");
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
   useEffect(() => {
     setSoundEnabled(isDashboardSoundEnabled());
   }, []);
@@ -113,6 +131,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
   const refreshPendingCount = useCallback(async () => {
     try {
       const pending = await getPendingReceipts();
+      setPendingReceipts(pending);
       setPendingCount(pending.length);
     } catch {
       // Non-fatal counter error
@@ -161,7 +180,55 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings" },
-        () => {
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            const b = payload.new as {
+              id?: string;
+              booker_name?: string;
+              total_price?: number;
+              booking_date?: string;
+            };
+            const id = `booking-${b.id || Date.now()}`;
+            setRealtimeAlerts((prev) => [
+              {
+                id,
+                type: "booking",
+                title: "حجز جديد على الملعب",
+                description: `حجز جديد للكابتن ${b.booker_name || "لاعب"} بقيمة ${
+                  b.total_price || 0
+                } ج.م بتاريخ ${b.booking_date || ""}`,
+                timestamp: new Date().toISOString(),
+                isRead: false,
+                actionLabel: "عرض الجدول ⬅",
+                actionHref: "/dashboard",
+                priority: "normal",
+              },
+              ...prev.slice(0, 15),
+            ]);
+            playReceiptChime();
+          } else if (
+            payload.eventType === "UPDATE" &&
+            (payload.new as { status?: string })?.status === "cancelled"
+          ) {
+            const b = payload.new as { id?: string; booker_name?: string };
+            const id = `cancel-${b.id || Date.now()}`;
+            setRealtimeAlerts((prev) => [
+              {
+                id,
+                type: "booking",
+                title: "تم إلغاء حجز",
+                description: `تم إلغاء حجز الكابتن ${
+                  b.booker_name || "لاعب"
+                } وأصبحت الساعة شاغرة مجدداً.`,
+                timestamp: new Date().toISOString(),
+                isRead: false,
+                actionLabel: "عرض الجدول ⬅",
+                actionHref: "/dashboard",
+                priority: "urgent",
+              },
+              ...prev.slice(0, 15),
+            ]);
+          }
           setRealtimeTick((n) => n + 1);
           void refreshPendingCount();
         }
@@ -171,6 +238,31 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         { event: "*", schema: "public", table: "receipts" },
         (payload) => {
           if (payload.eventType === "INSERT") {
+            const r = payload.new as {
+              id?: string;
+              sender_name?: string;
+              amount_paid?: number;
+              payment_method?: string;
+            };
+            const id = `receipt-live-${r.id || Date.now()}`;
+            setRealtimeAlerts((prev) => [
+              {
+                id,
+                type: "receipt",
+                title: "وصل إيصال دفع جديد الآن",
+                description: `قام ${r.sender_name || "لاعب"} بتحويل ${
+                  r.amount_paid || 0
+                } ج.م عبر ${
+                  r.payment_method === "instapay" ? "إنستاباي" : "فودافون كاش"
+                } وبانتظار اعتمادك.`,
+                timestamp: new Date().toISOString(),
+                isRead: false,
+                actionLabel: "مراجعة الإيصال ⬅",
+                actionHref: "/dashboard/receipts",
+                priority: "urgent",
+              },
+              ...prev.slice(0, 15),
+            ]);
             playReceiptChime();
             setNewReceiptBanner(true);
             window.setTimeout(() => setNewReceiptBanner(false), 7000);
@@ -250,6 +342,99 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     void Promise.all([refreshVenues(), refreshPendingCount()]);
   }, [refreshPendingCount, refreshVenues]);
 
+  const notifications = useMemo<OperationalNotification[]>(() => {
+    const list: OperationalNotification[] = [];
+
+    // 1. Pending Receipts
+    pendingReceipts.forEach((r) => {
+      const id = `receipt-${r.id}`;
+      list.push({
+        id,
+        type: "receipt",
+        title: "إيصال دفع بانتظار المراجعة",
+        description: `قام ${r.sender_name} بتحويل ${r.amount_paid} ج.م عبر ${
+          r.payment_method === "instapay" ? "إنستاباي" : "فودافون كاش"
+        } (مرجع: ${r.reference_number || "—"})`,
+        timestamp: r.created_at,
+        isRead: readNotificationIds.has(id),
+        actionLabel: "مراجعة الإيصال ⬅",
+        actionHref: "/dashboard/receipts",
+        priority: "urgent",
+      });
+    });
+
+    // 2. Low prepaid balance warning (for venue owner)
+    if (
+      selectedVenue &&
+      selectedVenue.prepaid_balance <=
+        Math.max(30, (selectedVenue.commission_per_slot || 15) * 2)
+    ) {
+      const id = `wallet-low-${selectedVenue.id}`;
+      list.push({
+        id,
+        type: "wallet",
+        title: "تنبيه: رصيد المحفظة قارب على النفاد",
+        description: `الرصيد المتبقي هو ${selectedVenue.prepaid_balance} ج.م. يرجى الشحن لضمان استمرار ظهور ملاعبك في الحجز الأونلاين.`,
+        timestamp: new Date().toISOString(),
+        isRead: readNotificationIds.has(id),
+        actionLabel: "شحن المحفظة ⬅",
+        actionHref: "/dashboard/wallet",
+        priority: "urgent",
+      });
+    }
+
+    // 3. Realtime pushed alerts (new bookings, cancellations)
+    realtimeAlerts.forEach((a) => {
+      if (!list.some((item) => item.id === a.id)) {
+        list.push({
+          ...a,
+          isRead: a.isRead || readNotificationIds.has(a.id),
+        });
+      }
+    });
+
+    // Sort by timestamp descending
+    return list.sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+  }, [pendingReceipts, selectedVenue, realtimeAlerts, readNotificationIds]);
+
+  const markNotificationAsRead = useCallback((id: string) => {
+    setReadNotificationIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      try {
+        window.localStorage.setItem(
+          "passyli_read_notifications",
+          JSON.stringify(Array.from(next))
+        );
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const markAllNotificationsAsRead = useCallback(() => {
+    setReadNotificationIds((prev) => {
+      const next = new Set(prev);
+      notifications.forEach((n) => next.add(n.id));
+      try {
+        window.localStorage.setItem(
+          "passyli_read_notifications",
+          JSON.stringify(Array.from(next))
+        );
+      } catch {}
+      return next;
+    });
+  }, [notifications]);
+
+  const clearNotificationsHistory = useCallback(() => {
+    setRealtimeAlerts([]);
+    setReadNotificationIds(new Set());
+    try {
+      window.localStorage.removeItem("passyli_read_notifications");
+    } catch {}
+  }, []);
+
   const value: DashboardContextValue = {
     venues,
     selectedVenueId,
@@ -276,6 +461,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     openSearchModal,
     openRecurringModal,
     openRunningSheetModal,
+    notifications,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    clearNotificationsHistory,
   };
 
   return (

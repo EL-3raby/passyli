@@ -21,6 +21,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
+import NotificationsPopover, {
+  type OperationalNotification,
+} from "@/components/shared/notifications-popover";
 
 export type AdminTabId =
   | "overview"
@@ -50,6 +53,10 @@ interface AdminShellProps {
     activeVenues: number;
     pendingAlerts: number;
   };
+  notifications?: OperationalNotification[];
+  onMarkAllNotificationsAsRead?: () => void;
+  onMarkNotificationAsRead?: (id: string) => void;
+  onClearNotifications?: () => void;
   children: React.ReactNode;
 }
 
@@ -60,6 +67,10 @@ export default function AdminShell({
   onRefresh,
   refreshing,
   quickStats,
+  notifications,
+  onMarkAllNotificationsAsRead,
+  onMarkNotificationAsRead,
+  onClearNotifications,
   children,
 }: AdminShellProps) {
   const router = useRouter();
@@ -435,6 +446,17 @@ export default function AdminShell({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {notifications && (
+              <NotificationsPopover
+                notifications={notifications}
+                onMarkAllAsRead={onMarkAllNotificationsAsRead}
+                onMarkAsRead={onMarkNotificationAsRead}
+                onClearAll={onClearNotifications}
+                title="تنبيهات الإدارة العليا"
+                emptyMessage="جميع طلبات الانضمام وشحن المحافظ معتمدة، لا توجد طلبات معلقة حالياً"
+              />
+            )}
+
             <button
               type="button"
               disabled={refreshing}

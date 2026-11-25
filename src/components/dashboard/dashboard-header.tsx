@@ -21,6 +21,9 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
+import NotificationsPopover, {
+  type OperationalNotification,
+} from "@/components/shared/notifications-popover";
 
 interface DashboardHeaderProps {
   venuesCount: number;
@@ -29,6 +32,10 @@ interface DashboardHeaderProps {
   prepaidBalance?: number;
   commissionPerSlot?: number;
   soundEnabled?: boolean;
+  notifications?: OperationalNotification[];
+  onMarkAllNotificationsAsRead?: () => void;
+  onMarkNotificationAsRead?: (id: string) => void;
+  onClearNotifications?: () => void;
   onToggleStaffMode: () => void;
   onOpenWalkin: () => void;
   onOpenMaintenance: () => void;
@@ -49,6 +56,10 @@ export default function DashboardHeader({
   prepaidBalance,
   commissionPerSlot = 15,
   soundEnabled = true,
+  notifications,
+  onMarkAllNotificationsAsRead,
+  onMarkNotificationAsRead,
+  onClearNotifications,
   onToggleStaffMode,
   onOpenWalkin,
   onOpenMaintenance,
@@ -117,6 +128,18 @@ export default function DashboardHeader({
 
         {/* Action Controls */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Realtime Operational Notifications Center */}
+          {notifications && (
+            <NotificationsPopover
+              notifications={notifications}
+              onMarkAllAsRead={onMarkAllNotificationsAsRead}
+              onMarkAsRead={onMarkNotificationAsRead}
+              onClearAll={onClearNotifications}
+              title="تنبيهات المنشأة الحية"
+              emptyMessage="جميع الإيصالات والحجوزات مراجعة، لا توجد تنبيهات معلقة حالياً"
+            />
+          )}
+
           {/* Quick Search */}
           {onOpenSearch && (
             <button

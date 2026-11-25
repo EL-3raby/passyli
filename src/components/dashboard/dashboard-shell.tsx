@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useDashboard } from "@/components/dashboard/dashboard-provider";
+import NotificationsPopover from "@/components/shared/notifications-popover";
 
 interface NavItem {
   label: string;
@@ -87,6 +88,10 @@ export default function DashboardShell({
     dismissReceiptBanner,
     openWalkinModal,
     openSearchModal,
+    notifications,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    clearNotificationsHistory,
   } = useDashboard();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -584,6 +589,16 @@ export default function DashboardShell({
 
           {/* Clean Utility Actions */}
           <div className="flex items-center gap-2 shrink-0">
+            {/* Live Operational Notification Center Bell */}
+            <NotificationsPopover
+              notifications={notifications}
+              onMarkAllAsRead={markAllNotificationsAsRead}
+              onMarkAsRead={markNotificationAsRead}
+              onClearAll={clearNotificationsHistory}
+              title="تنبيهات المنشأة الحية"
+              emptyMessage="جميع الإيصالات والحجوزات مراجعة، لا توجد تنبيهات معلقة حالياً"
+            />
+
             <button
               type="button"
               onClick={openSearchModal}
