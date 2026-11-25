@@ -156,6 +156,18 @@ export default function DashboardAnalyticsPage() {
     return availableCourts.find((c) => c.id === selectedCourtId) || null;
   }, [availableCourts, selectedCourtId]);
 
+  const totalVenueGross = useMemo(() => {
+    return courts.reduce((sum, c) => sum + c.gross_revenue, 0);
+  }, [courts]);
+
+  const activeCourtContributionPct = useMemo(() => {
+    if (!selectedCourtId || !summary || totalVenueGross <= 0) return 0;
+    return Math.min(
+      100,
+      Math.round((summary.gross_revenue / totalVenueGross) * 100)
+    );
+  }, [selectedCourtId, summary, totalVenueGross]);
+
   const maxHourlyCount = Math.max(
     ...hourly.map((h) => h.bookings_count),
     1
@@ -249,10 +261,100 @@ export default function DashboardAnalyticsPage() {
     );
   }
 
+  // Mandatory Shimmer Skeletons during initial fetch (Zero CLS layout protection)
+  if (isLoading && !analytics) {
+    return (
+      <div className="space-y-6 animate-pulse">
+        {/* Skeleton Toolbar */}
+        <div className="p-5 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-white/[0.06]">
+            <div className="h-6 w-48 bg-white/[0.06] rounded-xl" />
+            <div className="h-9 w-64 bg-white/[0.06] rounded-xl" />
+          </div>
+          <div className="flex justify-between items-center">
+            <div className="h-8 w-56 bg-white/[0.06] rounded-xl" />
+            <div className="h-8 w-44 bg-white/[0.06] rounded-xl" />
+          </div>
+        </div>
+
+        {/* Skeleton KPIs */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="p-5 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-3"
+            >
+              <div className="flex justify-between items-center">
+                <div className="h-4 w-24 bg-white/[0.06] rounded-md" />
+                <div className="h-8 w-8 bg-white/[0.06] rounded-xl" />
+              </div>
+              <div className="h-8 w-32 bg-white/[0.06] rounded-xl" />
+              <div className="h-3 w-40 bg-white/[0.06] rounded-md" />
+            </div>
+          ))}
+        </div>
+
+        {/* Skeleton Courts Breakdown */}
+        <div className="space-y-3">
+          <div className="h-5 w-44 bg-white/[0.06] rounded-md" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="p-5 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-4"
+              >
+                <div className="h-5 w-32 bg-white/[0.06] rounded-md" />
+                <div className="h-14 bg-white/[0.04] rounded-2xl" />
+                <div className="h-8 bg-white/[0.06] rounded-xl" />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Skeleton Hourly Matrix */}
+        <div className="p-6 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-4">
+          <div className="h-6 w-60 bg-white/[0.06] rounded-md" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-24 bg-white/[0.04] rounded-2xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Print-Only Executive Header (For PDF and Paper Reports) */}
+      <div className="hidden print:block p-6 rounded-2xl bg-white text-black border border-black/20 mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-black text-black">
+              منصة باصيلي — تقرير الأداء المالي والتشغيلي للمنشأة
+            </h1>
+            <p className="text-xs text-zinc-700 mt-1">
+              المنشأة: <strong>{selectedVenue?.name}</strong> | الفترة: من{" "}
+              <strong>{startDate}</strong> إلى <strong>{endDate}</strong>
+              {selectedCourtId && activeCourt ? (
+                <span>
+                  {" "}
+                  | تصفية خاصة بـ: <strong>{activeCourt.name}</strong>
+                </span>
+              ) : (
+                <span> | تقرير شامل لكافة الملاعب</span>
+              )}
+            </p>
+          </div>
+          <div className="text-left text-xs text-zinc-700">
+            <div>تاريخ الاستخراج: {new Date().toLocaleDateString("ar-EG")}</div>
+            <div className="font-black text-emerald-700 text-sm">Passyli.com</div>
+          </div>
+        </div>
+      </div>
+
       {/* Top Filter & Operations Toolbar */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-4">
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-4 print:hidden">
         {/* Row 1: Court Filter Ribbon */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
           <div className="flex items-center gap-2.5">
@@ -412,6 +514,17 @@ export default function DashboardAnalyticsPage() {
               <Download className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
               <span>تصدير CSV</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => window.print()}
+              disabled={!analytics}
+              className="min-h-[40px] px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/10 border border-white/[0.08] text-xs font-bold text-zinc-200 inline-flex items-center gap-2 transition-all disabled:opacity-40"
+              title="طباعة التقرير أو حفظه PDF"
+            >
+              <Printer className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+              <span>طباعة</span>
+            </button>
           </div>
         </div>
       </div>
@@ -422,14 +535,23 @@ export default function DashboardAnalyticsPage() {
           <div className="flex items-center gap-3">
             <span className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse shrink-0" />
             <div>
-              <span className="text-xs text-zinc-200 block">
-                تصفية التقرير لملعب محدد:{" "}
-                <strong className="text-white font-black text-sm">{activeCourt.name}</strong>{" "}
-                <span className="text-zinc-400 text-xs">
-                  ({activeCourt.sport === "football" ? "خماسي" : "بادل"})
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-zinc-200">
+                  تصفية التقرير لملعب محدد:{" "}
+                  <strong className="text-white font-black text-sm">
+                    {activeCourt.name}
+                  </strong>{" "}
+                  <span className="text-zinc-400 text-xs">
+                    ({activeCourt.sport === "football" ? "خماسي" : "بادل"})
+                  </span>
                 </span>
-              </span>
-              <span className="text-[11px] text-zinc-400">
+                {activeCourtContributionPct > 0 && (
+                  <span className="px-2 py-0.5 rounded-md bg-primary/20 text-primary border border-primary/30 text-[10px] font-black tabular-nums">
+                    يساهم بنسبة {activeCourtContributionPct}% من إجمالي أرباح المنشأة
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] text-zinc-400 block mt-0.5">
                 جميع المؤشرات المالية والمواعيد أدناه تخص هذا الملعب فقط
               </span>
             </div>
@@ -437,7 +559,7 @@ export default function DashboardAnalyticsPage() {
           <button
             type="button"
             onClick={() => setSelectedCourtId(null)}
-            className="text-xs font-black text-primary hover:text-white flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/30 shrink-0 self-start sm:self-auto"
+            className="text-xs font-black text-primary hover:text-white flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/30 shrink-0 self-start sm:self-auto print:hidden"
           >
             <X className="h-3.5 w-3.5" strokeWidth={2} />
             <span>عرض كافة الملاعب (إلغاء التحديد)</span>
@@ -731,7 +853,7 @@ export default function DashboardAnalyticsPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedCourtId(isCurrentSelected ? null : court.court_id)}
-                      className={`w-full min-h-[38px] rounded-xl text-xs font-black inline-flex items-center justify-center gap-1.5 transition-all ${
+                      className={`w-full min-h-[38px] rounded-xl text-xs font-black inline-flex items-center justify-center gap-1.5 transition-all print:hidden ${
                         isCurrentSelected
                           ? "bg-primary text-black shadow-md shadow-primary/20"
                           : "bg-white/[0.05] hover:bg-white/10 text-zinc-300 hover:text-white border border-white/[0.08]"
@@ -792,7 +914,7 @@ export default function DashboardAnalyticsPage() {
               </div>
 
               {/* View Switcher Toggle */}
-              <div className="flex items-center gap-1 p-1 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] self-start sm:self-auto">
+              <div className="flex items-center gap-1 p-1 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] self-start sm:self-auto print:hidden">
                 <button
                   type="button"
                   onClick={() => setHourlyViewMode("grid")}
@@ -1371,7 +1493,7 @@ export default function DashboardAnalyticsPage() {
             </div>
 
             {/* View Mode Toggle (Chart vs Table) */}
-            <div className="flex items-center gap-1 p-1 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] self-start sm:self-auto">
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] self-start sm:self-auto print:hidden">
               <button
                 type="button"
                 onClick={() => setDailyViewMode("chart")}
