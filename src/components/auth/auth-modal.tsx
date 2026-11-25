@@ -128,7 +128,8 @@ export default function AuthModal() {
           email.trim(),
           password,
           fullName.trim(),
-          phone.trim()
+          phone.trim(),
+          authRedirectUrl
         );
         if (!res.success) {
           setErrorMsg(res.error || "تعذر إنشاء الحساب");

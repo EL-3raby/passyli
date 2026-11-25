@@ -85,19 +85,40 @@ export async function signUpWithPassword(
   email: string,
   password: string,
   fullName: string,
-  phone?: string
+  phone?: string,
+  redirectTo?: string
 ) {
   const supabase = createClient();
   const cleanPhone = phone?.trim().replace(/\s+/g, "") || null;
+
+  if (cleanPhone) {
+    const { data: phoneTaken, error: phoneCheckError } = await supabase.rpc(
+      "is_signup_phone_taken",
+      { p_phone: cleanPhone }
+    );
+    if (!phoneCheckError && phoneTaken) {
+      return {
+        success: false,
+        error:
+          "رقم الموبايل مسجل بالفعل لحساب آخر؛ سجل الدخول بذلك الحساب أو استخدم رقماً مختلفاً (أو اتركه فارغاً).",
+      };
+    }
+  }
+
+  let emailRedirectUrl: string | undefined = undefined;
+  if (typeof window !== "undefined") {
+    const callbackUrl = new URL("/auth/callback", window.location.origin);
+    if (redirectTo && redirectTo.startsWith("/")) {
+      callbackUrl.searchParams.set("next", redirectTo);
+    }
+    emailRedirectUrl = callbackUrl.toString();
+  }
 
   const { data, error } = await supabase.auth.signUp({
     email: email.trim(),
     password,
     options: {
-      emailRedirectTo:
-        typeof window !== "undefined"
-          ? `${window.location.origin}/auth/callback`
-          : undefined,
+      emailRedirectTo: emailRedirectUrl,
       data: {
         full_name: fullName.trim(),
         phone: cleanPhone,
@@ -111,6 +132,9 @@ export async function signUpWithPassword(
       friendlyMsg = "هذا البريد الإلكتروني مسجل بالفعل، يرجى تسجيل الدخول";
     } else if (error.message.includes("Password should be")) {
       friendlyMsg = "كلمة المرور ضعيفة، يجب أن تكون 6 أحرف على الأقل";
+    } else if (error.message.includes("Database error saving new user")) {
+      friendlyMsg =
+        "تعذر حفظ بيانات الحساب، تأكد من عدم ارتباط رقم الموبايل بحساب آخر ثم أعد المحاولة.";
     }
     return { success: false, error: friendlyMsg };
   }

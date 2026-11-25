@@ -810,6 +810,12 @@ export type Database = {
         }
         Returns: Json
       }
+      is_signup_phone_taken: {
+        Args: {
+          p_phone: string
+        }
+        Returns: boolean
+      }
       submit_partner_application: {
         Args: {
           p_venue_name: string
