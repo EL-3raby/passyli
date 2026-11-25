@@ -238,18 +238,39 @@ export default function CourtsCatalogPage() {
       const venueSlug = params.get("venue");
       const dateParam = params.get("date");
       const slotParam = params.get("slot");
+      const courtParam = params.get("court");
 
       if (!venueSlug) return;
       const targetVenue = venues.find((v) => v.slug === venueSlug);
       if (!targetVenue || !targetVenue.courts[0]) return;
 
-      const primaryCourt = targetVenue.courts[0];
-      const day = availableDays.find((d) => d.dateStr === dateParam) || availableDays[0];
-      const slot = slotParam || primaryCourt.available_slots[0] || "08:00 م";
+      const targetCourt =
+        (courtParam
+          ? targetVenue.courts.find((c) => c.id === courtParam)
+          : null) || targetVenue.courts[0];
+
+      let day = availableDays.find((d) => d.dateStr === dateParam);
+      if (!day && dateParam) {
+        try {
+          const dObj = new Date(dateParam + "T00:00:00");
+          day = {
+            key: dateParam,
+            label: new Intl.DateTimeFormat("ar-EG", { weekday: "long" }).format(dObj),
+            displayDate: new Intl.DateTimeFormat("ar-EG", { day: "numeric", month: "long" }).format(dObj),
+            dateStr: dateParam,
+          };
+        } catch {
+          day = availableDays[0];
+        }
+      } else if (!day) {
+        day = availableDays[0];
+      }
+
+      const slot = slotParam || targetCourt.available_slots[0] || "08:00 م";
 
       setBookingModalData({
         venue: targetVenue,
-        court: primaryCourt,
+        court: targetCourt,
         bookingDate: day.dateStr,
         displayDate: day.displayDate,
         dayLabel: day.label,

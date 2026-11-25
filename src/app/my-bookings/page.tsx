@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -27,9 +27,18 @@ import {
   X,
   XCircle,
   Zap,
+  Lock,
+  Check,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
-import { cancelBookingLock, submitVenueReview } from "@/lib/api/bookings";
+import {
+  cancelBookingLock,
+  submitVenueReview,
+  getActiveBookingsForDate,
+  isSlotMatchingTime,
+  type ActiveSlotLock,
+} from "@/lib/api/bookings";
+import { generateDailySlots } from "@/lib/api/venues";
 import {
   updateMatchmakingStatus,
   formatDateArabic,
@@ -193,6 +202,95 @@ export default function MyBookingsPage() {
     setActionToast("شكراً لك! تم نشر تقييمك الموثق للملعب بنجاح.");
     setTimeout(() => setActionToast(null), 5000);
     void loadPlayerData(true);
+  };
+
+  // Re-book Modal State & Handlers
+  const [rebookBooking, setRebookBooking] = useState<PlayerBooking | null>(null);
+  const [rebookDate, setRebookDate] = useState<string>("");
+  const [rebookSlot, setRebookSlot] = useState<string>("");
+  const [rebookActiveLocks, setRebookActiveLocks] = useState<ActiveSlotLock[]>([]);
+  const [isLoadingRebookSlots, setIsLoadingRebookSlots] = useState(false);
+
+  const rebookDays = useMemo(() => {
+    const days: { dateStr: string; label: string; dayName: string; dayNum: number; monthName: string }[] = [];
+    const now = new Date();
+    const arabicDays = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+    const arabicMonths = [
+      "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+      "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+    ];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const dateStr = `${year}-${month}-${day}`;
+      const label = i === 0 ? "النهاردة" : i === 1 ? "بكرة" : arabicDays[d.getDay()];
+      days.push({
+        dateStr,
+        label,
+        dayName: arabicDays[d.getDay()],
+        dayNum: d.getDate(),
+        monthName: arabicMonths[d.getMonth()],
+      });
+    }
+    return days;
+  }, []);
+
+  const handleOpenRebook = (booking: PlayerBooking) => {
+    setRebookBooking(booking);
+    const initialDate = rebookDays[0]?.dateStr || new Date().toISOString().split("T")[0];
+    setRebookDate(initialDate);
+    const prevSlot = formatTimeArabic(booking.start_time);
+    setRebookSlot(prevSlot);
+  };
+
+  useEffect(() => {
+    if (!rebookBooking || !rebookDate) return;
+    let isMounted = true;
+    setIsLoadingRebookSlots(true);
+    getActiveBookingsForDate(rebookDate)
+      .then((locks) => {
+        if (isMounted) setRebookActiveLocks(locks);
+      })
+      .catch(() => {
+        if (isMounted) setRebookActiveLocks([]);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingRebookSlots(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [rebookBooking, rebookDate]);
+
+  const rebookSlots = useMemo(() => {
+    if (!rebookBooking) return [];
+    const duration =
+      rebookBooking.court?.slot_duration_minutes ||
+      (rebookBooking.court?.sport === "padel" ? 90 : 60);
+    return generateDailySlots(duration);
+  }, [rebookBooking]);
+
+  const isRebookSlotTaken = (slot: string) => {
+    if (!rebookBooking) return false;
+    return rebookActiveLocks.some(
+      (b) => b.courtId === rebookBooking.court.id && isSlotMatchingTime(slot, b.startTime)
+    );
+  };
+
+  const handleProceedRebook = () => {
+    if (!rebookBooking || !rebookSlot || !rebookDate) return;
+    const venueSlug = rebookBooking.court?.venue?.slug;
+    const courtId = rebookBooking.court?.id;
+    const url = `/courts#book?venue=${encodeURIComponent(
+      venueSlug || ""
+    )}&court=${encodeURIComponent(courtId || "")}&date=${encodeURIComponent(
+      rebookDate
+    )}&slot=${encodeURIComponent(rebookSlot)}`;
+    setRebookBooking(null);
+    router.push(url);
   };
 
   // Live 1-second tick for active 8-minute hold countdowns
@@ -976,17 +1074,14 @@ export default function MyBookingsPage() {
                               {(booking.status === "confirmed" || booking.status === "completed") && (
                                 <div className="flex flex-wrap items-center gap-2">
                                   {booking.court?.venue?.slug && (
-                                    <Link
-                                      href={`/courts#book?venue=${encodeURIComponent(
-                                        booking.court.venue.slug
-                                      )}&slot=${encodeURIComponent(
-                                        formatTimeArabic(booking.start_time)
-                                      )}`}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenRebook(booking)}
                                       className="flex-1 min-h-[42px] rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
                                     >
                                       <RotateCcw className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
                                       <span>احجز نفس الملعب تاني</span>
-                                    </Link>
+                                    </button>
                                   )}
 
                                   {booking.status === "completed" && !booking.has_review && (
@@ -1011,19 +1106,24 @@ export default function MyBookingsPage() {
 
                               {(booking.status === "cancelled" || booking.status === "expired") && (
                                 <div className="flex flex-wrap items-center gap-2">
-                                  <Link
-                                    href={
-                                      booking.court?.venue?.slug
-                                        ? `/courts#book?venue=${encodeURIComponent(
-                                            booking.court.venue.slug
-                                          )}`
-                                        : "/courts"
-                                    }
-                                    className="flex-1 min-h-[42px] rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
-                                  >
-                                    <RotateCcw className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                                    <span>احجز ميعاد بديل في الملعب</span>
-                                  </Link>
+                                  {booking.court?.venue?.slug ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenRebook(booking)}
+                                      className="flex-1 min-h-[42px] rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                                    >
+                                      <RotateCcw className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                                      <span>احجز ميعاد بديل في الملعب</span>
+                                    </button>
+                                  ) : (
+                                    <Link
+                                      href="/courts"
+                                      className="flex-1 min-h-[42px] rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                                    >
+                                      <RotateCcw className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                                      <span>احجز ميعاد بديل في الملعب</span>
+                                    </Link>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -1242,6 +1342,171 @@ export default function MyBookingsPage() {
                 <span>{submittingReview ? "جاري النشر..." : "نشر التقييم الموثق"}</span>
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Re-book Pitch Modal: Select Date & Time Slot */}
+      {rebookBooking && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+        >
+          <div
+            className="w-full max-w-lg rounded-2xl bg-[#141418] border border-white/10 p-5 sm:p-6 shadow-2xl my-auto animate-in fade-in zoom-in-95 duration-200"
+            dir="rtl"
+          >
+            {/* Header */}
+            <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] pb-4 mb-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 text-primary text-xs font-bold bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20 mb-2">
+                  <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <span>احجز نفس الملعب تاني</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-white">
+                  {rebookBooking.court?.venue?.name}
+                </h3>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  {rebookBooking.court?.name} • {rebookBooking.court?.sport === "padel" ? "بادل" : "كرة قدم خماسي"} • {rebookBooking.court?.venue?.district || rebookBooking.court?.venue?.city}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRebookBooking(null)}
+                className="h-9 w-9 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-all"
+                aria-label="إغلاق النافذة"
+              >
+                <X className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            {/* Step 1: Select Day */}
+            <div className="mb-4">
+              <label className="text-xs font-bold text-zinc-300 block mb-2">
+                ١. اختار اليوم اللي عايز تلعب فيه:
+              </label>
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                {rebookDays.map((day) => {
+                  const isSelected = rebookDate === day.dateStr;
+                  return (
+                    <button
+                      key={day.dateStr}
+                      type="button"
+                      onClick={() => setRebookDate(day.dateStr)}
+                      className={`min-w-[80px] p-2.5 rounded-xl border text-center transition-all shrink-0 ${
+                        isSelected
+                          ? "bg-primary text-black border-primary shadow-sm font-black"
+                          : "bg-[#0e0e11] hover:bg-white/[0.05] border-white/[0.08] text-zinc-300 hover:text-white font-bold"
+                      }`}
+                    >
+                      <span className="block text-[11px] leading-tight opacity-90">
+                        {day.label}
+                      </span>
+                      <span className="block text-sm font-black mt-1 tabular-nums">
+                        {day.dayNum}
+                      </span>
+                      <span className="block text-[10px] opacity-75">
+                        {day.monthName}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Step 2: Select Time Slot */}
+            <div className="mb-5">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-bold text-zinc-300">
+                  ٢. اختار ميعاد بداية الماتش:
+                </label>
+                {isLoadingRebookSlots && (
+                  <span className="inline-flex items-center gap-1 text-[11px] text-zinc-400">
+                    <Loader2 className="h-3 w-3 animate-spin text-primary" strokeWidth={1.5} />
+                    <span>تحديث المتاح...</span>
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-1 rounded-xl bg-[#0e0e11] border border-white/[0.06]">
+                {rebookSlots.map((slot) => {
+                  const isTaken = isRebookSlotTaken(slot);
+                  const isSelected = rebookSlot === slot;
+
+                  if (isTaken) {
+                    return (
+                      <div
+                        key={slot}
+                        className="min-h-[42px] px-2 rounded-lg bg-zinc-900/60 border border-white/[0.04] text-zinc-600 text-xs flex flex-col items-center justify-center opacity-60 cursor-not-allowed"
+                        title="هذا الميعاد محجوز بالفعل"
+                      >
+                        <span className="tabular-nums line-through">{slot}</span>
+                        <span className="text-[9px] text-rose-400/80 inline-flex items-center gap-0.5">
+                          <Lock className="h-2.5 w-2.5" strokeWidth={1.5} />
+                          <span>محجوز</span>
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => setRebookSlot(slot)}
+                      className={`min-h-[42px] px-2 rounded-lg border text-xs font-bold transition-all flex flex-col items-center justify-center ${
+                        isSelected
+                          ? "bg-primary text-black border-primary shadow-sm font-black"
+                          : "bg-[#141418] hover:bg-white/[0.08] border-white/[0.08] text-zinc-200 hover:text-white hover:border-primary/40"
+                      }`}
+                    >
+                      <span className="tabular-nums">{slot}</span>
+                      <span className={`text-[9px] ${isSelected ? "text-black/80 font-bold" : "text-emerald-400"}`}>
+                        {isSelected ? "مختار" : "متاح"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Selected Summary Pill */}
+            {rebookSlot && (
+              <div className="mb-4 rounded-xl bg-white/[0.04] border border-white/[0.08] p-3 text-xs flex items-center justify-between text-zinc-300">
+                <span className="font-bold">الميعاد المختار:</span>
+                <span className="font-black text-primary tabular-nums">
+                  {rebookSlot} — {rebookDays.find((d) => d.dateStr === rebookDate)?.label || rebookDate}
+                </span>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={handleProceedRebook}
+                disabled={!rebookSlot || isRebookSlotTaken(rebookSlot)}
+                className="w-full min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-40 disabled:pointer-events-none text-black font-black text-xs inline-flex items-center justify-center gap-2 transition-all shadow-[0_2px_12px_rgba(16,185,129,0.25)]"
+              >
+                <Check className="h-4 w-4" strokeWidth={2.5} />
+                <span>
+                  {rebookSlot
+                    ? `متابعة الحجز لميعاد ${rebookSlot}`
+                    : "اختار ميعاد للمتابعة"}
+                </span>
+              </button>
+
+              {rebookBooking.court?.venue?.slug && (
+                <Link
+                  href={`/courts#book?venue=${encodeURIComponent(rebookBooking.court.venue.slug)}`}
+                  onClick={() => setRebookBooking(null)}
+                  className="w-full min-h-[38px] rounded-xl bg-transparent hover:bg-white/[0.04] text-zinc-400 hover:text-zinc-200 text-xs font-bold inline-flex items-center justify-center transition-all"
+                >
+                  <span>أو تصفح كافة الملاعب والمواعيد في صفحة الكتالوج</span>
+                </Link>
+              )}
+            </div>
           </div>
         </div>
       )}
