@@ -19,6 +19,8 @@ import {
   AlertTriangle,
   Building2,
   X,
+  Printer,
+  MessageCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -90,6 +92,16 @@ function formatTimeArabic(timeStr: string) {
   return `${String(h).padStart(2, "0")}:${mStr || "00"} ${period}`;
 }
 
+function buildStaffWhatsAppUrl(phone: string, text: string): string {
+  const digits = phone.replace(/\D/g, "");
+  const intl = digits.startsWith("20")
+    ? digits
+    : digits.startsWith("0")
+    ? `2${digits}`
+    : `20${digits}`;
+  return `https://wa.me/${intl}?text=${encodeURIComponent(text)}`;
+}
+
 export default function StaffPortalPage() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [authenticatedVenue, setAuthenticatedVenue] = useState<{
@@ -130,6 +142,7 @@ export default function StaffPortalPage() {
   const [walkinPhone, setWalkinPhone] = useState("");
   const [walkinPaid, setWalkinPaid] = useState<number>(0);
   const [walkinBusy, setWalkinBusy] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const showToast = useCallback((text: string, isError = false) => {
     setFeedbackMsg({ text, isError });
@@ -547,6 +560,14 @@ export default function StaffPortalPage() {
             </button>
             <button
               type="button"
+              onClick={() => setIsSheetOpen(true)}
+              className="min-h-[44px] px-3.5 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.08] text-zinc-200 text-xs font-bold inline-flex items-center gap-1.5"
+            >
+              <Printer className="h-4 w-4 text-primary" strokeWidth={1.5} />
+              <span>كشف اليوم</span>
+            </button>
+            <button
+              type="button"
               onClick={handleLogout}
               className="min-h-[44px] px-3.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/25 text-rose-300 text-xs font-bold inline-flex items-center gap-1.5"
             >
@@ -743,6 +764,18 @@ export default function StaffPortalPage() {
                                 <CheckCircle2 className="h-4 w-4" strokeWidth={1.5} />
                                 <span>حضر واستلم</span>
                               </button>
+                              <a
+                                href={buildStaffWhatsAppUrl(
+                                  booking.booker_phone,
+                                  `مرحباً كابتن ${booking.booker_name}، نذكرك بموعد حجزك اليوم في ${venueInfo?.name || authenticatedVenue.venueName} الساعة ${formatTimeArabic(booking.start_time)} (كود ${booking.booking_reference}).`
+                                )}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label="تذكير واتساب"
+                                className="min-h-[44px] min-w-[44px] rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/25 text-emerald-300 inline-flex items-center justify-center"
+                              >
+                                <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
+                              </a>
                               <button
                                 type="button"
                                 disabled={isBusy}
@@ -862,6 +895,102 @@ export default function StaffPortalPage() {
                 <span>{walkinBusy ? "جاري القفل..." : "تأكيد وقفل الساعة"}</span>
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Isolated Daily Running Sheet Modal (Zero Profits) */}
+      {isSheetOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setIsSheetOpen(false)}
+        >
+          <div
+            className="w-full max-w-3xl max-h-[88vh] overflow-y-auto rounded-3xl bg-[#141418] border border-white/10 p-5 sm:p-6 space-y-4 shadow-2xl"
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3 print:border-zinc-300">
+              <div>
+                <h3 className="font-display text-base sm:text-lg font-black text-white">
+                  كشف تشغيل الدكة — {venueInfo?.name || authenticatedVenue.venueName}
+                </h3>
+                <p className="text-xs text-zinc-400 tabular-nums">
+                  التاريخ: {selectedDate} (مرتب حسب الميعاد — بدون بيانات أرباح)
+                </p>
+              </div>
+              <div className="flex items-center gap-2 print:hidden">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="min-h-[44px] px-4 rounded-xl bg-primary text-black font-black text-xs inline-flex items-center gap-1.5"
+                >
+                  <Printer className="h-4 w-4" strokeWidth={2} />
+                  <span>طباعة الكشف</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsSheetOpen(false)}
+                  aria-label="إغلاق"
+                  className="min-h-[44px] min-w-[44px] rounded-xl bg-white/[0.05] text-zinc-300 flex items-center justify-center"
+                >
+                  <X className="h-5 w-5" strokeWidth={1.5} />
+                </button>
+              </div>
+            </div>
+
+            {bookings.filter((b) => b.status === "confirmed" || b.status === "completed").length === 0 ? (
+              <p className="text-xs text-zinc-400 py-8 text-center">
+                لا توجد حجوزات مؤكدة لهذا اليوم حتى الآن.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-right">
+                  <thead>
+                    <tr className="border-b border-white/[0.08] text-zinc-400">
+                      <th className="py-2.5 px-3 font-bold">الساعة</th>
+                      <th className="py-2.5 px-3 font-bold">الملعب</th>
+                      <th className="py-2.5 px-3 font-bold">الكابتن</th>
+                      <th className="py-2.5 px-3 font-bold">الموبايل</th>
+                      <th className="py-2.5 px-3 font-bold">الكود</th>
+                      <th className="py-2.5 px-3 font-bold">المطلوب كاش</th>
+                      <th className="py-2.5 px-3 font-bold">الحالة</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.05]">
+                    {bookings
+                      .filter((b) => b.status === "confirmed" || b.status === "completed")
+                      .map((b) => {
+                        const courtName =
+                          courts.find((c) => c.id === b.court_id)?.name || "ملعب";
+                        return (
+                          <tr key={b.id}>
+                            <td className="py-2.5 px-3 font-bold text-white tabular-nums">
+                              {formatTimeArabic(b.start_time)}
+                            </td>
+                            <td className="py-2.5 px-3 text-zinc-300">{courtName}</td>
+                            <td className="py-2.5 px-3 font-bold text-white">
+                              {b.booker_name}
+                            </td>
+                            <td className="py-2.5 px-3 text-zinc-300 tabular-nums" dir="ltr">
+                              {b.booker_phone}
+                            </td>
+                            <td className="py-2.5 px-3 font-mono text-zinc-400 tabular-nums" dir="ltr">
+                              {b.booking_reference}
+                            </td>
+                            <td className="py-2.5 px-3 font-black text-amber-400 tabular-nums">
+                              {b.cash_remaining} ج.م
+                            </td>
+                            <td className="py-2.5 px-3 font-bold text-emerald-400">
+                              {b.status === "completed" ? "حضر" : "منتظر"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}

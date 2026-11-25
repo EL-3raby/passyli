@@ -760,6 +760,31 @@ export type Database = {
         }
         Returns: Json
       }
+      owner_update_court_settings: {
+        Args: {
+          p_court_id: string
+          p_name: string
+          p_price_morning: number
+          p_price_evening: number
+          p_peak_hour_start: string
+          p_slot_duration_minutes: number
+          p_is_active: boolean
+        }
+        Returns: Json
+      }
+      owner_add_court: {
+        Args: {
+          p_venue_id: string
+          p_name: string
+          p_sport: Database["public"]["Enums"]["sport_type"]
+          p_surface: Database["public"]["Enums"]["surface_type"]
+          p_price_morning: number
+          p_price_evening: number
+          p_peak_hour_start?: string
+          p_slot_duration_minutes?: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       booking_status:

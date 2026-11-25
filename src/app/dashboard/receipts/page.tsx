@@ -33,6 +33,10 @@ import { createClient } from "@/lib/supabase/client";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import WalkinModal from "@/components/dashboard/walkin-modal";
 import MaintenanceModal from "@/components/dashboard/maintenance-modal";
+import WalletModal from "@/components/dashboard/wallet-modal";
+import PrepaidWalletModal from "@/components/dashboard/prepaid-wallet-modal";
+import StaffPinModal from "@/components/dashboard/staff-pin-modal";
+import CourtSettingsModal from "@/components/dashboard/court-settings-modal";
 
 export default function ReceiptsReviewPage() {
   const [venues, setVenues] = useState<DashboardVenue[]>([]);
@@ -60,6 +64,10 @@ export default function ReceiptsReviewPage() {
   // Quick modals for header
   const [isWalkinOpen, setIsWalkinOpen] = useState(false);
   const [isMaintenanceOpen, setIsMaintenanceOpen] = useState(false);
+  const [isWalletOpen, setIsWalletOpen] = useState(false);
+  const [isPrepaidOpen, setIsPrepaidOpen] = useState(false);
+  const [isStaffPinOpen, setIsStaffPinOpen] = useState(false);
+  const [isCourtSettingsOpen, setIsCourtSettingsOpen] = useState(false);
 
   // Load data
   const loadData = useCallback(async (showIndicator = false) => {
@@ -205,6 +213,10 @@ export default function ReceiptsReviewPage() {
   };
 
   const allCourts = venues.flatMap((v) => v.courts);
+  const activeVenue =
+    (selectedVenueId !== "all"
+      ? venues.find((v) => v.id === selectedVenueId)
+      : venues[0]) || null;
 
   return (
     <div className="min-h-screen bg-[#09090b] pb-24 text-foreground selection:bg-primary/20 selection:text-primary">
@@ -213,12 +225,36 @@ export default function ReceiptsReviewPage() {
         venuesCount={venues.length}
         pendingReceiptsCount={receipts.length}
         isStaffMode={isStaffMode}
+        prepaidBalance={activeVenue?.prepaid_balance}
+        commissionPerSlot={activeVenue?.commission_per_slot}
         onToggleStaffMode={() => setIsStaffMode((prev) => !prev)}
         onOpenWalkin={() => setIsWalkinOpen(true)}
         onOpenMaintenance={() => setIsMaintenanceOpen(true)}
+        onOpenWallets={() => setIsWalletOpen(true)}
+        onOpenPrepaidWallet={() => setIsPrepaidOpen(true)}
+        onOpenStaffPin={() => setIsStaffPinOpen(true)}
+        onOpenCourtSettings={() => setIsCourtSettingsOpen(true)}
       />
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6" dir="rtl">
+
+        {!isStaffMode && activeVenue && activeVenue.prepaid_balance <= Math.max(30, (activeVenue.commission_per_slot || 15) * 2) && (
+          <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs sm:text-sm text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 font-bold">
+              <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" strokeWidth={1.5} />
+              <span>
+                رصيد محفظة &ldquo;{activeVenue.name}&rdquo; منخفض ({activeVenue.prepaid_balance} ج.م). اشحن الرصيد لضمان استمرار استقبال الحجوزات أونلاين.
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPrepaidOpen(true)}
+              className="min-h-[40px] px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-black text-xs shrink-0"
+            >
+              شحن الرصيد الآن
+            </button>
+          </div>
+        )}
         
         {/* Title & Filters Bar */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-2xl bg-[#141418] border border-white/[0.08] shadow-sm">
@@ -696,6 +732,33 @@ export default function ReceiptsReviewPage() {
         onClose={() => setIsMaintenanceOpen(false)}
         courts={allCourts}
         onMaintenanceSuccess={() => loadData()}
+      />
+
+      <WalletModal
+        isOpen={isWalletOpen}
+        onClose={() => setIsWalletOpen(false)}
+        venue={activeVenue}
+        onSuccess={() => loadData()}
+      />
+
+      <PrepaidWalletModal
+        isOpen={isPrepaidOpen}
+        onClose={() => setIsPrepaidOpen(false)}
+        venue={activeVenue}
+        onRechargeSubmitted={() => loadData()}
+      />
+
+      <StaffPinModal
+        isOpen={isStaffPinOpen}
+        onClose={() => setIsStaffPinOpen(false)}
+        venue={activeVenue}
+      />
+
+      <CourtSettingsModal
+        isOpen={isCourtSettingsOpen}
+        onClose={() => setIsCourtSettingsOpen(false)}
+        venue={activeVenue}
+        onSuccess={() => loadData()}
       />
     </div>
   );

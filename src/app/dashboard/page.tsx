@@ -40,6 +40,7 @@ import DailyRunningSheetModal from "@/components/dashboard/daily-running-sheet-m
 import WalletModal from "@/components/dashboard/wallet-modal";
 import PrepaidWalletModal from "@/components/dashboard/prepaid-wallet-modal";
 import StaffPinModal from "@/components/dashboard/staff-pin-modal";
+import CourtSettingsModal from "@/components/dashboard/court-settings-modal";
 import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardPage() {
@@ -66,6 +67,7 @@ export default function DashboardPage() {
   const [isWalletOpen, setIsWalletOpen] = useState(false);
   const [isPrepaidOpen, setIsPrepaidOpen] = useState(false);
   const [isStaffPinOpen, setIsStaffPinOpen] = useState(false);
+  const [isCourtSettingsOpen, setIsCourtSettingsOpen] = useState(false);
   const [cancellingBooking, setCancellingBooking] = useState<DashboardBooking | null>(null);
 
   // Load venues on mount
@@ -271,6 +273,7 @@ export default function DashboardPage() {
         onOpenWallets={() => setIsWalletOpen(true)}
         onOpenPrepaidWallet={() => setIsPrepaidOpen(true)}
         onOpenStaffPin={() => setIsStaffPinOpen(true)}
+        onOpenCourtSettings={() => setIsCourtSettingsOpen(true)}
       />
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6" dir="rtl">
@@ -871,6 +874,15 @@ export default function DashboardPage() {
         isOpen={isStaffPinOpen}
         onClose={() => setIsStaffPinOpen(false)}
         venue={currentVenue}
+      />
+
+      <CourtSettingsModal
+        isOpen={isCourtSettingsOpen}
+        onClose={() => setIsCourtSettingsOpen(false)}
+        venue={currentVenue}
+        onSuccess={() => {
+          getDashboardVenues().then((vList) => setVenues(vList));
+        }}
       />
     </div>
   );

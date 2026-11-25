@@ -12,6 +12,7 @@ import {
   User,
   Heart,
   ShieldCheck,
+  KeyRound,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 
@@ -45,8 +46,8 @@ export default function Navbar() {
   const isAdminActive = pathname?.startsWith("/admin");
 
   const canManageVenues =
-    Boolean(user) &&
-    (role === "venue_owner" || role === "receptionist" || role === "super_admin");
+    Boolean(user) && (role === "venue_owner" || role === "super_admin");
+  const isStaff = Boolean(user) && role === "receptionist";
   const isSuperAdmin = Boolean(user) && role === "super_admin";
 
   const showPartnerLink = !user || canManageVenues;
@@ -138,6 +139,19 @@ export default function Navbar() {
               }`}
             >
               إدارة الملاعب
+            </Link>
+          )}
+          {isStaff && (
+            <Link
+              href="/staff"
+              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
+                pathname?.startsWith("/staff")
+                  ? "text-amber-300 font-bold bg-amber-500/15"
+                  : "text-amber-300 hover:bg-amber-500/10"
+              }`}
+            >
+              <KeyRound className="h-3.5 w-3.5" strokeWidth={1.5} />
+              <span>بوابة الموظف</span>
             </Link>
           )}
           {isSuperAdmin && (
@@ -259,6 +273,17 @@ export default function Navbar() {
                     >
                       <Building2 className="h-4 w-4 text-emerald-400" strokeWidth={1.5} />
                       <span>إدارة الملاعب</span>
+                    </Link>
+                  )}
+
+                  {isStaff && (
+                    <Link
+                      href="/staff"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-amber-300 hover:bg-amber-500/10 transition-colors"
+                    >
+                      <KeyRound className="h-4 w-4 text-amber-400" strokeWidth={1.5} />
+                      <span>بوابة موظف الدكة</span>
                     </Link>
                   )}
 

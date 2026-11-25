@@ -16,6 +16,7 @@ import {
   Wallet,
   KeyRound,
   Coins,
+  Sliders,
 } from "lucide-react";
 
 interface DashboardHeaderProps {
@@ -32,6 +33,7 @@ interface DashboardHeaderProps {
   onOpenWallets?: () => void;
   onOpenPrepaidWallet?: () => void;
   onOpenStaffPin?: () => void;
+  onOpenCourtSettings?: () => void;
 }
 
 export default function DashboardHeader({
@@ -48,6 +50,7 @@ export default function DashboardHeader({
   onOpenWallets,
   onOpenPrepaidWallet,
   onOpenStaffPin,
+  onOpenCourtSettings,
 }: DashboardHeaderProps) {
   const pathname = usePathname();
   const isTimelineActive = pathname === "/dashboard";
@@ -154,6 +157,18 @@ export default function DashboardHeader({
               </>
             )}
           </button>
+
+          {/* Court Pricing & Add Court Modal (Owner Mode Only) */}
+          {!isStaffMode && onOpenCourtSettings && (
+            <button
+              type="button"
+              onClick={onOpenCourtSettings}
+              title="إدارة أسعار الساعات وإضافة ملاعب فرعية"
+              className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-primary transition-all"
+            >
+              <Sliders className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
 
           {/* Maintenance Modal Trigger */}
           <button

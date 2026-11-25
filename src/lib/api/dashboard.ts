@@ -631,6 +631,70 @@ export async function submitVenueRechargeRequest(params: {
   return data as { success: boolean; id?: string; error?: string };
 }
 
+export async function updateCourtSettings(params: {
+  courtId: string;
+  name: string;
+  priceMorning: number;
+  priceEvening: number;
+  peakHourStart: string;
+  slotDurationMinutes: number;
+  isActive: boolean;
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient();
+  const normalizedPeak =
+    params.peakHourStart.length === 5
+      ? `${params.peakHourStart}:00`
+      : params.peakHourStart;
+
+  const { data, error } = await supabase.rpc("owner_update_court_settings", {
+    p_court_id: params.courtId,
+    p_name: params.name.trim(),
+    p_price_morning: Math.round(params.priceMorning),
+    p_price_evening: Math.round(params.priceEvening),
+    p_peak_hour_start: normalizedPeak,
+    p_slot_duration_minutes: params.slotDurationMinutes,
+    p_is_active: params.isActive,
+  });
+
+  if (error) {
+    return { success: false, error: error.message || "تعذر تحديث إعدادات الملعب" };
+  }
+  return data as { success: boolean; error?: string };
+}
+
+export async function addVenueCourt(params: {
+  venueId: string;
+  name: string;
+  sport: "football" | "padel";
+  surface: "turf_3g" | "panoramic_glass" | "covered_padel" | "natural_grass";
+  priceMorning: number;
+  priceEvening: number;
+  peakHourStart: string;
+  slotDurationMinutes: number;
+}): Promise<{ success: boolean; court_id?: string; error?: string }> {
+  const supabase = createClient();
+  const normalizedPeak =
+    params.peakHourStart.length === 5
+      ? `${params.peakHourStart}:00`
+      : params.peakHourStart;
+
+  const { data, error } = await supabase.rpc("owner_add_court", {
+    p_venue_id: params.venueId,
+    p_name: params.name.trim(),
+    p_sport: params.sport,
+    p_surface: params.surface,
+    p_price_morning: Math.round(params.priceMorning),
+    p_price_evening: Math.round(params.priceEvening),
+    p_peak_hour_start: normalizedPeak,
+    p_slot_duration_minutes: params.slotDurationMinutes,
+  });
+
+  if (error) {
+    return { success: false, error: error.message || "تعذر إضافة الملعب الفرعي" };
+  }
+  return data as { success: boolean; court_id?: string; error?: string };
+}
+
 export async function setVenueStaffPin(
   venueId: string,
   pin: string | null

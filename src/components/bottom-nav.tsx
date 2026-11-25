@@ -11,6 +11,7 @@ import {
   User,
   LogIn,
   ShieldCheck,
+  KeyRound,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -28,9 +29,9 @@ export default function BottomNav() {
   const pathname = usePathname();
   const { user, role, favoriteVenueIds, openAuthModal } = useAuth();
 
-  const canManageVenues =
-    Boolean(user) &&
-    (role === "venue_owner" || role === "receptionist" || role === "super_admin");
+  const isVenueOwnerOrAdmin =
+    Boolean(user) && (role === "venue_owner" || role === "super_admin");
+  const isStaff = Boolean(user) && role === "receptionist";
 
   const navItems: NavItem[] = !user
     ? [
@@ -47,19 +48,16 @@ export default function BottomNav() {
           isActive: pathname?.startsWith("/matchmaking") ?? false,
         },
         {
-          label: role === "super_admin" ? "المشرف" : "تذاكري",
-          href: role === "super_admin" ? "/admin" : "/my-bookings",
-          icon: role === "super_admin" ? ShieldCheck : Ticket,
-          isActive:
-            role === "super_admin"
-              ? pathname?.startsWith("/admin") ?? false
-              : pathname?.startsWith("/my-bookings") ?? false,
+          label: "تذاكري",
+          href: "/my-bookings",
+          icon: Ticket,
+          isActive: pathname?.startsWith("/my-bookings") ?? false,
         },
         {
           label: "أضف ملعبك",
-          href: "/#partner",
+          href: "/partner",
           icon: Building2,
-          isActive: false,
+          isActive: pathname?.startsWith("/partner") ?? false,
         },
         {
           label: "دخول",
@@ -68,7 +66,40 @@ export default function BottomNav() {
           isActive: false,
         },
       ]
-    : canManageVenues
+    : isStaff
+    ? [
+        {
+          label: "بوابة الموظف",
+          href: "/staff",
+          icon: KeyRound,
+          isActive: pathname?.startsWith("/staff") ?? false,
+        },
+        {
+          label: "الملاعب",
+          href: "/courts",
+          icon: MapPin,
+          isActive: pathname?.startsWith("/courts") ?? false,
+        },
+        {
+          label: "التقسيمات",
+          href: "/matchmaking",
+          icon: Users,
+          isActive: pathname?.startsWith("/matchmaking") ?? false,
+        },
+        {
+          label: "تذاكري",
+          href: "/my-bookings",
+          icon: Ticket,
+          isActive: pathname?.startsWith("/my-bookings") ?? false,
+        },
+        {
+          label: "ملفي",
+          href: "/profile",
+          icon: User,
+          isActive: pathname?.startsWith("/profile") ?? false,
+        },
+      ]
+    : isVenueOwnerOrAdmin
     ? [
         {
           label: "الملاعب",
