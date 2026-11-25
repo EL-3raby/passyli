@@ -17,6 +17,9 @@ import {
   KeyRound,
   Coins,
   Sliders,
+  Repeat,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 
 interface DashboardHeaderProps {
@@ -25,6 +28,7 @@ interface DashboardHeaderProps {
   isStaffMode: boolean;
   prepaidBalance?: number;
   commissionPerSlot?: number;
+  soundEnabled?: boolean;
   onToggleStaffMode: () => void;
   onOpenWalkin: () => void;
   onOpenMaintenance: () => void;
@@ -34,6 +38,8 @@ interface DashboardHeaderProps {
   onOpenPrepaidWallet?: () => void;
   onOpenStaffPin?: () => void;
   onOpenCourtSettings?: () => void;
+  onOpenRecurring?: () => void;
+  onToggleSound?: () => void;
 }
 
 export default function DashboardHeader({
@@ -42,6 +48,7 @@ export default function DashboardHeader({
   isStaffMode,
   prepaidBalance,
   commissionPerSlot = 15,
+  soundEnabled = true,
   onToggleStaffMode,
   onOpenWalkin,
   onOpenMaintenance,
@@ -51,6 +58,8 @@ export default function DashboardHeader({
   onOpenPrepaidWallet,
   onOpenStaffPin,
   onOpenCourtSettings,
+  onOpenRecurring,
+  onToggleSound,
 }: DashboardHeaderProps) {
   const pathname = usePathname();
   const isTimelineActive = pathname === "/dashboard";
@@ -157,6 +166,38 @@ export default function DashboardHeader({
               </>
             )}
           </button>
+
+          {/* Sound Chime Toggle */}
+          {onToggleSound && (
+            <button
+              type="button"
+              onClick={onToggleSound}
+              title={soundEnabled ? "كتم جرس الإيصالات الواردة" : "تفعيل جرس تنبيه الإيصالات الواردة"}
+              className={`inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl border transition-all ${
+                soundEnabled
+                  ? "bg-primary/10 border-primary/25 text-primary"
+                  : "bg-white/[0.04] border-white/[0.08] text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              {soundEnabled ? (
+                <Volume2 className="h-4 w-4" strokeWidth={1.5} />
+              ) : (
+                <VolumeX className="h-4 w-4" strokeWidth={1.5} />
+              )}
+            </button>
+          )}
+
+          {/* Recurring Weekly Slot Modal (Owner Mode Only) */}
+          {!isStaffMode && onOpenRecurring && (
+            <button
+              type="button"
+              onClick={onOpenRecurring}
+              title="حجز ساعات أسبوعية ثابتة ومتكررة"
+              className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-primary transition-all"
+            >
+              <Repeat className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
 
           {/* Court Pricing & Add Court Modal (Owner Mode Only) */}
           {!isStaffMode && onOpenCourtSettings && (

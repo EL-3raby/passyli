@@ -746,3 +746,46 @@ export async function submitPartnerApplication(params: {
 
   return data as { success: boolean; id?: string; error?: string };
 }
+
+export interface RecurringBookingResult {
+  success: boolean;
+  created_count?: number;
+  booked_dates?: string[];
+  skipped_dates?: string[];
+  error?: string;
+}
+
+export async function createRecurringWalkin(params: {
+  courtId: string;
+  startDate: string;
+  weeksCount: number;
+  startTime: string;
+  endTime: string;
+  bookerName: string;
+  bookerPhone: string;
+  totalPrice: number;
+  amountPaidPerSlot?: number;
+}): Promise<RecurringBookingResult> {
+  const supabase = createClient();
+  const formatTime = (t: string) => (t.length === 5 ? `${t}:00` : t);
+
+  const { data, error } = await supabase.rpc("owner_create_recurring_walkin", {
+    p_court_id: params.courtId,
+    p_start_date: params.startDate,
+    p_weeks_count: Math.min(12, Math.max(2, Math.round(params.weeksCount))),
+    p_start_time: formatTime(params.startTime),
+    p_end_time: formatTime(params.endTime),
+    p_booker_name: params.bookerName.trim(),
+    p_booker_phone: params.bookerPhone.trim(),
+    p_total_price: Math.round(params.totalPrice),
+    p_amount_paid_per_slot: Math.round(params.amountPaidPerSlot ?? 0),
+  });
+
+  if (error) {
+    return {
+      success: false,
+      error: error.message || "تعذر حجز السلسلة الأسبوعية",
+    };
+  }
+  return data as unknown as RecurringBookingResult;
+}

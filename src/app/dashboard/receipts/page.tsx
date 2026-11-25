@@ -37,6 +37,11 @@ import WalletModal from "@/components/dashboard/wallet-modal";
 import PrepaidWalletModal from "@/components/dashboard/prepaid-wallet-modal";
 import StaffPinModal from "@/components/dashboard/staff-pin-modal";
 import CourtSettingsModal from "@/components/dashboard/court-settings-modal";
+import {
+  isDashboardSoundEnabled,
+  setDashboardSoundEnabled,
+  playReceiptChime,
+} from "@/lib/sound";
 
 export default function ReceiptsReviewPage() {
   const [venues, setVenues] = useState<DashboardVenue[]>([]);
@@ -68,6 +73,12 @@ export default function ReceiptsReviewPage() {
   const [isPrepaidOpen, setIsPrepaidOpen] = useState(false);
   const [isStaffPinOpen, setIsStaffPinOpen] = useState(false);
   const [isCourtSettingsOpen, setIsCourtSettingsOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [newReceiptNotice, setNewReceiptNotice] = useState(false);
+
+  useEffect(() => {
+    setSoundEnabled(isDashboardSoundEnabled());
+  }, []);
 
   // Load data
   const loadData = useCallback(async (showIndicator = false) => {
@@ -94,7 +105,12 @@ export default function ReceiptsReviewPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "receipts" },
-        () => {
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            playReceiptChime();
+            setNewReceiptNotice(true);
+            window.setTimeout(() => setNewReceiptNotice(false), 6000);
+          }
           loadData();
         }
       )
@@ -227,6 +243,7 @@ export default function ReceiptsReviewPage() {
         isStaffMode={isStaffMode}
         prepaidBalance={activeVenue?.prepaid_balance}
         commissionPerSlot={activeVenue?.commission_per_slot}
+        soundEnabled={soundEnabled}
         onToggleStaffMode={() => setIsStaffMode((prev) => !prev)}
         onOpenWalkin={() => setIsWalkinOpen(true)}
         onOpenMaintenance={() => setIsMaintenanceOpen(true)}
@@ -234,9 +251,25 @@ export default function ReceiptsReviewPage() {
         onOpenPrepaidWallet={() => setIsPrepaidOpen(true)}
         onOpenStaffPin={() => setIsStaffPinOpen(true)}
         onOpenCourtSettings={() => setIsCourtSettingsOpen(true)}
+        onToggleSound={() => {
+          const next = !soundEnabled;
+          setSoundEnabled(next);
+          setDashboardSoundEnabled(next);
+          if (next) playReceiptChime();
+        }}
       />
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6" dir="rtl">
+
+        {newReceiptNotice && (
+          <div
+            role="status"
+            className="p-3.5 rounded-2xl bg-primary/15 border border-primary/35 text-primary text-xs sm:text-sm font-black flex items-center gap-2.5"
+          >
+            <span className="h-2 w-2 rounded-full bg-primary animate-ping shrink-0" />
+            <span>وصل إيصال تحويل جديد من لاعب الآن — تم تحديث القائمة تلقائياً!</span>
+          </div>
+        )}
 
         {!isStaffMode && activeVenue && activeVenue.prepaid_balance <= Math.max(30, (activeVenue.commission_per_slot || 15) * 2) && (
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs sm:text-sm text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">

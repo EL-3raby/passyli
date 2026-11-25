@@ -41,6 +41,12 @@ import WalletModal from "@/components/dashboard/wallet-modal";
 import PrepaidWalletModal from "@/components/dashboard/prepaid-wallet-modal";
 import StaffPinModal from "@/components/dashboard/staff-pin-modal";
 import CourtSettingsModal from "@/components/dashboard/court-settings-modal";
+import RecurringBookingModal from "@/components/dashboard/recurring-booking-modal";
+import {
+  isDashboardSoundEnabled,
+  setDashboardSoundEnabled,
+  playReceiptChime,
+} from "@/lib/sound";
 import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardPage() {
@@ -68,7 +74,13 @@ export default function DashboardPage() {
   const [isPrepaidOpen, setIsPrepaidOpen] = useState(false);
   const [isStaffPinOpen, setIsStaffPinOpen] = useState(false);
   const [isCourtSettingsOpen, setIsCourtSettingsOpen] = useState(false);
+  const [isRecurringOpen, setIsRecurringOpen] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [cancellingBooking, setCancellingBooking] = useState<DashboardBooking | null>(null);
+
+  useEffect(() => {
+    setSoundEnabled(isDashboardSoundEnabled());
+  }, []);
 
   // Load venues on mount
   useEffect(() => {
@@ -123,7 +135,10 @@ export default function DashboardPage() {
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "receipts" },
-        () => {
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            playReceiptChime();
+          }
           loadBookings();
         }
       )
@@ -261,6 +276,7 @@ export default function DashboardPage() {
         isStaffMode={isStaffMode}
         prepaidBalance={currentVenue?.prepaid_balance}
         commissionPerSlot={currentVenue?.commission_per_slot}
+        soundEnabled={soundEnabled}
         onToggleStaffMode={() => setIsStaffMode((prev) => !prev)}
         onOpenWalkin={() => {
           setWalkinCourtId(visibleCourts[0]?.id);
@@ -274,6 +290,13 @@ export default function DashboardPage() {
         onOpenPrepaidWallet={() => setIsPrepaidOpen(true)}
         onOpenStaffPin={() => setIsStaffPinOpen(true)}
         onOpenCourtSettings={() => setIsCourtSettingsOpen(true)}
+        onOpenRecurring={() => setIsRecurringOpen(true)}
+        onToggleSound={() => {
+          const next = !soundEnabled;
+          setSoundEnabled(next);
+          setDashboardSoundEnabled(next);
+          if (next) playReceiptChime();
+        }}
       />
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6" dir="rtl">
@@ -882,6 +905,16 @@ export default function DashboardPage() {
         venue={currentVenue}
         onSuccess={() => {
           getDashboardVenues().then((vList) => setVenues(vList));
+        }}
+      />
+
+      <RecurringBookingModal
+        isOpen={isRecurringOpen}
+        onClose={() => setIsRecurringOpen(false)}
+        courts={allCourts}
+        initialDate={selectedDate}
+        onSuccess={() => {
+          loadBookings();
         }}
       />
     </div>

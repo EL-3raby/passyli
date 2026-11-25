@@ -785,6 +785,20 @@ export type Database = {
         }
         Returns: Json
       }
+      owner_create_recurring_walkin: {
+        Args: {
+          p_court_id: string
+          p_start_date: string
+          p_weeks_count: number
+          p_start_time: string
+          p_end_time: string
+          p_booker_name: string
+          p_booker_phone: string
+          p_total_price: number
+          p_amount_paid_per_slot?: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       booking_status:
