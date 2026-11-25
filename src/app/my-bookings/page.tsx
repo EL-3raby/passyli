@@ -29,6 +29,8 @@ import {
   Zap,
   Lock,
   Check,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import {
@@ -136,6 +138,61 @@ function formatCountdown(lockedUntil: string | null, nowMs: number): string | nu
   return `${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
+interface NextWeekSlotTarget {
+  dateStr: string;
+  dayName: string;
+  dayNum: number;
+  monthName: string;
+  slotLabel: string;
+  fullLabel: string;
+}
+
+function getNextWeekSlotTarget(booking: PlayerBooking): NextWeekSlotTarget {
+  const arabicDays = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+  const arabicMonths = [
+    "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+    "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+  ];
+
+  let baseDate = new Date();
+  try {
+    const [y, m, d] = booking.booking_date.split("-").map(Number);
+    baseDate = new Date(y, m - 1, d);
+  } catch {
+    baseDate = new Date();
+  }
+
+  const targetDate = new Date(baseDate);
+  targetDate.setDate(targetDate.getDate() + 7);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // If targetDate is already in the past, roll forward by 7 days until it reaches upcoming
+  while (targetDate < today) {
+    targetDate.setDate(targetDate.getDate() + 7);
+  }
+
+  const year = targetDate.getFullYear();
+  const month = String(targetDate.getMonth() + 1).padStart(2, "0");
+  const day = String(targetDate.getDate()).padStart(2, "0");
+  const dateStr = `${year}-${month}-${day}`;
+
+  const dayName = arabicDays[targetDate.getDay()];
+  const dayNum = targetDate.getDate();
+  const monthName = arabicMonths[targetDate.getMonth()];
+  const slotLabel = formatTimeArabic(booking.start_time);
+
+  return {
+    dateStr,
+    dayName,
+    dayNum,
+    monthName,
+    slotLabel,
+    fullLabel: `${dayName} القادم (${dayNum} ${monthName}) • ${slotLabel}`,
+  };
+}
+
 export default function MyBookingsPage() {
   const router = useRouter();
   const { user, profile, isLoading: authLoading, openAuthModal } = useAuth();
@@ -208,9 +265,11 @@ export default function MyBookingsPage() {
   const [rebookBooking, setRebookBooking] = useState<PlayerBooking | null>(null);
   const [rebookDate, setRebookDate] = useState<string>("");
   const [rebookSlot, setRebookSlot] = useState<string>("");
+  const [timePeriodFilter, setTimePeriodFilter] = useState<"all" | "evening" | "morning">("all");
   const [rebookActiveLocks, setRebookActiveLocks] = useState<ActiveSlotLock[]>([]);
   const [isLoadingRebookSlots, setIsLoadingRebookSlots] = useState(false);
 
+  // 14-day horizon covering 2 full weeks
   const rebookDays = useMemo(() => {
     const days: { dateStr: string; label: string; dayName: string; dayNum: number; monthName: string }[] = [];
     const now = new Date();
@@ -219,7 +278,7 @@ export default function MyBookingsPage() {
       "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
       "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
     ];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 14; i++) {
       const d = new Date(now);
       d.setDate(d.getDate() + i);
       const year = d.getFullYear();
@@ -238,12 +297,18 @@ export default function MyBookingsPage() {
     return days;
   }, []);
 
-  const handleOpenRebook = (booking: PlayerBooking) => {
+  const handleOpenRebook = (
+    booking: PlayerBooking,
+    customDate?: string,
+    customSlot?: string
+  ) => {
     setRebookBooking(booking);
-    const initialDate = rebookDays[0]?.dateStr || new Date().toISOString().split("T")[0];
+    setTimePeriodFilter("all");
+    const target = getNextWeekSlotTarget(booking);
+    const initialDate = customDate || target.dateStr || rebookDays[0]?.dateStr;
     setRebookDate(initialDate);
-    const prevSlot = formatTimeArabic(booking.start_time);
-    setRebookSlot(prevSlot);
+    const initialSlot = customSlot || target.slotLabel || formatTimeArabic(booking.start_time);
+    setRebookSlot(initialSlot);
   };
 
   useEffect(() => {
@@ -272,6 +337,29 @@ export default function MyBookingsPage() {
       (rebookBooking.court?.sport === "padel" ? 90 : 60);
     return generateDailySlots(duration);
   }, [rebookBooking]);
+
+  const filteredRebookSlots = useMemo(() => {
+    if (timePeriodFilter === "all") return rebookSlots;
+    return rebookSlots.filter((slot) => {
+      const isPM = slot.includes("م");
+      const hour = parseInt(slot.split(":")[0], 10);
+      if (timePeriodFilter === "evening") {
+        if (isPM) {
+          return (hour >= 4 && hour <= 11) || hour === 12;
+        } else {
+          return hour === 12 || (hour >= 1 && hour <= 3);
+        }
+      }
+      if (timePeriodFilter === "morning") {
+        if (!isPM) {
+          return hour >= 6 && hour <= 11;
+        } else {
+          return hour >= 1 && hour <= 3;
+        }
+      }
+      return true;
+    });
+  }, [rebookSlots, timePeriodFilter]);
 
   const isRebookSlotTaken = (slot: string) => {
     if (!rebookBooking) return false;
@@ -1072,23 +1160,39 @@ export default function MyBookingsPage() {
                               )}
 
                               {(booking.status === "confirmed" || booking.status === "completed") && (
-                                <div className="flex flex-wrap items-center gap-2">
-                                  {booking.court?.venue?.slug && (
-                                    <button
-                                      type="button"
-                                      onClick={() => handleOpenRebook(booking)}
-                                      className="flex-1 min-h-[42px] rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
-                                    >
-                                      <RotateCcw className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                                      <span>احجز نفس الملعب تاني</span>
-                                    </button>
-                                  )}
+                                <div className="space-y-2">
+                                  {booking.court?.venue?.slug && (() => {
+                                    const nextTarget = getNextWeekSlotTarget(booking);
+                                    return (
+                                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                                        {/* Smart 1-Tap Re-match Next Week */}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleOpenRebook(booking, nextTarget.dateStr, nextTarget.slotLabel)}
+                                          className="flex-1 min-h-[44px] px-3.5 rounded-xl bg-gradient-to-r from-emerald-500/15 via-emerald-500/10 to-transparent hover:from-emerald-500/25 hover:to-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-black flex items-center justify-center gap-2 transition-all shadow-sm"
+                                        >
+                                          <RotateCcw className="h-3.5 w-3.5 text-primary shrink-0" strokeWidth={2} />
+                                          <span>كرر ميعادك: {nextTarget.dayName} القادم ({nextTarget.slotLabel})</span>
+                                        </button>
+
+                                        {/* Custom Time */}
+                                        <button
+                                          type="button"
+                                          onClick={() => handleOpenRebook(booking)}
+                                          className="sm:w-auto min-h-[44px] px-3.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-zinc-300 hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                                        >
+                                          <Calendar className="h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} />
+                                          <span>ميعاد تاني</span>
+                                        </button>
+                                      </div>
+                                    );
+                                  })()}
 
                                   {booking.status === "completed" && !booking.has_review && (
                                     <button
                                       type="button"
                                       onClick={() => handleOpenReview(booking)}
-                                      className="flex-1 min-h-[42px] rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-black flex items-center justify-center gap-1.5 transition-all"
+                                      className="w-full min-h-[42px] rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-black flex items-center justify-center gap-1.5 transition-all"
                                     >
                                       <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={1.5} />
                                       <span>قيّم تجربتك بالملعب</span>
@@ -1096,9 +1200,9 @@ export default function MyBookingsPage() {
                                   )}
 
                                   {booking.status === "completed" && booking.has_review && (
-                                    <span className="min-h-[42px] px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold inline-flex items-center gap-1">
+                                    <span className="w-full min-h-[38px] px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold inline-flex items-center justify-center gap-1">
                                       <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-                                      <span>تم تقييم الماتش</span>
+                                      <span>تم تقييم الماتش بنجاح</span>
                                     </span>
                                   )}
                                 </div>
@@ -1346,170 +1450,300 @@ export default function MyBookingsPage() {
         </div>
       )}
 
-      {/* Re-book Pitch Modal: Select Date & Time Slot */}
-      {rebookBooking && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
-        >
+      {/* Re-book Pitch Mobile Bottom Sheet / Desktop Modal */}
+      {rebookBooking && (() => {
+        const nextTarget = getNextWeekSlotTarget(rebookBooking);
+        const isNextTargetSelected = rebookDate === nextTarget.dateStr && rebookSlot === nextTarget.slotLabel;
+        const isNextTargetTaken = rebookActiveLocks.some(
+          (b) => b.courtId === rebookBooking.court.id && isSlotMatchingTime(nextTarget.slotLabel, b.startTime)
+        );
+
+        return (
           <div
-            className="w-full max-w-lg rounded-2xl bg-[#141418] border border-white/10 p-5 sm:p-6 shadow-2xl my-auto animate-in fade-in zoom-in-95 duration-200"
-            dir="rtl"
+            role="dialog"
+            aria-modal="true"
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center sm:p-4"
           >
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] pb-4 mb-4">
-              <div>
-                <div className="inline-flex items-center gap-1.5 text-primary text-xs font-bold bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20 mb-2">
-                  <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  <span>احجز نفس الملعب تاني</span>
+            {/* Backdrop click to close */}
+            <div
+              className="absolute inset-0"
+              onClick={() => setRebookBooking(null)}
+              aria-hidden="true"
+            />
+
+            <div
+              className="relative w-full sm:max-w-xl max-h-[92vh] flex flex-col rounded-t-3xl sm:rounded-2xl bg-[#141418] border-t sm:border border-white/10 shadow-2xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200 z-10 overflow-hidden text-right"
+              dir="rtl"
+            >
+              {/* Mobile Drag Indicator */}
+              <div className="pt-3 pb-1 sm:hidden flex justify-center">
+                <div className="w-12 h-1.5 rounded-full bg-white/20" />
+              </div>
+
+              {/* Scrollable Content */}
+              <div className="p-5 sm:p-6 overflow-y-auto space-y-4">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] pb-3.5">
+                  <div>
+                    <div className="inline-flex items-center gap-1.5 text-primary text-xs font-bold bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20 mb-2">
+                      <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.5} />
+                      <span>تكرار حجز الملعب</span>
+                    </div>
+                    <h3 className="text-base sm:text-lg font-black text-white">
+                      {rebookBooking.court?.venue?.name}
+                    </h3>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      {rebookBooking.court?.name} • {rebookBooking.court?.sport === "padel" ? "بادل" : "كرة قدم خماسي"} • {rebookBooking.court?.venue?.district || rebookBooking.court?.venue?.city}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setRebookBooking(null)}
+                    className="h-9 w-9 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-all shrink-0"
+                    aria-label="إغلاق النافذة"
+                  >
+                    <X className="h-4 w-4" strokeWidth={1.5} />
+                  </button>
                 </div>
-                <h3 className="text-base sm:text-lg font-black text-white">
-                  {rebookBooking.court?.venue?.name}
-                </h3>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  {rebookBooking.court?.name} • {rebookBooking.court?.sport === "padel" ? "بادل" : "كرة قدم خماسي"} • {rebookBooking.court?.venue?.district || rebookBooking.court?.venue?.city}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setRebookBooking(null)}
-                className="h-9 w-9 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.08] text-zinc-400 hover:text-white flex items-center justify-center transition-all"
-                aria-label="إغلاق النافذة"
-              >
-                <X className="h-4 w-4" strokeWidth={1.5} />
-              </button>
-            </div>
 
-            {/* Step 1: Select Day */}
-            <div className="mb-4">
-              <label className="text-xs font-bold text-zinc-300 block mb-2">
-                ١. اختار اليوم اللي عايز تلعب فيه:
-              </label>
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
-                {rebookDays.map((day) => {
-                  const isSelected = rebookDate === day.dateStr;
-                  return (
-                    <button
-                      key={day.dateStr}
-                      type="button"
-                      onClick={() => setRebookDate(day.dateStr)}
-                      className={`min-w-[80px] p-2.5 rounded-xl border text-center transition-all shrink-0 ${
-                        isSelected
-                          ? "bg-primary text-black border-primary shadow-sm font-black"
-                          : "bg-[#0e0e11] hover:bg-white/[0.05] border-white/[0.08] text-zinc-300 hover:text-white font-bold"
-                      }`}
-                    >
-                      <span className="block text-[11px] leading-tight opacity-90">
-                        {day.label}
-                      </span>
-                      <span className="block text-sm font-black mt-1 tabular-nums">
-                        {day.dayNum}
-                      </span>
-                      <span className="block text-[10px] opacity-75">
-                        {day.monthName}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+                {/* Hero Quick-Pick: Same Slot Next Week */}
+                <div className="rounded-2xl bg-gradient-to-r from-emerald-500/15 via-[#1a1a20] to-[#141418] border border-primary/30 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+                  <div>
+                    <span className="inline-flex items-center gap-1 text-[11px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20 mb-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                      <span>ميعادك الدوري المقترح</span>
+                    </span>
+                    <h4 className="text-sm font-black text-white tabular-nums">
+                      {nextTarget.dayName} القادم ({nextTarget.dayNum} {nextTarget.monthName}) — {nextTarget.slotLabel}
+                    </h4>
+                    <p className="text-[11px] text-zinc-400 mt-0.5">
+                      {isNextTargetTaken ? (
+                        <span className="text-rose-400 font-bold">هذا الميعاد محجوز حالياً الأسبوع القادم</span>
+                      ) : (
+                        <span className="text-emerald-400 font-bold">متاح حالياً للحجز الفوري</span>
+                      )}
+                    </p>
+                  </div>
 
-            {/* Step 2: Select Time Slot */}
-            <div className="mb-5">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-bold text-zinc-300">
-                  ٢. اختار ميعاد بداية الماتش:
-                </label>
-                {isLoadingRebookSlots && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-zinc-400">
-                    <Loader2 className="h-3 w-3 animate-spin text-primary" strokeWidth={1.5} />
-                    <span>تحديث المتاح...</span>
-                  </span>
+                  <button
+                    type="button"
+                    disabled={isNextTargetTaken}
+                    onClick={() => {
+                      setRebookDate(nextTarget.dateStr);
+                      setRebookSlot(nextTarget.slotLabel);
+                    }}
+                    className={`min-h-[40px] px-4 rounded-xl text-xs font-black transition-all shrink-0 flex items-center justify-center gap-1.5 ${
+                      isNextTargetSelected
+                        ? "bg-primary text-black ring-2 ring-primary/50"
+                        : "bg-white/[0.08] hover:bg-white/[0.14] text-white border border-white/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                    }`}
+                  >
+                    {isNextTargetSelected ? (
+                      <>
+                        <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
+                        <span>محدد الآن</span>
+                      </>
+                    ) : (
+                      <>
+                        <Zap className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
+                        <span>اختيار هذا الميعاد</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Step 1: Select Day (14-day horizon) */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-zinc-300">
+                      ١. اختار اليوم:
+                    </label>
+                    <span className="text-[11px] text-zinc-400">متاح لـ 14 يوم قادم</span>
+                  </div>
+                  <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                    {rebookDays.map((day) => {
+                      const isSelected = rebookDate === day.dateStr;
+                      const isNextWeekSameDay = day.dateStr === nextTarget.dateStr;
+
+                      return (
+                        <button
+                          key={day.dateStr}
+                          type="button"
+                          onClick={() => setRebookDate(day.dateStr)}
+                          className={`min-w-[82px] p-2.5 rounded-xl border text-center transition-all shrink-0 relative ${
+                            isSelected
+                              ? "bg-primary text-black border-primary shadow-sm font-black"
+                              : "bg-[#0e0e11] hover:bg-white/[0.05] border-white/[0.08] text-zinc-300 hover:text-white font-bold"
+                          }`}
+                        >
+                          {isNextWeekSameDay && (
+                            <span
+                              className={`absolute -top-1.5 right-1 px-1.5 py-0.2 rounded-full text-[9px] font-black ${
+                                isSelected ? "bg-black text-primary" : "bg-primary text-black"
+                              }`}
+                            >
+                              نفس يومك
+                            </span>
+                          )}
+                          <span className="block text-[11px] leading-tight opacity-90">
+                            {day.label}
+                          </span>
+                          <span className="block text-sm font-black mt-1 tabular-nums">
+                            {day.dayNum}
+                          </span>
+                          <span className="block text-[10px] opacity-75">
+                            {day.monthName}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Step 2: Select Time Slot + Time Period Filter */}
+                <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <label className="text-xs font-bold text-zinc-300">
+                        ٢. اختار ميعاد بداية الماتش:
+                      </label>
+                      {isLoadingRebookSlots && (
+                        <span className="inline-flex items-center gap-1 text-[11px] text-zinc-400">
+                          <Loader2 className="h-3 w-3 animate-spin text-primary" strokeWidth={1.5} />
+                          <span>تحديث...</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Period Filter Chips */}
+                    <div className="flex items-center gap-1 bg-[#0e0e11] p-1 rounded-xl border border-white/[0.06] self-start sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => setTimePeriodFilter("all")}
+                        className={`min-h-[28px] px-2.5 rounded-lg text-[11px] font-bold transition-all ${
+                          timePeriodFilter === "all"
+                            ? "bg-primary text-black font-black"
+                            : "text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        الكل
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTimePeriodFilter("evening")}
+                        className={`min-h-[28px] px-2.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 ${
+                          timePeriodFilter === "evening"
+                            ? "bg-primary text-black font-black"
+                            : "text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        <Moon className="h-3 w-3" strokeWidth={1.5} />
+                        <span>السهرة وبالليل</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTimePeriodFilter("morning")}
+                        className={`min-h-[28px] px-2.5 rounded-lg text-[11px] font-bold transition-all flex items-center gap-1 ${
+                          timePeriodFilter === "morning"
+                            ? "bg-primary text-black font-black"
+                            : "text-zinc-400 hover:text-white"
+                        }`}
+                      >
+                        <Sun className="h-3 w-3" strokeWidth={1.5} />
+                        <span>الصبح والظهيرة</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-52 overflow-y-auto p-1.5 rounded-xl bg-[#0e0e11] border border-white/[0.06]">
+                    {filteredRebookSlots.length === 0 ? (
+                      <div className="col-span-full py-6 text-center text-xs text-zinc-500 font-bold">
+                        لا توجد مواعيد في هذه الفترة، جرب اختيار فترة أخرى أو ميعاد الكل.
+                      </div>
+                    ) : (
+                      filteredRebookSlots.map((slot) => {
+                        const isTaken = isRebookSlotTaken(slot);
+                        const isSelected = rebookSlot === slot;
+
+                        if (isTaken) {
+                          return (
+                            <div
+                              key={slot}
+                              className="min-h-[44px] px-2 rounded-xl bg-zinc-900/60 border border-white/[0.04] text-zinc-600 text-xs flex flex-col items-center justify-center opacity-60 cursor-not-allowed"
+                              title="هذا الميعاد محجوز بالفعل"
+                            >
+                              <span className="tabular-nums line-through">{slot}</span>
+                              <span className="text-[9px] text-rose-400/80 inline-flex items-center gap-0.5">
+                                <Lock className="h-2.5 w-2.5" strokeWidth={1.5} />
+                                <span>محجوز</span>
+                              </span>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <button
+                            key={slot}
+                            type="button"
+                            onClick={() => setRebookSlot(slot)}
+                            className={`min-h-[44px] px-2 rounded-xl border text-xs font-bold transition-all flex flex-col items-center justify-center ${
+                              isSelected
+                                ? "bg-primary text-black border-primary shadow-sm font-black"
+                                : "bg-[#141418] hover:bg-white/[0.08] border-white/[0.08] text-zinc-200 hover:text-white hover:border-primary/40"
+                            }`}
+                          >
+                            <span className="tabular-nums">{slot}</span>
+                            <span className={`text-[9px] ${isSelected ? "text-black/80 font-bold" : "text-emerald-400"}`}>
+                              {isSelected ? "مختار" : "متاح"}
+                            </span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {/* Selected Summary Pill */}
+                {rebookSlot && (
+                  <div className="rounded-xl bg-white/[0.04] border border-white/[0.08] p-3 text-xs flex items-center justify-between text-zinc-300">
+                    <span className="font-bold">الميعاد المختار:</span>
+                    <span className="font-black text-primary tabular-nums">
+                      {rebookSlot} — {rebookDays.find((d) => d.dateStr === rebookDate)?.label || rebookDate}
+                    </span>
+                  </div>
                 )}
               </div>
 
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 max-h-56 overflow-y-auto p-1 rounded-xl bg-[#0e0e11] border border-white/[0.06]">
-                {rebookSlots.map((slot) => {
-                  const isTaken = isRebookSlotTaken(slot);
-                  const isSelected = rebookSlot === slot;
-
-                  if (isTaken) {
-                    return (
-                      <div
-                        key={slot}
-                        className="min-h-[42px] px-2 rounded-lg bg-zinc-900/60 border border-white/[0.04] text-zinc-600 text-xs flex flex-col items-center justify-center opacity-60 cursor-not-allowed"
-                        title="هذا الميعاد محجوز بالفعل"
-                      >
-                        <span className="tabular-nums line-through">{slot}</span>
-                        <span className="text-[9px] text-rose-400/80 inline-flex items-center gap-0.5">
-                          <Lock className="h-2.5 w-2.5" strokeWidth={1.5} />
-                          <span>محجوز</span>
-                        </span>
-                      </div>
-                    );
-                  }
-
-                  return (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => setRebookSlot(slot)}
-                      className={`min-h-[42px] px-2 rounded-lg border text-xs font-bold transition-all flex flex-col items-center justify-center ${
-                        isSelected
-                          ? "bg-primary text-black border-primary shadow-sm font-black"
-                          : "bg-[#141418] hover:bg-white/[0.08] border-white/[0.08] text-zinc-200 hover:text-white hover:border-primary/40"
-                      }`}
-                    >
-                      <span className="tabular-nums">{slot}</span>
-                      <span className={`text-[9px] ${isSelected ? "text-black/80 font-bold" : "text-emerald-400"}`}>
-                        {isSelected ? "مختار" : "متاح"}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Selected Summary Pill */}
-            {rebookSlot && (
-              <div className="mb-4 rounded-xl bg-white/[0.04] border border-white/[0.08] p-3 text-xs flex items-center justify-between text-zinc-300">
-                <span className="font-bold">الميعاد المختار:</span>
-                <span className="font-black text-primary tabular-nums">
-                  {rebookSlot} — {rebookDays.find((d) => d.dateStr === rebookDate)?.label || rebookDate}
-                </span>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={handleProceedRebook}
-                disabled={!rebookSlot || isRebookSlotTaken(rebookSlot)}
-                className="w-full min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-40 disabled:pointer-events-none text-black font-black text-xs inline-flex items-center justify-center gap-2 transition-all shadow-[0_2px_12px_rgba(16,185,129,0.25)]"
-              >
-                <Check className="h-4 w-4" strokeWidth={2.5} />
-                <span>
-                  {rebookSlot
-                    ? `متابعة الحجز لميعاد ${rebookSlot}`
-                    : "اختار ميعاد للمتابعة"}
-                </span>
-              </button>
-
-              {rebookBooking.court?.venue?.slug && (
-                <Link
-                  href={`/courts#book?venue=${encodeURIComponent(rebookBooking.court.venue.slug)}`}
-                  onClick={() => setRebookBooking(null)}
-                  className="w-full min-h-[38px] rounded-xl bg-transparent hover:bg-white/[0.04] text-zinc-400 hover:text-zinc-200 text-xs font-bold inline-flex items-center justify-center transition-all"
+              {/* Sticky Action Footer */}
+              <div className="p-4 sm:p-5 border-t border-white/[0.08] bg-[#141418] flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleProceedRebook}
+                  disabled={!rebookSlot || isRebookSlotTaken(rebookSlot)}
+                  className="w-full min-h-[48px] rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-40 disabled:pointer-events-none text-black font-black text-xs inline-flex items-center justify-center gap-2 transition-all shadow-[0_2px_14px_rgba(16,185,129,0.25)]"
                 >
-                  <span>أو تصفح كافة الملاعب والمواعيد في صفحة الكتالوج</span>
-                </Link>
-              )}
+                  <Check className="h-4 w-4" strokeWidth={2.5} />
+                  <span>
+                    {rebookSlot
+                      ? `متابعة الحجز لميعاد ${rebookSlot}`
+                      : "اختار ميعاد للمتابعة"}
+                  </span>
+                </button>
+
+                {rebookBooking.court?.venue?.slug && (
+                  <Link
+                    href={`/courts#book?venue=${encodeURIComponent(rebookBooking.court.venue.slug)}`}
+                    onClick={() => setRebookBooking(null)}
+                    className="w-full min-h-[36px] rounded-xl bg-transparent hover:bg-white/[0.04] text-zinc-400 hover:text-zinc-200 text-xs font-bold inline-flex items-center justify-center transition-all"
+                  >
+                    <span>أو تصفح كافة الملاعب والمواعيد في صفحة الكتالوج</span>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
