@@ -448,6 +448,7 @@ export default function AdminShell({
           <div className="flex items-center gap-2 shrink-0">
             {notifications && (
               <NotificationsPopover
+                align="left"
                 notifications={notifications}
                 onMarkAllAsRead={onMarkAllNotificationsAsRead}
                 onMarkAsRead={onMarkNotificationAsRead}

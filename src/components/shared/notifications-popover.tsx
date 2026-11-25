@@ -92,9 +92,9 @@ export default function NotificationsPopover({
   onMarkAllAsRead,
   onMarkAsRead,
   onClearAll,
-  title = "مركز التنبيهات التشغيلية",
+  title = "تنبيهات المنشأة الحية",
   emptyMessage = "جميع العمليات محدثة، لا توجد تنبيهات معلقة حالياً",
-  align = "right",
+  align = "left",
 }: NotificationsPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "unread">("all");
@@ -167,8 +167,8 @@ export default function NotificationsPopover({
       {isOpen && (
         <div
           dir="rtl"
-          className={`absolute top-full mt-2.5 z-50 w-[360px] sm:w-[400px] max-w-[calc(100vw-1.5rem)] rounded-3xl bg-[#141418] border border-white/[0.12] shadow-[0_16px_50px_rgba(0,0,0,0.6)] backdrop-blur-2xl overflow-hidden flex flex-col transition-all duration-200 ${
-            align === "right" ? "right-0 origin-top-right" : "left-0 origin-top-left"
+          className={`absolute top-full mt-2.5 z-50 w-[360px] sm:w-[400px] max-w-[calc(100vw-2rem)] rounded-3xl bg-[#141418] border border-white/[0.12] shadow-[0_16px_50px_rgba(0,0,0,0.6)] backdrop-blur-2xl overflow-hidden flex flex-col transition-all duration-200 ${
+            align === "left" ? "left-0 origin-top-left" : "right-0 origin-top-right"
           }`}
         >
           {/* Header */}

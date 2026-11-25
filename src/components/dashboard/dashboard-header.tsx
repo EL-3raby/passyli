@@ -131,6 +131,7 @@ export default function DashboardHeader({
           {/* Realtime Operational Notifications Center */}
           {notifications && (
             <NotificationsPopover
+              align="left"
               notifications={notifications}
               onMarkAllAsRead={onMarkAllNotificationsAsRead}
               onMarkAsRead={onMarkNotificationAsRead}

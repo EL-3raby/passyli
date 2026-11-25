@@ -591,6 +591,7 @@ export default function DashboardShell({
           <div className="flex items-center gap-2 shrink-0">
             {/* Live Operational Notification Center Bell */}
             <NotificationsPopover
+              align="left"
               notifications={notifications}
               onMarkAllAsRead={markAllNotificationsAsRead}
               onMarkAsRead={markNotificationAsRead}
