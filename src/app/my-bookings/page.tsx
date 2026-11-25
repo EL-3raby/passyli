@@ -25,6 +25,8 @@ import {
   RotateCcw,
   Star,
   X,
+  XCircle,
+  Zap,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { cancelBookingLock, submitVenueReview } from "@/lib/api/bookings";
@@ -135,9 +137,9 @@ export default function MyBookingsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [actionToast, setActionToast] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"upcoming" | "past" | "matchmaking">(
-    "upcoming"
-  );
+  type BookingTab = "upcoming" | "completed" | "cancelled" | "matchmaking";
+  const [activeTab, setActiveTab] = useState<BookingTab>("upcoming");
+  const [searchQuery, setSearchQuery] = useState("");
   const [nowMs, setNowMs] = useState<number>(() => Date.now());
 
   // Guest reference quick lookup
@@ -341,18 +343,54 @@ export default function MyBookingsPage() {
   };
 
   const todayStr = new Date().toISOString().split("T")[0];
+
+  // 1. Upcoming matches (future or today, not cancelled/expired/completed)
   const upcomingBookings = bookings.filter(
     (b) =>
       b.booking_date >= todayStr &&
       b.status !== "cancelled" &&
-      b.status !== "expired"
+      b.status !== "expired" &&
+      b.status !== "completed"
   );
-  const pastBookings = bookings.filter(
+
+  // 2. Completed matches (completed status, or past date and not cancelled/expired)
+  const completedBookings = bookings.filter(
     (b) =>
-      b.booking_date < todayStr ||
-      b.status === "cancelled" ||
-      b.status === "expired"
+      b.status === "completed" ||
+      (b.booking_date < todayStr &&
+        b.status !== "cancelled" &&
+        b.status !== "expired")
   );
+
+  // 3. Cancelled / Expired matches
+  const cancelledBookings = bookings.filter(
+    (b) => b.status === "cancelled" || b.status === "expired"
+  );
+
+  // Match happening today (if any)
+  const todayMatch = upcomingBookings.find((b) => b.booking_date === todayStr);
+
+  const currentList =
+    activeTab === "upcoming"
+      ? upcomingBookings
+      : activeTab === "completed"
+      ? completedBookings
+      : cancelledBookings;
+
+  const filteredList = currentList.filter((b) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.trim().toLowerCase();
+    const ref = b.booking_reference.toLowerCase();
+    const venue = (b.court?.venue?.name || "").toLowerCase();
+    const court = (b.court?.name || "").toLowerCase();
+    const district = (b.court?.venue?.district || "").toLowerCase();
+    return (
+      ref.includes(q) ||
+      venue.includes(q) ||
+      court.includes(q) ||
+      district.includes(q)
+    );
+  });
 
   return (
     <div className="min-h-screen bg-[#09090b] text-foreground pb-28" dir="rtl">
@@ -509,53 +547,176 @@ export default function MyBookingsPage() {
               </div>
             )}
 
-            {/* Tabs */}
-            <div className="flex flex-wrap items-center gap-2 border-b border-white/[0.08] pb-3">
-              <button
-                type="button"
-                onClick={() => setActiveTab("upcoming")}
-                className={`min-h-[44px] px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-                  activeTab === "upcoming"
-                    ? "bg-primary text-black font-black"
-                    : "bg-[#141418] text-zinc-400 hover:text-white border border-white/[0.06]"
-                }`}
-              >
-                <span>الماتشات القادمة</span>
-                <span className="px-2 py-0.5 rounded-full bg-black/20 text-[11px] tabular-nums">
-                  {upcomingBookings.length}
-                </span>
-              </button>
+            {/* Today's Match Hero Card (if player has a match today) */}
+            {todayMatch && (
+              <div className="rounded-2xl bg-gradient-to-r from-emerald-950/40 via-[#141418] to-[#141418] border border-primary/30 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+                <div className="flex items-center gap-3.5">
+                  <div className="h-11 w-11 rounded-xl bg-primary/15 border border-primary/30 text-primary flex items-center justify-center shrink-0">
+                    <Zap className="h-5 w-5" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-ping" />
+                        <span>ماتش النهاردة!</span>
+                      </span>
+                      <span className="text-xs font-bold text-zinc-400 tabular-nums" dir="ltr">
+                        {todayMatch.booking_reference}
+                      </span>
+                    </div>
+                    <h2 className="text-sm sm:text-base font-black text-white mt-1">
+                      {todayMatch.court?.venue?.name} — {todayMatch.court?.name}
+                    </h2>
+                    <p className="text-xs text-zinc-400 flex items-center gap-2 mt-0.5">
+                      <span className="flex items-center gap-1 text-white font-bold tabular-nums">
+                        <Clock className="h-3 w-3 text-primary" strokeWidth={1.5} />
+                        {formatTimeArabic(todayMatch.start_time)}
+                      </span>
+                      <span>•</span>
+                      <span>{todayMatch.court?.venue?.district}</span>
+                    </p>
+                  </div>
+                </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab("past")}
-                className={`min-h-[44px] px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-                  activeTab === "past"
-                    ? "bg-primary text-black font-black"
-                    : "bg-[#141418] text-zinc-400 hover:text-white border border-white/[0.06]"
-                }`}
-              >
-                <span>السجل السابق والملغاة</span>
-                <span className="px-2 py-0.5 rounded-full bg-black/20 text-[11px] tabular-nums">
-                  {pastBookings.length}
-                </span>
-              </button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <Link
+                    href={`/ticket/${todayMatch.booking_reference}`}
+                    className="flex-1 sm:flex-initial inline-flex min-h-[44px] items-center justify-center gap-1.5 px-4 rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs transition-all shadow-[0_2px_12px_rgba(16,185,129,0.25)]"
+                  >
+                    <Ticket className="h-4 w-4" strokeWidth={2} />
+                    <span>تذكرة الدخول للدكة</span>
+                  </Link>
+                  {todayMatch.court?.venue?.phone && (
+                    <a
+                      href={`tel:${todayMatch.court.venue.phone}`}
+                      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/10 text-white transition-all"
+                      title="الاتصال بالملعب"
+                      aria-label="الاتصال بالملعب"
+                    >
+                      <Phone className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                    </a>
+                  )}
+                </div>
+              </div>
+            )}
 
-              <button
-                type="button"
-                onClick={() => setActiveTab("matchmaking")}
-                className={`min-h-[44px] px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-                  activeTab === "matchmaking"
-                    ? "bg-primary text-black font-black"
-                    : "bg-[#141418] text-zinc-400 hover:text-white border border-white/[0.06]"
-                }`}
-              >
-                <Users className="h-3.5 w-3.5" strokeWidth={1.5} />
-                <span>تقسيماتي المفتوحة</span>
-                <span className="px-2 py-0.5 rounded-full bg-black/20 text-[11px] tabular-nums">
-                  {matchPosts.length}
-                </span>
-              </button>
+            {/* Refined Tabs + Search Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-white/[0.08] pb-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("upcoming")}
+                  className={`min-h-[44px] px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                    activeTab === "upcoming"
+                      ? "bg-primary text-black font-black shadow-sm"
+                      : "bg-[#141418] text-zinc-400 hover:text-white border border-white/[0.06]"
+                  }`}
+                >
+                  <Calendar className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <span>الماتشات القادمة</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-black tabular-nums ${
+                      activeTab === "upcoming"
+                        ? "bg-black/20 text-black"
+                        : "bg-white/[0.08] text-zinc-300"
+                    }`}
+                  >
+                    {upcomingBookings.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("completed")}
+                  className={`min-h-[44px] px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                    activeTab === "completed"
+                      ? "bg-primary text-black font-black shadow-sm"
+                      : "bg-[#141418] text-zinc-400 hover:text-white border border-white/[0.06]"
+                  }`}
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <span>الماتشات اللي انتهت</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-black tabular-nums ${
+                      activeTab === "completed"
+                        ? "bg-black/20 text-black"
+                        : "bg-white/[0.08] text-zinc-300"
+                    }`}
+                  >
+                    {completedBookings.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("cancelled")}
+                  className={`min-h-[44px] px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                    activeTab === "cancelled"
+                      ? "bg-primary text-black font-black shadow-sm"
+                      : "bg-[#141418] text-zinc-400 hover:text-white border border-white/[0.06]"
+                  }`}
+                >
+                  <XCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <span>الماتشات الملغاة</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-black tabular-nums ${
+                      activeTab === "cancelled"
+                        ? "bg-black/20 text-black"
+                        : "bg-white/[0.08] text-zinc-300"
+                    }`}
+                  >
+                    {cancelledBookings.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("matchmaking")}
+                  className={`min-h-[44px] px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                    activeTab === "matchmaking"
+                      ? "bg-primary text-black font-black shadow-sm"
+                      : "bg-[#141418] text-zinc-400 hover:text-white border border-white/[0.06]"
+                  }`}
+                >
+                  <Users className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <span>تقسيماتي المفتوحة</span>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[11px] font-black tabular-nums ${
+                      activeTab === "matchmaking"
+                        ? "bg-black/20 text-black"
+                        : "bg-white/[0.08] text-zinc-300"
+                    }`}
+                  >
+                    {matchPosts.length}
+                  </span>
+                </button>
+              </div>
+
+              {/* Quick Search */}
+              {bookings.length > 0 && activeTab !== "matchmaking" && (
+                <div className="relative min-w-[200px] sm:w-64">
+                  <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-zinc-400">
+                    <Search className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="ابحث برقم التذكرة أو الملعب..."
+                    className="w-full min-h-[40px] rounded-xl bg-white/[0.04] border border-white/[0.08] pr-9 pl-8 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-primary/50 transition-all"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute inset-y-0 left-2.5 flex items-center text-zinc-400 hover:text-white"
+                      aria-label="مسح البحث"
+                    >
+                      <X className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Error State */}
@@ -576,41 +737,66 @@ export default function MyBookingsPage() {
             {/* Bookings Grid */}
             {!errorMsg && activeTab !== "matchmaking" && (
               <>
-                {(activeTab === "upcoming" ? upcomingBookings : pastBookings).length ===
-                0 ? (
+                {filteredList.length === 0 ? (
                   <div className="rounded-2xl bg-[#141418] border border-white/[0.08] p-10 text-center space-y-4">
                     <div className="h-12 w-12 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center text-zinc-400 mx-auto">
                       <Ticket className="h-6 w-6" strokeWidth={1.5} />
                     </div>
                     <div>
                       <h3 className="font-display text-base font-bold text-white">
-                        {activeTab === "upcoming"
-                          ? "لا توجد ماتشات قادمة حالياً"
-                          : "لا يوجد سجل حجوزات سابق"}
+                        {searchQuery.trim()
+                          ? `لا توجد نتائج تطابق بحثك («${searchQuery}»)`
+                          : activeTab === "upcoming"
+                          ? "مفيش ماتشات قادمة محجوزة حالياً"
+                          : activeTab === "completed"
+                          ? "لسه مفيش ماتشات مكتملة في سجلك"
+                          : "سجلك نظيف! مفيش أي ماتشات ملغاة"}
                       </h3>
-                      <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto">
-                        تصفح أقرب ملاعب الخماسي والبادل في دمنهور واحجز ساعتك القادمة في ثواني.
+                      <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto leading-relaxed">
+                        {searchQuery.trim()
+                          ? "تأكد من كود التذكرة أو اسم الملعب، أو امسح كلمة البحث لعرض كل التذاكر."
+                          : activeTab === "upcoming"
+                          ? "تصفح أقرب ملاعب الخماسي والبادل في دمنهور واحجز ساعتك القادمة في ثواني."
+                          : activeTab === "completed"
+                          ? "بعد ما تحضر ماتشك وتلعب، هيظهر هنا وتقدر تقيّم الملعب وتحجز نفس الساعة بضغطة واحدة."
+                          : "كل حجوزاتك مؤكدة أو مكتملة بنجاح، لا توجد أي حجوزات ملغاة أو منتهية."}
                       </p>
                     </div>
-                    <Link
-                      href="/courts"
-                      className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs px-6 transition-all"
-                    >
-                      <span>استعراض الملاعب المتاحة</span>
-                      <ArrowRight className="h-4 w-4 rotate-180" strokeWidth={2} />
-                    </Link>
+                    {searchQuery.trim() ? (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-white/[0.08] hover:bg-white/[0.12] text-white font-bold text-xs px-6 transition-all"
+                      >
+                        <RotateCcw className="h-4 w-4" strokeWidth={1.5} />
+                        <span>مسح كلمة البحث</span>
+                      </button>
+                    ) : (
+                      activeTab !== "cancelled" && (
+                        <Link
+                          href="/courts"
+                          className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs px-6 transition-all"
+                        >
+                          <span>استعراض الملاعب المتاحة</span>
+                          <ArrowRight className="h-4 w-4 rotate-180" strokeWidth={2} />
+                        </Link>
+                      )
+                    )}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {(activeTab === "upcoming" ? upcomingBookings : pastBookings).map(
-                      (booking) => {
-                        const statusInfo =
-                          BOOKING_STATUS_CONFIG[booking.status] ||
-                          BOOKING_STATUS_CONFIG.pending_payment;
-                        const countdown =
-                          booking.status === "pending_payment"
-                            ? formatCountdown(booking.locked_until, nowMs)
-                            : null;
+                    {filteredList.map((booking) => {
+                      const statusInfo =
+                        BOOKING_STATUS_CONFIG[booking.status] ||
+                        BOOKING_STATUS_CONFIG.pending_payment;
+                      const countdown =
+                        booking.status === "pending_payment"
+                          ? formatCountdown(booking.locked_until, nowMs)
+                          : null;
+                      const isToday =
+                        booking.booking_date === todayStr &&
+                        booking.status !== "cancelled" &&
+                        booking.status !== "expired";
 
                         return (
                           <div
@@ -619,14 +805,22 @@ export default function MyBookingsPage() {
                           >
                             <div className="space-y-3">
                               <div className="flex items-start justify-between gap-2">
-                                <span
-                                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold ${statusInfo.badge}`}
-                                >
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  {isToday && (
+                                    <span className="text-[10px] font-black text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                      <span>النهاردة!</span>
+                                    </span>
+                                  )}
                                   <span
-                                    className={`h-1.5 w-1.5 rounded-full ${statusInfo.dot}`}
-                                  />
-                                  {statusInfo.label}
-                                </span>
+                                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-bold ${statusInfo.badge}`}
+                                  >
+                                    <span
+                                      className={`h-1.5 w-1.5 rounded-full ${statusInfo.dot}`}
+                                    />
+                                    {statusInfo.label}
+                                  </span>
+                                </div>
 
                                 <span
                                   className="font-mono text-xs font-bold text-primary tabular-nums"
@@ -812,6 +1006,24 @@ export default function MyBookingsPage() {
                                       <span>تم تقييم الماتش</span>
                                     </span>
                                   )}
+                                </div>
+                              )}
+
+                              {(booking.status === "cancelled" || booking.status === "expired") && (
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Link
+                                    href={
+                                      booking.court?.venue?.slug
+                                        ? `/courts#book?venue=${encodeURIComponent(
+                                            booking.court.venue.slug
+                                          )}`
+                                        : "/courts"
+                                    }
+                                    className="flex-1 min-h-[42px] rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                                  >
+                                    <RotateCcw className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                                    <span>احجز ميعاد بديل في الملعب</span>
+                                  </Link>
                                 </div>
                               )}
                             </div>
