@@ -14,30 +14,40 @@ import {
   Search,
   Printer,
   Wallet,
+  KeyRound,
+  Coins,
 } from "lucide-react";
 
 interface DashboardHeaderProps {
   venuesCount: number;
   pendingReceiptsCount: number;
   isStaffMode: boolean;
+  prepaidBalance?: number;
+  commissionPerSlot?: number;
   onToggleStaffMode: () => void;
   onOpenWalkin: () => void;
   onOpenMaintenance: () => void;
   onOpenSearch?: () => void;
   onOpenRunningSheet?: () => void;
   onOpenWallets?: () => void;
+  onOpenPrepaidWallet?: () => void;
+  onOpenStaffPin?: () => void;
 }
 
 export default function DashboardHeader({
   venuesCount,
   pendingReceiptsCount,
   isStaffMode,
+  prepaidBalance,
+  commissionPerSlot = 15,
   onToggleStaffMode,
   onOpenWalkin,
   onOpenMaintenance,
   onOpenSearch,
   onOpenRunningSheet,
   onOpenWallets,
+  onOpenPrepaidWallet,
+  onOpenStaffPin,
 }: DashboardHeaderProps) {
   const pathname = usePathname();
   const isTimelineActive = pathname === "/dashboard";
@@ -154,6 +164,35 @@ export default function DashboardHeader({
           >
             <Wrench className="h-4 w-4" strokeWidth={1.5} />
           </button>
+
+          {/* Prepaid Balance Pill (Owner Mode Only) */}
+          {!isStaffMode && onOpenPrepaidWallet && typeof prepaidBalance === "number" && (
+            <button
+              type="button"
+              onClick={onOpenPrepaidWallet}
+              title="رصيد محفظة باصيلي مسبق الدفع وشحن الرصيد"
+              className={`inline-flex min-h-[38px] items-center gap-1.5 px-3 rounded-xl border text-xs font-black tabular-nums transition-all ${
+                prepaidBalance <= Math.max(30, commissionPerSlot * 2)
+                  ? "bg-amber-500/15 hover:bg-amber-500/25 border-amber-500/35 text-amber-300"
+                  : "bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/30 text-emerald-400"
+              }`}
+            >
+              <Coins className="h-3.5 w-3.5 shrink-0" strokeWidth={1.5} />
+              <span>{prepaidBalance} ج.م</span>
+            </button>
+          )}
+
+          {/* Staff PIN Button (Owner Mode Only) */}
+          {!isStaffMode && onOpenStaffPin && (
+            <button
+              type="button"
+              onClick={onOpenStaffPin}
+              title="إدارة رمز PIN الخاص بموظف الدكة"
+              className="inline-flex min-h-[38px] min-w-[38px] items-center justify-center rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-zinc-300 hover:text-amber-300 transition-all"
+            >
+              <KeyRound className="h-4 w-4" strokeWidth={1.5} />
+            </button>
+          )}
 
           {/* Wallets Settings Trigger */}
           {onOpenWallets && (

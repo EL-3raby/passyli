@@ -672,6 +672,94 @@ export type Database = {
         }
         Returns: Json
       }
+      owner_get_venue_wallet_details: {
+        Args: {
+          p_venue_id: string
+        }
+        Returns: Json
+      }
+      owner_set_staff_pin: {
+        Args: {
+          p_venue_id: string
+          p_pin?: string | null
+        }
+        Returns: Json
+      }
+      staff_list_active_venues: {
+        Args: Record<string, never>
+        Returns: Json
+      }
+      staff_verify_pin: {
+        Args: {
+          p_venue_id: string
+          p_pin: string
+        }
+        Returns: Json
+      }
+      staff_get_schedule: {
+        Args: {
+          p_venue_id: string
+          p_secret: string
+          p_date: string
+        }
+        Returns: Json
+      }
+      staff_create_walkin: {
+        Args: {
+          p_venue_id: string
+          p_secret: string
+          p_court_id: string
+          p_booking_date: string
+          p_start_time: string
+          p_end_time: string
+          p_booker_name: string
+          p_booker_phone: string
+          p_amount_paid?: number
+        }
+        Returns: Json
+      }
+      staff_complete_attendance: {
+        Args: {
+          p_venue_id: string
+          p_secret: string
+          p_booking_id: string
+        }
+        Returns: Json
+      }
+      staff_cancel_booking: {
+        Args: {
+          p_venue_id: string
+          p_secret: string
+          p_booking_id: string
+          p_reason?: string | null
+        }
+        Returns: Json
+      }
+      submit_venue_recharge: {
+        Args: {
+          p_venue_id: string
+          p_amount: number
+          p_receipt_url: string
+          p_ref_number?: string | null
+        }
+        Returns: Json
+      }
+      submit_partner_application: {
+        Args: {
+          p_venue_name: string
+          p_applicant_name: string
+          p_phone: string
+          p_whatsapp_number: string
+          p_city: string
+          p_district: string
+          p_address: string
+          p_sports: string[]
+          p_courts_count: number
+          p_base_price_morning: number
+          p_base_price_evening: number
+        }
+        Returns: Json
+      }
     }
     Enums: {
       booking_status:

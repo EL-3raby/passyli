@@ -122,7 +122,7 @@ export default function Navbar() {
           )}
           {showPartnerLink && (
             <Link
-              href="/#partner"
+              href="/partner"
               className="px-3.5 py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-white/[0.04] transition-all"
             >
               أضف ملعبك

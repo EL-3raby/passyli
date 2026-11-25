@@ -29,7 +29,40 @@ export interface DashboardVenue {
   opening_time: string;
   closing_time: string;
   is_active: boolean;
+  prepaid_balance: number;
+  commission_per_slot: number;
+  owner_id: string | null;
   courts: DashboardCourt[];
+}
+
+export interface WalletTransactionItem {
+  id: string;
+  amount: number;
+  balance_after: number;
+  type: "welcome_bonus" | "recharge" | "commission_deduction" | "admin_adjustment";
+  description: string;
+  created_at: string;
+}
+
+export interface VenueRechargeItem {
+  id: string;
+  amount: number;
+  reference_number: string | null;
+  status: "pending" | "approved" | "rejected";
+  admin_notes: string | null;
+  receipt_url: string;
+  created_at: string;
+}
+
+export interface VenueWalletDetails {
+  success: boolean;
+  error?: string;
+  prepaid_balance: number;
+  commission_per_slot: number;
+  is_active: boolean;
+  has_staff_pin: boolean;
+  transactions: WalletTransactionItem[];
+  recharges: VenueRechargeItem[];
 }
 
 export interface DashboardReceipt {
@@ -82,11 +115,25 @@ export interface CreateWalkinParams {
 }
 
 /**
- * Fetch all venues with their courts for dashboard selector
+ * Fetch only venues owned by the authenticated user (or all for super_admin)
  */
 export async function getDashboardVenues(): Promise<DashboardVenue[]> {
   const supabase = createClient();
-  const { data, error } = await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return [];
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const isSuperAdmin = profile?.role === "super_admin";
+
+  let query = supabase
     .from("venues")
     .select(`
       id,
@@ -103,6 +150,9 @@ export async function getDashboardVenues(): Promise<DashboardVenue[]> {
       opening_time,
       closing_time,
       is_active,
+      prepaid_balance,
+      commission_per_slot,
+      owner_id,
       courts (
         id,
         venue_id,
@@ -118,6 +168,12 @@ export async function getDashboardVenues(): Promise<DashboardVenue[]> {
       )
     `)
     .order("name");
+
+  if (!isSuperAdmin) {
+    query = query.eq("owner_id", user.id);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching dashboard venues:", error);
@@ -499,5 +555,130 @@ export async function updateVenueWallets(
     return { success: false, error: error.message || "تعذر تحديث بيانات المحافظ" };
   }
 
-  return data as any;
+  return data as { success: boolean; error?: string };
+}
+
+export async function getVenueWalletDetails(
+  venueId: string
+): Promise<VenueWalletDetails> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("owner_get_venue_wallet_details", {
+    p_venue_id: venueId,
+  });
+
+  if (error) {
+    return {
+      success: false,
+      error: error.message || "تعذر تحميل تفاصيل المحفظة",
+      prepaid_balance: 0,
+      commission_per_slot: 15,
+      is_active: false,
+      has_staff_pin: false,
+      transactions: [],
+      recharges: [],
+    };
+  }
+
+  return data as unknown as VenueWalletDetails;
+}
+
+export async function uploadRechargeReceiptImage(
+  venueId: string,
+  imageBlob: Blob
+): Promise<{ url: string | null; error?: string }> {
+  const supabase = createClient();
+  const filePath = `recharges/${venueId}_${Date.now()}_${Math.random()
+    .toString(36)
+    .substring(2, 7)}.jpg`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("receipts-storage")
+    .upload(filePath, imageBlob, {
+      contentType: "image/jpeg",
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (uploadError) {
+    return { url: null, error: "فشل رفع صورة الإيصال، حاول مرة أخرى" };
+  }
+
+  const { data: publicData } = supabase.storage
+    .from("receipts-storage")
+    .getPublicUrl(filePath);
+
+  return { url: publicData.publicUrl };
+}
+
+export async function submitVenueRechargeRequest(params: {
+  venueId: string;
+  amount: number;
+  receiptUrl: string;
+  referenceNumber?: string;
+}): Promise<{ success: boolean; id?: string; error?: string }> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("submit_venue_recharge", {
+    p_venue_id: params.venueId,
+    p_amount: Math.round(params.amount),
+    p_receipt_url: params.receiptUrl,
+    p_ref_number: params.referenceNumber?.trim() || null,
+  });
+
+  if (error) {
+    return { success: false, error: error.message || "تعذر إرسال طلب الشحن" };
+  }
+
+  return data as { success: boolean; id?: string; error?: string };
+}
+
+export async function setVenueStaffPin(
+  venueId: string,
+  pin: string | null
+): Promise<{ success: boolean; has_pin?: boolean; error?: string }> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("owner_set_staff_pin", {
+    p_venue_id: venueId,
+    p_pin: pin,
+  });
+
+  if (error) {
+    return { success: false, error: error.message || "تعذر حفظ رمز الموظف" };
+  }
+
+  return data as { success: boolean; has_pin?: boolean; error?: string };
+}
+
+export async function submitPartnerApplication(params: {
+  venueName: string;
+  applicantName: string;
+  phone: string;
+  whatsappNumber: string;
+  city: string;
+  district: string;
+  address: string;
+  sports: string[];
+  courtsCount: number;
+  basePriceMorning: number;
+  basePriceEvening: number;
+}): Promise<{ success: boolean; id?: string; error?: string }> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("submit_partner_application", {
+    p_venue_name: params.venueName.trim(),
+    p_applicant_name: params.applicantName.trim(),
+    p_phone: params.phone.trim(),
+    p_whatsapp_number: params.whatsappNumber.trim(),
+    p_city: params.city.trim() || "دمنهور",
+    p_district: params.district.trim(),
+    p_address: params.address.trim(),
+    p_sports: params.sports,
+    p_courts_count: Math.max(1, Math.round(params.courtsCount)),
+    p_base_price_morning: Math.max(50, Math.round(params.basePriceMorning)),
+    p_base_price_evening: Math.max(50, Math.round(params.basePriceEvening)),
+  });
+
+  if (error) {
+    return { success: false, error: error.message || "تعذر إرسال طلب الشراكة" };
+  }
+
+  return data as { success: boolean; id?: string; error?: string };
 }

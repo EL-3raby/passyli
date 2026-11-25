@@ -38,6 +38,8 @@ import SearchModal from "@/components/dashboard/search-modal";
 import CancelBookingModal from "@/components/dashboard/cancel-booking-modal";
 import DailyRunningSheetModal from "@/components/dashboard/daily-running-sheet-modal";
 import WalletModal from "@/components/dashboard/wallet-modal";
+import PrepaidWalletModal from "@/components/dashboard/prepaid-wallet-modal";
+import StaffPinModal from "@/components/dashboard/staff-pin-modal";
 import { createClient } from "@/lib/supabase/client";
 
 export default function DashboardPage() {
@@ -62,6 +64,8 @@ export default function DashboardPage() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isWalletOpen, setIsWalletOpen] = useState(false);
+  const [isPrepaidOpen, setIsPrepaidOpen] = useState(false);
+  const [isStaffPinOpen, setIsStaffPinOpen] = useState(false);
   const [cancellingBooking, setCancellingBooking] = useState<DashboardBooking | null>(null);
 
   // Load venues on mount
@@ -119,6 +123,20 @@ export default function DashboardPage() {
         { event: "*", schema: "public", table: "receipts" },
         () => {
           loadBookings();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "venues" },
+        () => {
+          getDashboardVenues().then((vList) => setVenues(vList));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "venue_wallet_transactions" },
+        () => {
+          getDashboardVenues().then((vList) => setVenues(vList));
         }
       )
       .subscribe();
@@ -239,6 +257,8 @@ export default function DashboardPage() {
         venuesCount={venues.length}
         pendingReceiptsCount={pendingCount}
         isStaffMode={isStaffMode}
+        prepaidBalance={currentVenue?.prepaid_balance}
+        commissionPerSlot={currentVenue?.commission_per_slot}
         onToggleStaffMode={() => setIsStaffMode((prev) => !prev)}
         onOpenWalkin={() => {
           setWalkinCourtId(visibleCourts[0]?.id);
@@ -249,9 +269,56 @@ export default function DashboardPage() {
         onOpenSearch={() => setIsSearchOpen(true)}
         onOpenRunningSheet={() => setIsSheetOpen(true)}
         onOpenWallets={() => setIsWalletOpen(true)}
+        onOpenPrepaidWallet={() => setIsPrepaidOpen(true)}
+        onOpenStaffPin={() => setIsStaffPinOpen(true)}
       />
 
       <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6" dir="rtl">
+
+        {/* Low Prepaid Balance or Inactive Venue Alert (Owner Mode Only) */}
+        {!isStaffMode && currentVenue && (
+          <>
+            {!currentVenue.is_active && (
+              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs sm:text-sm text-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 font-bold">
+                  <AlertCircle className="h-4 w-4 text-rose-400 shrink-0" strokeWidth={1.5} />
+                  <span>
+                    تنبيه: هذا الملعب متوقف مؤقتاً عن الظهور للجمهور. تأكد من شحن رصيدك أو تواصل مع الإدارة لإعادة التفعيل.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPrepaidOpen(true)}
+                  className="min-h-[40px] px-4 rounded-xl bg-rose-500 text-white font-black text-xs shrink-0"
+                >
+                  فتح محفظة باصيلي
+                </button>
+              </div>
+            )}
+
+            {currentVenue.prepaid_balance <= Math.max(30, (currentVenue.commission_per_slot || 15) * 2) && (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs sm:text-sm text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5 font-bold">
+                  <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" strokeWidth={1.5} />
+                  <span>
+                    انخفض رصيد محفظة باصيلي إلى{" "}
+                    <strong className="tabular-nums text-amber-300">
+                      {currentVenue.prepaid_balance} ج.م
+                    </strong>
+                    . اشحن الرصيد الآن لضمان عدم توقف استقبال حجوزات اللاعبين أونلاين.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPrepaidOpen(true)}
+                  className="min-h-[40px] px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-black text-xs shrink-0 transition-all"
+                >
+                  شحن الرصيد الآن
+                </button>
+              </div>
+            )}
+          </>
+        )}
         
         {/* Top Control Bar: Venue Picker + Date Navigation */}
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-2xl bg-[#141418] border border-white/[0.08] shadow-sm">
@@ -466,6 +533,22 @@ export default function DashboardPage() {
                 className="h-28 rounded-2xl bg-[#141418]/60 animate-pulse border border-white/[0.06]"
               />
             ))}
+          </div>
+        ) : venues.length === 0 ? (
+          <div className="text-center py-16 p-6 rounded-2xl bg-[#141418] border border-white/[0.08] space-y-4">
+            <Building2 className="h-10 w-10 text-primary mx-auto" strokeWidth={1.5} />
+            <h4 className="text-base font-black text-white">
+              لا توجد منشآت رياضية مربوطة بحسابك حالياً
+            </h4>
+            <p className="text-xs sm:text-sm text-zinc-400 max-w-md mx-auto leading-relaxed">
+              إذا كنت قد قدمت طلب شراكة بالفعل، انتظر اعتماد الإدارة وربط حسابك بالملعب، أو سجّل منشأتك الآن.
+            </p>
+            <Link
+              href="/partner"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs px-5 transition-all"
+            >
+              تقديم طلب تسجيل ملعب جديد
+            </Link>
           </div>
         ) : visibleCourts.length === 0 ? (
           <div className="text-center py-16 p-6 rounded-2xl bg-[#141418] border border-white/[0.08] space-y-3">
@@ -773,6 +856,21 @@ export default function DashboardPage() {
         onSuccess={() => {
           getDashboardVenues().then((vList) => setVenues(vList));
         }}
+      />
+
+      <PrepaidWalletModal
+        isOpen={isPrepaidOpen}
+        onClose={() => setIsPrepaidOpen(false)}
+        venue={currentVenue}
+        onRechargeSubmitted={() => {
+          getDashboardVenues().then((vList) => setVenues(vList));
+        }}
+      />
+
+      <StaffPinModal
+        isOpen={isStaffPinOpen}
+        onClose={() => setIsStaffPinOpen(false)}
+        venue={currentVenue}
       />
     </div>
   );
