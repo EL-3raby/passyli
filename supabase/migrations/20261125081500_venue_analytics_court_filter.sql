@@ -327,14 +327,13 @@ BEGIN
   -- 9. Ratings Summary
   SELECT jsonb_build_object(
     'reviews_count', COALESCE(COUNT(*), 0),
-    'avg_overall', ROUND(COALESCE(AVG(overall_rating), 0)::NUMERIC, 1),
-    'avg_turf', ROUND(COALESCE(AVG(turf_rating), 0)::NUMERIC, 1),
-    'avg_lighting', ROUND(COALESCE(AVG(lighting_rating), 0)::NUMERIC, 1),
-    'avg_service', ROUND(COALESCE(AVG(service_rating), 0)::NUMERIC, 1)
+    'avg_overall', ROUND(COALESCE(AVG(overall_rating), 5.0)::NUMERIC, 1),
+    'avg_turf', ROUND(COALESCE(AVG(turf_rating), 5.0)::NUMERIC, 1),
+    'avg_lighting', ROUND(COALESCE(AVG(lighting_rating), 5.0)::NUMERIC, 1),
+    'avg_service', ROUND(COALESCE(AVG(service_rating), 5.0)::NUMERIC, 1)
   ) INTO v_ratings
-  FROM public.reviews
-  WHERE venue_id = p_venue_id
-    AND is_published = TRUE;
+  FROM public.venue_reviews
+  WHERE venue_id = p_venue_id;
 
   -- 10. Return Composite Response
   RETURN jsonb_build_object(
