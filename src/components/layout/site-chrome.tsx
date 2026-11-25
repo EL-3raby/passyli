@@ -11,9 +11,11 @@ interface SiteChromeProps {
 
 export default function SiteChrome({ children, footer }: SiteChromeProps) {
   const pathname = usePathname();
-  const isDashboardPortal = pathname?.startsWith("/dashboard") ?? false;
+  const isDashboardOrAdminPortal =
+    (pathname?.startsWith("/dashboard") || pathname?.startsWith("/admin")) ??
+    false;
 
-  if (isDashboardPortal) {
+  if (isDashboardOrAdminPortal) {
     return <main className="flex-1 min-h-screen">{children}</main>;
   }
 
