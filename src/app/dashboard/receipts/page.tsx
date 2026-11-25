@@ -9,126 +9,90 @@ import {
   AlertCircle,
   Clock,
   Phone,
-  User,
   Copy,
   Check,
-  Building2,
   RefreshCw,
-  ExternalLink,
   MessageCircle,
   SlidersHorizontal,
   Eye,
   AlertTriangle,
   ArrowRight,
   ShieldAlert,
+  X,
 } from "lucide-react";
 import {
-  getDashboardVenues,
   getPendingReceipts,
   reviewReceipt,
-  type DashboardVenue,
   type DashboardReceipt,
 } from "@/lib/api/dashboard";
-import { createClient } from "@/lib/supabase/client";
-import DashboardHeader from "@/components/dashboard/dashboard-header";
-import WalkinModal from "@/components/dashboard/walkin-modal";
-import MaintenanceModal from "@/components/dashboard/maintenance-modal";
-import WalletModal from "@/components/dashboard/wallet-modal";
-import PrepaidWalletModal from "@/components/dashboard/prepaid-wallet-modal";
-import StaffPinModal from "@/components/dashboard/staff-pin-modal";
-import CourtSettingsModal from "@/components/dashboard/court-settings-modal";
-import {
-  isDashboardSoundEnabled,
-  setDashboardSoundEnabled,
-  playReceiptChime,
-} from "@/lib/sound";
+import { useDashboard } from "@/components/dashboard/dashboard-provider";
+
+interface CourtWithVenue {
+  name?: string;
+  venue?: {
+    name?: string;
+  };
+}
 
 export default function ReceiptsReviewPage() {
-  const [venues, setVenues] = useState<DashboardVenue[]>([]);
-  const [selectedVenueId, setSelectedVenueId] = useState<string>("all");
+  const {
+    venues,
+    selectedVenue,
+    isStaffMode,
+    realtimeTick,
+    triggerRealtimeRefresh,
+  } = useDashboard();
+
+  const [filterVenueId, setFilterVenueId] = useState<string>("all");
   const [receipts, setReceipts] = useState<DashboardReceipt[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [isStaffMode, setIsStaffMode] = useState<boolean>(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  // Active action states
-  const [actionProcessingId, setActionProcessingId] = useState<string | null>(null);
+  const [actionProcessingId, setActionProcessingId] = useState<string | null>(
+    null
+  );
   const [copiedRefId, setCopiedRefId] = useState<string | null>(null);
-
-  // Zoom Image modal state
   const [zoomedImageUrl, setZoomedImageUrl] = useState<string | null>(null);
 
-  // Adjust amount dialog state
-  const [adjustReceipt, setAdjustReceipt] = useState<DashboardReceipt | null>(null);
+  const [adjustReceipt, setAdjustReceipt] = useState<DashboardReceipt | null>(
+    null
+  );
   const [adjustedAmount, setAdjustedAmount] = useState<number>(100);
 
-  // Reject dialog state
-  const [rejectReceipt, setRejectReceipt] = useState<DashboardReceipt | null>(null);
-  const [rejectionReason, setRejectionReason] = useState<string>("الرقم المرجعي غير مطابق للعملية");
+  const [rejectReceipt, setRejectReceipt] = useState<DashboardReceipt | null>(
+    null
+  );
+  const [rejectionReason, setRejectionReason] = useState<string>(
+    "الرقم المرجعي غير مطابق للعملية"
+  );
 
-  // Quick modals for header
-  const [isWalkinOpen, setIsWalkinOpen] = useState(false);
-  const [isMaintenanceOpen, setIsMaintenanceOpen] = useState(false);
-  const [isWalletOpen, setIsWalletOpen] = useState(false);
-  const [isPrepaidOpen, setIsPrepaidOpen] = useState(false);
-  const [isStaffPinOpen, setIsStaffPinOpen] = useState(false);
-  const [isCourtSettingsOpen, setIsCourtSettingsOpen] = useState(false);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [newReceiptNotice, setNewReceiptNotice] = useState(false);
-
-  useEffect(() => {
-    setSoundEnabled(isDashboardSoundEnabled());
-  }, []);
-
-  // Load data
-  const loadData = useCallback(async (showIndicator = false) => {
-    if (showIndicator) setIsRefreshing(true);
-    const [vList, rList] = await Promise.all([
-      getDashboardVenues(),
-      getPendingReceipts(selectedVenueId === "all" ? undefined : selectedVenueId),
-    ]);
-    setVenues(vList);
-    setReceipts(rList);
-    if (showIndicator) setIsRefreshing(false);
-    setIsLoading(false);
-  }, [selectedVenueId]);
+  const loadData = useCallback(
+    async (showIndicator = false) => {
+      try {
+        setErrorMsg(null);
+        if (showIndicator) setIsRefreshing(true);
+        const rList = await getPendingReceipts(
+          filterVenueId === "all" ? undefined : filterVenueId
+        );
+        setReceipts(rList);
+      } catch (err: unknown) {
+        setErrorMsg(
+          err instanceof Error ? err.message : "تعذر تحميل الإيصالات المعلقة"
+        );
+      } finally {
+        if (showIndicator) setIsRefreshing(false);
+        setIsLoading(false);
+      }
+    },
+    [filterVenueId]
+  );
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    void loadData();
+  }, [loadData, realtimeTick]);
 
-  // Realtime subscription for incoming receipts
-  useEffect(() => {
-    const supabase = createClient();
-    const channel = supabase
-      .channel("receipts_realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "receipts" },
-        (payload) => {
-          if (payload.eventType === "INSERT") {
-            playReceiptChime();
-            setNewReceiptNotice(true);
-            window.setTimeout(() => setNewReceiptNotice(false), 6000);
-          }
-          loadData();
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "bookings" },
-        () => {
-          loadData();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [loadData]);
-
-  // Format 24h time to Arabic
   const formatTimeArabic = (timeStr?: string) => {
     if (!timeStr) return "";
     const [hStr, mStr] = timeStr.split(":");
@@ -140,7 +104,6 @@ export default function ReceiptsReviewPage() {
     return `${String(h).padStart(2, "0")}:${m} ${period}`;
   };
 
-  // Format date to Arabic
   const formatDateArabic = (dateStr?: string) => {
     if (!dateStr) return "";
     try {
@@ -156,35 +119,35 @@ export default function ReceiptsReviewPage() {
     }
   };
 
-  // Copy reference number
   const handleCopyRef = (ref: string, id: string) => {
     if (typeof window === "undefined") return;
-    navigator.clipboard.writeText(ref);
+    void navigator.clipboard.writeText(ref);
     setCopiedRefId(id);
     setTimeout(() => setCopiedRefId(null), 2000);
   };
 
-  // Action: Approve
   const handleApprove = async (receipt: DashboardReceipt) => {
     try {
+      setActionError(null);
       setActionProcessingId(receipt.id);
       const res = await reviewReceipt(receipt.id, "approve");
       if (res.success) {
+        triggerRealtimeRefresh();
         await loadData();
       } else {
-        alert(res.error || "تعذر اعتماد الإيصال");
+        setActionError(res.error || "تعذر اعتماد الإيصال");
       }
-    } catch (err: any) {
-      alert(err.message || "حدث خطأ غير متوقع");
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
     } finally {
       setActionProcessingId(null);
     }
   };
 
-  // Action: Submit Adjustment
   const handleConfirmAdjust = async () => {
     if (!adjustReceipt) return;
     try {
+      setActionError(null);
       setActionProcessingId(adjustReceipt.id);
       const res = await reviewReceipt(
         adjustReceipt.id,
@@ -193,21 +156,22 @@ export default function ReceiptsReviewPage() {
       );
       if (res.success) {
         setAdjustReceipt(null);
+        triggerRealtimeRefresh();
         await loadData();
       } else {
-        alert(res.error || "تعذر تعديل مبلغ الإيصال");
+        setActionError(res.error || "تعذر تعديل مبلغ الإيصال");
       }
-    } catch (err: any) {
-      alert(err.message || "حدث خطأ");
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
     } finally {
       setActionProcessingId(null);
     }
   };
 
-  // Action: Submit Reject
   const handleConfirmReject = async () => {
     if (!rejectReceipt) return;
     try {
+      setActionError(null);
       setActionProcessingId(rejectReceipt.id);
       const res = await reviewReceipt(
         rejectReceipt.id,
@@ -217,378 +181,397 @@ export default function ReceiptsReviewPage() {
       );
       if (res.success) {
         setRejectReceipt(null);
+        triggerRealtimeRefresh();
         await loadData();
       } else {
-        alert(res.error || "تعذر رفض الإيصال");
+        setActionError(res.error || "تعذر رفض الإيصال");
       }
-    } catch (err: any) {
-      alert(err.message || "حدث خطأ");
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "حدث خطأ غير متوقع");
     } finally {
       setActionProcessingId(null);
     }
   };
 
-  const allCourts = venues.flatMap((v) => v.courts);
   const activeVenue =
-    (selectedVenueId !== "all"
-      ? venues.find((v) => v.id === selectedVenueId)
-      : venues[0]) || null;
+    (filterVenueId !== "all"
+      ? venues.find((v) => v.id === filterVenueId)
+      : selectedVenue) || null;
 
   return (
-    <div className="min-h-screen bg-[#09090b] pb-24 text-foreground selection:bg-primary/20 selection:text-primary">
-      {/* Header */}
-      <DashboardHeader
-        venuesCount={venues.length}
-        pendingReceiptsCount={receipts.length}
-        isStaffMode={isStaffMode}
-        prepaidBalance={activeVenue?.prepaid_balance}
-        commissionPerSlot={activeVenue?.commission_per_slot}
-        soundEnabled={soundEnabled}
-        onToggleStaffMode={() => setIsStaffMode((prev) => !prev)}
-        onOpenWalkin={() => setIsWalkinOpen(true)}
-        onOpenMaintenance={() => setIsMaintenanceOpen(true)}
-        onOpenWallets={() => setIsWalletOpen(true)}
-        onOpenPrepaidWallet={() => setIsPrepaidOpen(true)}
-        onOpenStaffPin={() => setIsStaffPinOpen(true)}
-        onOpenCourtSettings={() => setIsCourtSettingsOpen(true)}
-        onToggleSound={() => {
-          const next = !soundEnabled;
-          setSoundEnabled(next);
-          setDashboardSoundEnabled(next);
-          if (next) playReceiptChime();
-        }}
-      />
-
-      <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 space-y-6" dir="rtl">
-
-        {newReceiptNotice && (
-          <div
-            role="status"
-            className="p-3.5 rounded-2xl bg-primary/15 border border-primary/35 text-primary text-xs sm:text-sm font-black flex items-center gap-2.5"
-          >
-            <span className="h-2 w-2 rounded-full bg-primary animate-ping shrink-0" />
-            <span>وصل إيصال تحويل جديد من لاعب الآن — تم تحديث القائمة تلقائياً!</span>
-          </div>
-        )}
-
-        {!isStaffMode && activeVenue && activeVenue.prepaid_balance <= Math.max(30, (activeVenue.commission_per_slot || 15) * 2) && (
+    <div className="space-y-6">
+      {!isStaffMode &&
+        activeVenue &&
+        activeVenue.prepaid_balance <=
+          Math.max(30, (activeVenue.commission_per_slot || 15) * 2) && (
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs sm:text-sm text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 font-bold">
-              <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" strokeWidth={1.5} />
-              <span>
-                رصيد محفظة &ldquo;{activeVenue.name}&rdquo; منخفض ({activeVenue.prepaid_balance} ج.م). اشحن الرصيد لضمان استمرار استقبال الحجوزات أونلاين.
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsPrepaidOpen(true)}
-              className="min-h-[40px] px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-black text-xs shrink-0"
-            >
-              شحن الرصيد الآن
-            </button>
-          </div>
-        )}
-        
-        {/* Title & Filters Bar */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-2xl bg-[#141418] border border-white/[0.08] shadow-sm">
-          
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
-              <FileCheck2 className="h-5 w-5" strokeWidth={1.5} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-black text-white">
-                  مراجعة واعتماد إيصالات التحويل
-                </h1>
-                <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-black tabular-nums">
-                  {receipts.length} معلق
-                </span>
-              </div>
-              <p className="text-xs text-zinc-400">
-                فحص إيصالات فودافون كاش وإنستاباي واعتماد الحجز أو تصحيح المبلغ المحول
-              </p>
-            </div>
-          </div>
-
-          {/* Venue Filter + Refresh */}
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedVenueId}
-              onChange={(e) => setSelectedVenueId(e.target.value)}
-              className="h-10 rounded-xl bg-[#1c1c1f] border border-white/10 px-3.5 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-primary transition-all cursor-pointer"
-            >
-              <option value="all">جميع المنشآت الرياضية</option>
-              {venues.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
-
-            <button
-              type="button"
-              onClick={() => loadData(true)}
-              disabled={isRefreshing}
-              className="h-10 w-10 rounded-xl bg-white/[0.06] hover:bg-white/10 text-zinc-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-50 shrink-0"
-              title="تحديث القائمة"
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${isRefreshing ? "animate-spin text-primary" : ""}`}
+              <AlertTriangle
+                className="h-4 w-4 text-amber-400 shrink-0"
                 strokeWidth={1.5}
               />
-            </button>
-          </div>
-
-        </div>
-
-        {/* Audit Instructions Hint */}
-        <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-zinc-400 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
-            <span>
-              <strong>توجيه إداري:</strong> تأكد من مطابقة الرقم المرجعي للتحويل في تطبيقك البنكي أو محفظتك قبل الضغط على اعتماد الحجز. في حالة النقص، استخدم زر «تعديل المبلغ».
-            </span>
-          </div>
-
-          <Link
-            href="/dashboard"
-            className="text-primary hover:underline font-bold text-xs shrink-0 hidden sm:inline-flex items-center gap-1"
-          >
-            <span>العودة للجدول الزمني</span>
-            <ArrowRight className="h-3 w-3" />
-          </Link>
-        </div>
-
-        {/* Receipts Content List */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div
-                key={i}
-                className="h-64 rounded-2xl bg-[#141418]/60 animate-pulse border border-white/[0.06]"
-              />
-            ))}
-          </div>
-        ) : receipts.length === 0 ? (
-          <div className="text-center py-20 p-6 rounded-2xl bg-[#141418] border border-white/[0.08] space-y-3">
-            <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
-              <CheckCircle2 className="h-6 w-6" strokeWidth={1.5} />
+              <span>
+                رصيد محفظة &ldquo;{activeVenue.name}&rdquo; منخفض (
+                {activeVenue.prepaid_balance} ج.م). اشحن الرصيد لضمان استمرار استقبال الحجوزات أونلاين.
+              </span>
             </div>
-            <h3 className="text-base font-bold text-white">لا توجد إيصالات تحويل معلقة حالياً</h3>
-            <p className="text-xs text-zinc-400 max-w-sm mx-auto">
-              جميع حجوزات الملاعب معتمدة ومحدثة. أي إيصال جديد يرفعه اللاعبون سيظهر هنا فورياً للمراجعة والاعتماد.
-            </p>
-            <div className="pt-2">
-              <Link
-                href="/dashboard"
-                className="inline-flex min-h-[44px] items-center gap-2 px-5 rounded-xl bg-white/[0.06] hover:bg-white/10 text-xs font-bold text-white transition-all"
-              >
-                <span>متابعة جدول الحجوزات اليومي</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            {receipts.map((receipt) => {
-              const b = receipt.booking;
-              const court = b?.court;
-              const venue = (court as any)?.venue;
-              const isProcessing = actionProcessingId === receipt.id;
-
-              return (
-                <div
-                  key={receipt.id}
-                  className="rounded-2xl bg-[#141418] border border-white/[0.08] p-4 sm:p-5 space-y-4 shadow-sm flex flex-col justify-between"
-                >
-                  {/* Top Bar: Booker Info & Status */}
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between border-b border-white/[0.06] pb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm sm:text-base font-black text-white">
-                            {receipt.sender_name || b?.booker_name}
-                          </span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 font-bold border border-amber-500/20">
-                            إيصال معلق
-                          </span>
-                        </div>
-                        <span className="text-xs text-zinc-400 block mt-0.5">
-                          {venue?.name || "الملعب"} • {court?.name}
-                        </span>
-                      </div>
-
-                      {/* Contact Actions */}
-                      <div className="flex items-center gap-1.5">
-                        <a
-                          href={`https://wa.me/2${(receipt.sender_phone || b?.booker_phone || "").replace(/\D/g, "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="h-9 w-9 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 flex items-center justify-center transition-all"
-                          title="محادثة واتساب"
-                        >
-                          <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
-                        </a>
-
-                        <a
-                          href={`tel:${receipt.sender_phone || b?.booker_phone}`}
-                          className="h-9 w-9 rounded-xl bg-white/[0.06] hover:bg-white/10 text-zinc-300 hover:text-white flex items-center justify-center transition-all"
-                          title="اتصال هاتفي"
-                        >
-                          <Phone className="h-4 w-4" strokeWidth={1.5} />
-                        </a>
-                      </div>
-                    </div>
-
-                    {/* Match & Time Pill */}
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <div className="px-3 py-1.5 rounded-xl bg-[#1c1c1f] border border-white/[0.06] text-zinc-300 flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                        <span className="font-bold tabular-nums">
-                          {formatDateArabic(b?.booking_date)} • {formatTimeArabic(b?.start_time)}
-                        </span>
-                      </div>
-
-                      <div className="px-3 py-1.5 rounded-xl bg-[#1c1c1f] border border-white/[0.06] text-zinc-300 flex items-center gap-1.5">
-                        <span className="text-zinc-400">طريقة التحويل:</span>
-                        <strong className="text-white">
-                          {receipt.payment_method === "instapay"
-                            ? "إنستاباي"
-                            : receipt.payment_method === "vodafone_cash"
-                            ? "فودافون كاش"
-                            : "محفظة كاش"}
-                        </strong>
-                      </div>
-                    </div>
-
-                    {/* Screenshot Preview & Reference Number Box */}
-                    <div className="grid grid-cols-3 gap-3 p-3 rounded-xl bg-[#1c1c1f] border border-white/[0.06]">
-                      {/* Thumbnail Image */}
-                      <div className="relative group rounded-lg overflow-hidden border border-white/10 bg-black aspect-[3/4] flex items-center justify-center cursor-pointer">
-                        {receipt.image_url ? (
-                          <>
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={receipt.image_url}
-                              alt="سكرين شوت الإيصال"
-                              className="w-full h-full object-cover group-hover:scale-105 transition-all"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setZoomedImageUrl(receipt.image_url)}
-                              className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-all"
-                            >
-                              <Eye className="h-5 w-5" strokeWidth={1.5} />
-                            </button>
-                          </>
-                        ) : (
-                          <span className="text-[10px] text-zinc-500">لا توجد صورة</span>
-                        )}
-                      </div>
-
-                      {/* Financials & Reference Detail */}
-                      <div className="col-span-2 space-y-2 flex flex-col justify-between">
-                        <div>
-                          <span className="text-[11px] text-zinc-400 block">الرقم المرجعي للتحويل</span>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="font-mono text-xs font-bold text-white bg-black/40 px-2 py-1 rounded-md tabular-nums break-all">
-                              {receipt.reference_number}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => handleCopyRef(receipt.reference_number, receipt.id)}
-                              className="h-7 w-7 rounded-md bg-white/[0.06] hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center shrink-0 transition-all"
-                              title="نسخ الرقم المرجعي"
-                            >
-                              {copiedRefId === receipt.id ? (
-                                <Check className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
-                              ) : (
-                                <Copy className="h-3.5 w-3.5" strokeWidth={1.5} />
-                              )}
-                            </button>
-                          </div>
-                        </div>
-
-                        {/* Financial balance breakdown */}
-                        <div className="space-y-1 text-xs border-t border-white/[0.06] pt-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-zinc-400">العربون المحول:</span>
-                            <span className="font-bold text-primary tabular-nums">
-                              {receipt.amount_paid} ج.م
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-zinc-400">إجمالي الماتش:</span>
-                            <span className="text-white tabular-nums">
-                              {b?.total_price} ج.م
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-zinc-400">المتبقي كاش في الملعب:</span>
-                            <span className="font-bold text-amber-400 tabular-nums">
-                              {b?.cash_remaining} ج.م
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Decision Actions Bar */}
-                  <div className="pt-3 border-t border-white/[0.06] flex items-center gap-2">
-                    {/* Approve CTA */}
-                    <button
-                      type="button"
-                      disabled={isProcessing}
-                      onClick={() => handleApprove(receipt)}
-                      className="flex-1 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-black text-black hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50"
-                    >
-                      <CheckCircle2 className="h-4 w-4" strokeWidth={1.5} />
-                      <span>{isProcessing ? "جاري الاعتماد..." : "اعتماد الحجز"}</span>
-                    </button>
-
-                    {/* Adjust Underpayment CTA */}
-                    <button
-                      type="button"
-                      disabled={isProcessing}
-                      onClick={() => {
-                        setAdjustReceipt(receipt);
-                        setAdjustedAmount(receipt.amount_paid);
-                      }}
-                      className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-white/[0.06] hover:bg-white/10 px-3 text-xs font-bold text-zinc-200 transition-all disabled:opacity-50"
-                    >
-                      <SlidersHorizontal className="h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} />
-                      <span>تعديل المبلغ</span>
-                    </button>
-
-                    {/* Reject CTA */}
-                    <button
-                      type="button"
-                      disabled={isProcessing}
-                      onClick={() => {
-                        setRejectReceipt(receipt);
-                        setRejectionReason("الرقم المرجعي غير مطابق للعملية");
-                      }}
-                      className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 px-3 text-xs font-bold text-destructive transition-all disabled:opacity-50"
-                    >
-                      <XCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
-                      <span>رفض</span>
-                    </button>
-                  </div>
-
-                </div>
-              );
-            })}
+            <Link
+              href="/dashboard/wallet"
+              className="min-h-[44px] px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-black text-xs inline-flex items-center justify-center shrink-0"
+            >
+              شحن الرصيد الآن
+            </Link>
           </div>
         )}
 
-      </main>
+      {actionError && (
+        <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-xs font-bold text-rose-300 flex items-center justify-between gap-2">
+          <span>{actionError}</span>
+          <button
+            type="button"
+            onClick={() => setActionError(null)}
+            className="text-rose-200 underline text-xs"
+          >
+            إغلاق
+          </button>
+        </div>
+      )}
+
+      {/* Filter & Count Strip */}
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 p-4 rounded-2xl bg-[#141418] border border-white/[0.08]">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+            <FileCheck2 className="h-5 w-5" strokeWidth={1.5} />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm sm:text-base font-black text-white">
+                إيصالات التحويل قيد المراجعة
+              </h2>
+              <span className="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-black tabular-nums">
+                {receipts.length} معلق
+              </span>
+            </div>
+            <p className="text-xs text-zinc-400">
+              طابق الرقم المرجعي والمبلغ المحول ثم اعتمد أو عدّل القيمة.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <select
+            value={filterVenueId}
+            onChange={(e) => setFilterVenueId(e.target.value)}
+            aria-label="تصفية حسب المنشأة"
+            className="min-h-[44px] rounded-xl bg-[#1c1c1f] border border-white/10 px-3.5 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-primary transition-all cursor-pointer"
+          >
+            <option value="all">جميع المنشآت الرياضية</option>
+            {venues.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.name}
+              </option>
+            ))}
+          </select>
+
+          <button
+            type="button"
+            onClick={() => void loadData(true)}
+            disabled={isRefreshing}
+            className="min-h-[44px] min-w-[44px] rounded-xl bg-white/[0.06] hover:bg-white/10 text-zinc-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-50 shrink-0"
+            title="تحديث القائمة"
+            aria-label="تحديث القائمة"
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${
+                isRefreshing ? "animate-spin text-primary" : ""
+              }`}
+              strokeWidth={1.5}
+            />
+          </button>
+        </div>
+      </div>
+
+      {/* Audit Hint */}
+      <div className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-xs text-zinc-400 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <AlertCircle
+            className="h-4 w-4 text-primary shrink-0"
+            strokeWidth={1.5}
+          />
+          <span>
+            <strong>توجيه مالي:</strong> تأكد من وصول التحويل في تطبيقك البنكي أو محفظتك قبل الضغط على اعتماد الحجز.
+          </span>
+        </div>
+
+        <Link
+          href="/dashboard"
+          className="text-primary hover:underline font-bold text-xs shrink-0 hidden sm:inline-flex items-center gap-1"
+        >
+          <span>الجدول اليومي</span>
+          <ArrowRight className="h-3 w-3 rotate-180" strokeWidth={1.5} />
+        </Link>
+      </div>
+
+      {/* Main Content */}
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="h-64 rounded-2xl bg-[#141418]/60 animate-pulse border border-white/[0.06]"
+            />
+          ))}
+        </div>
+      ) : errorMsg ? (
+        <div className="rounded-2xl bg-[#141418] border border-rose-500/30 p-8 text-center space-y-3">
+          <AlertCircle
+            className="h-9 w-9 text-rose-400 mx-auto"
+            strokeWidth={1.5}
+          />
+          <p className="text-sm font-bold text-white">{errorMsg}</p>
+          <button
+            type="button"
+            onClick={() => void loadData(true)}
+            className="min-h-[44px] px-5 rounded-xl bg-primary text-black font-black text-xs"
+          >
+            إعادة المحاولة
+          </button>
+        </div>
+      ) : receipts.length === 0 ? (
+        <div className="text-center py-20 p-6 rounded-2xl bg-[#141418] border border-white/[0.08] space-y-3">
+          <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+            <CheckCircle2 className="h-6 w-6" strokeWidth={1.5} />
+          </div>
+          <h3 className="text-base font-bold text-white">
+            لا توجد إيصالات تحويل معلقة حالياً
+          </h3>
+          <p className="text-xs text-zinc-400 max-w-sm mx-auto">
+            جميع حجوزات الملاعب معتمدة ومحدثة. أي إيصال جديد يرفعه اللاعبون سيظهر هنا فورياً.
+          </p>
+          <div className="pt-2">
+            <Link
+              href="/dashboard"
+              className="inline-flex min-h-[44px] items-center gap-2 px-5 rounded-xl bg-white/[0.06] hover:bg-white/10 text-xs font-bold text-white transition-all"
+            >
+              <span>متابعة جدول الحجوزات اليومي</span>
+              <ArrowRight className="h-3.5 w-3.5 rotate-180" strokeWidth={1.5} />
+            </Link>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+          {receipts.map((receipt) => {
+            const b = receipt.booking;
+            const court = b?.court as CourtWithVenue | undefined;
+            const venue = court?.venue;
+            const isProcessing = actionProcessingId === receipt.id;
+
+            return (
+              <div
+                key={receipt.id}
+                className="rounded-2xl bg-[#141418] border border-white/[0.08] p-4 sm:p-5 space-y-4 shadow-sm flex flex-col justify-between"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between border-b border-white/[0.06] pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm sm:text-base font-black text-white">
+                          {receipt.sender_name || b?.booker_name}
+                        </span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 font-bold border border-amber-500/20">
+                          إيصال معلق
+                        </span>
+                      </div>
+                      <span className="text-xs text-zinc-400 block mt-0.5">
+                        {venue?.name || "الملعب"} • {court?.name}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      <a
+                        href={`https://wa.me/2${(
+                          receipt.sender_phone ||
+                          b?.booker_phone ||
+                          ""
+                        ).replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="min-h-[44px] min-w-[44px] rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 flex items-center justify-center transition-all"
+                        title="محادثة واتساب"
+                        aria-label="محادثة واتساب"
+                      >
+                        <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
+                      </a>
+
+                      <a
+                        href={`tel:${receipt.sender_phone || b?.booker_phone}`}
+                        className="min-h-[44px] min-w-[44px] rounded-xl bg-white/[0.06] hover:bg-white/10 text-zinc-300 hover:text-white flex items-center justify-center transition-all"
+                        title="اتصال هاتفي"
+                        aria-label="اتصال هاتفي"
+                      >
+                        <Phone className="h-4 w-4" strokeWidth={1.5} />
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <div className="px-3 py-1.5 rounded-xl bg-[#1c1c1f] border border-white/[0.06] text-zinc-300 flex items-center gap-1.5">
+                      <Clock
+                        className="h-3.5 w-3.5 text-primary"
+                        strokeWidth={1.5}
+                      />
+                      <span className="font-bold tabular-nums">
+                        {formatDateArabic(b?.booking_date)} •{" "}
+                        {formatTimeArabic(b?.start_time)}
+                      </span>
+                    </div>
+
+                    <div className="px-3 py-1.5 rounded-xl bg-[#1c1c1f] border border-white/[0.06] text-zinc-300 flex items-center gap-1.5">
+                      <span className="text-zinc-400">طريقة التحويل:</span>
+                      <strong className="text-white">
+                        {receipt.payment_method === "instapay"
+                          ? "إنستاباي"
+                          : receipt.payment_method === "vodafone_cash"
+                          ? "فودافون كاش"
+                          : "محفظة كاش"}
+                      </strong>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 p-3 rounded-xl bg-[#1c1c1f] border border-white/[0.06]">
+                    <div className="relative group rounded-lg overflow-hidden border border-white/10 bg-black aspect-[3/4] flex items-center justify-center cursor-pointer">
+                      {receipt.image_url ? (
+                        <>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={receipt.image_url}
+                            alt="سكرين شوت الإيصال"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-all"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setZoomedImageUrl(receipt.image_url)}
+                            aria-label="تكبير صورة الإيصال"
+                            className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-all"
+                          >
+                            <Eye className="h-5 w-5" strokeWidth={1.5} />
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-[10px] text-zinc-500">
+                          لا توجد صورة
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="col-span-2 space-y-2 flex flex-col justify-between">
+                      <div>
+                        <span className="text-[11px] text-zinc-400 block">
+                          الرقم المرجعي للتحويل
+                        </span>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="font-mono text-xs font-bold text-white bg-black/40 px-2 py-1 rounded-md tabular-nums break-all">
+                            {receipt.reference_number}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleCopyRef(receipt.reference_number, receipt.id)
+                            }
+                            className="min-h-[36px] min-w-[36px] rounded-md bg-white/[0.06] hover:bg-white/10 text-zinc-400 hover:text-white flex items-center justify-center shrink-0 transition-all"
+                            title="نسخ الرقم المرجعي"
+                            aria-label="نسخ الرقم المرجعي"
+                          >
+                            {copiedRefId === receipt.id ? (
+                              <Check
+                                className="h-3.5 w-3.5 text-primary"
+                                strokeWidth={2}
+                              />
+                            ) : (
+                              <Copy className="h-3.5 w-3.5" strokeWidth={1.5} />
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1 text-xs border-t border-white/[0.06] pt-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-400">العربون المحول:</span>
+                          <span className="font-bold text-primary tabular-nums">
+                            {receipt.amount_paid} ج.م
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-400">إجمالي الماتش:</span>
+                          <span className="text-white tabular-nums">
+                            {b?.total_price} ج.م
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-zinc-400">
+                            المتبقي كاش في الملعب:
+                          </span>
+                          <span className="font-bold text-amber-400 tabular-nums">
+                            {b?.cash_remaining} ج.م
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-white/[0.06] flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={isProcessing}
+                    onClick={() => void handleApprove(receipt)}
+                    className="flex-1 inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-black text-black hover:bg-primary-hover active:scale-[0.98] transition-all disabled:opacity-50"
+                  >
+                    <CheckCircle2 className="h-4 w-4" strokeWidth={1.5} />
+                    <span>
+                      {isProcessing ? "جاري الاعتماد..." : "اعتماد الحجز"}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isProcessing}
+                    onClick={() => {
+                      setAdjustReceipt(receipt);
+                      setAdjustedAmount(receipt.amount_paid);
+                    }}
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-white/[0.06] hover:bg-white/10 px-3 text-xs font-bold text-zinc-200 transition-all disabled:opacity-50"
+                  >
+                    <SlidersHorizontal
+                      className="h-3.5 w-3.5 text-zinc-400"
+                      strokeWidth={1.5}
+                    />
+                    <span>تعديل المبلغ</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isProcessing}
+                    onClick={() => {
+                      setRejectReceipt(receipt);
+                      setRejectionReason("الرقم المرجعي غير مطابق للعملية");
+                    }}
+                    className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 px-3 text-xs font-bold text-destructive transition-all disabled:opacity-50"
+                  >
+                    <XCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    <span>رفض</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Image Lightbox Modal */}
       {zoomedImageUrl && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
           onClick={() => setZoomedImageUrl(null)}
         >
           <div className="relative max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl border border-white/20">
@@ -601,9 +584,10 @@ export default function ReceiptsReviewPage() {
             <button
               type="button"
               onClick={() => setZoomedImageUrl(null)}
-              className="absolute top-3 right-3 h-10 w-10 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black transition-all"
+              aria-label="إغلاق الصورة"
+              className="absolute top-3 right-3 min-h-[44px] min-w-[44px] rounded-full bg-black/75 text-white flex items-center justify-center hover:bg-black transition-all"
             >
-              ✕
+              <X className="h-4 w-4" strokeWidth={1.5} />
             </button>
           </div>
         </div>
@@ -622,7 +606,7 @@ export default function ReceiptsReviewPage() {
               </div>
               <div>
                 <h3 className="text-sm sm:text-base font-black text-white">
-                  تعديل المبلغ المحول فعلياً (Underpayment)
+                  تعديل المبلغ المحول فعلياً
                 </h3>
                 <p className="text-xs text-zinc-400">
                   كابتن الفرقة: {adjustReceipt.sender_name}
@@ -631,7 +615,7 @@ export default function ReceiptsReviewPage() {
             </div>
 
             <p className="text-xs text-zinc-300 leading-relaxed">
-              إذا كان الإيصال المرفوع يوضح تحويل مبلغ أقل (مثلاً 50 ج.م بدلاً من 100 ج.م)، حدد المبلغ الحقيقي ليتم تحديث المتبقي كاش في الملعب تلقائياً.
+              إذا كان الإيصال المرفوع يوضح تحويل مبلغ أقل، حدد المبلغ الحقيقي ليتم تحديث المتبقي كاش في الملعب تلقائياً.
             </p>
 
             <div>
@@ -643,8 +627,10 @@ export default function ReceiptsReviewPage() {
                 min="0"
                 max={adjustReceipt.booking?.total_price || 500}
                 value={adjustedAmount}
-                onChange={(e) => setAdjustedAmount(parseInt(e.target.value, 10) || 0)}
-                className="w-full rounded-xl bg-[#1c1c1f] border border-white/10 px-3.5 py-2.5 text-sm font-bold text-primary focus:outline-none focus:border-primary transition-all tabular-nums text-left"
+                onChange={(e) =>
+                  setAdjustedAmount(parseInt(e.target.value, 10) || 0)
+                }
+                className="w-full min-h-[44px] rounded-xl bg-[#1c1c1f] border border-white/10 px-3.5 text-sm font-bold text-primary focus:outline-none focus:border-primary transition-all tabular-nums text-left"
               />
             </div>
 
@@ -658,7 +644,11 @@ export default function ReceiptsReviewPage() {
               <div className="flex justify-between">
                 <span className="text-zinc-400">المتبقي كاش الجديد:</span>
                 <span className="text-amber-400 font-bold tabular-nums">
-                  {Math.max(0, (adjustReceipt.booking?.total_price || 0) - adjustedAmount)} ج.م
+                  {Math.max(
+                    0,
+                    (adjustReceipt.booking?.total_price || 0) - adjustedAmount
+                  )}{" "}
+                  ج.م
                 </span>
               </div>
             </div>
@@ -666,11 +656,13 @@ export default function ReceiptsReviewPage() {
             <div className="flex items-center gap-2 pt-2">
               <button
                 type="button"
-                onClick={handleConfirmAdjust}
+                onClick={() => void handleConfirmAdjust()}
                 disabled={actionProcessingId === adjustReceipt.id}
                 className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary text-xs font-black text-black hover:bg-primary-hover transition-all disabled:opacity-50"
               >
-                {actionProcessingId === adjustReceipt.id ? "جاري الاعتماد..." : "تأكيد واعتماد الحجز"}
+                {actionProcessingId === adjustReceipt.id
+                  ? "جاري الاعتماد..."
+                  : "تأكيد واعتماد الحجز"}
               </button>
               <button
                 type="button"
@@ -712,12 +704,20 @@ export default function ReceiptsReviewPage() {
               <select
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                className="w-full rounded-xl bg-[#1c1c1f] border border-white/10 px-3.5 py-2.5 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-primary transition-all cursor-pointer mb-2"
+                className="w-full min-h-[44px] rounded-xl bg-[#1c1c1f] border border-white/10 px-3.5 text-xs sm:text-sm font-bold text-white focus:outline-none focus:border-primary transition-all cursor-pointer mb-2"
               >
-                <option value="الرقم المرجعي غير مطابق للعملية">الرقم المرجعي غير مطابق للعملية</option>
-                <option value="صورة الإيصال غير واضحة أو مقصوصة">صورة الإيصال غير واضحة أو مقصوصة</option>
-                <option value="لم يصل أي تحويل على محفظة الملعب">لم يصل أي تحويل على محفظة الملعب</option>
-                <option value="الإيصال مكرر ومستخدم في حجز سابق">الإيصال مكرر ومستخدم في حجز سابق</option>
+                <option value="الرقم المرجعي غير مطابق للعملية">
+                  الرقم المرجعي غير مطابق للعملية
+                </option>
+                <option value="صورة الإيصال غير واضحة أو مقصوصة">
+                  صورة الإيصال غير واضحة أو مقصوصة
+                </option>
+                <option value="لم يصل أي تحويل على محفظة الملعب">
+                  لم يصل أي تحويل على محفظة الملعب
+                </option>
+                <option value="الإيصال مكرر ومستخدم في حجز سابق">
+                  الإيصال مكرر ومستخدم في حجز سابق
+                </option>
                 <option value="أخرى">سبب آخر...</option>
               </select>
 
@@ -726,7 +726,7 @@ export default function ReceiptsReviewPage() {
                   type="text"
                   placeholder="اكتب سبب الرفض بالتفصيل..."
                   onChange={(e) => setRejectionReason(e.target.value)}
-                  className="w-full rounded-xl bg-[#1c1c1f] border border-white/10 px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-all"
+                  className="w-full min-h-[44px] rounded-xl bg-[#1c1c1f] border border-white/10 px-3.5 text-xs text-white focus:outline-none focus:border-primary transition-all"
                 />
               )}
             </div>
@@ -734,11 +734,13 @@ export default function ReceiptsReviewPage() {
             <div className="flex items-center gap-2 pt-2">
               <button
                 type="button"
-                onClick={handleConfirmReject}
+                onClick={() => void handleConfirmReject()}
                 disabled={actionProcessingId === rejectReceipt.id}
                 className="flex-1 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-destructive text-xs font-black text-white hover:bg-destructive/90 transition-all disabled:opacity-50"
               >
-                {actionProcessingId === rejectReceipt.id ? "جاري الإلغاء..." : "تأكيد الرفض وتحرير الساعة"}
+                {actionProcessingId === rejectReceipt.id
+                  ? "جاري الإلغاء..."
+                  : "تأكيد الرفض وتحرير الساعة"}
               </button>
               <button
                 type="button"
@@ -751,48 +753,6 @@ export default function ReceiptsReviewPage() {
           </div>
         </div>
       )}
-
-      {/* Quick Walkin & Maintenance Modals */}
-      <WalkinModal
-        isOpen={isWalkinOpen}
-        onClose={() => setIsWalkinOpen(false)}
-        courts={allCourts}
-        onBookingSuccess={() => loadData()}
-      />
-
-      <MaintenanceModal
-        isOpen={isMaintenanceOpen}
-        onClose={() => setIsMaintenanceOpen(false)}
-        courts={allCourts}
-        onMaintenanceSuccess={() => loadData()}
-      />
-
-      <WalletModal
-        isOpen={isWalletOpen}
-        onClose={() => setIsWalletOpen(false)}
-        venue={activeVenue}
-        onSuccess={() => loadData()}
-      />
-
-      <PrepaidWalletModal
-        isOpen={isPrepaidOpen}
-        onClose={() => setIsPrepaidOpen(false)}
-        venue={activeVenue}
-        onRechargeSubmitted={() => loadData()}
-      />
-
-      <StaffPinModal
-        isOpen={isStaffPinOpen}
-        onClose={() => setIsStaffPinOpen(false)}
-        venue={activeVenue}
-      />
-
-      <CourtSettingsModal
-        isOpen={isCourtSettingsOpen}
-        onClose={() => setIsCourtSettingsOpen(false)}
-        venue={activeVenue}
-        onSuccess={() => loadData()}
-      />
     </div>
   );
 }

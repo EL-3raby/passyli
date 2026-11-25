@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Building2, KeyRound, ArrowRight, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { DashboardProvider } from "@/components/dashboard/dashboard-provider";
+import DashboardShell from "@/components/dashboard/dashboard-shell";
 
 export default async function DashboardLayout({
   children,
@@ -86,5 +88,9 @@ export default async function DashboardLayout({
     );
   }
 
-  return <>{children}</>;
+  return (
+    <DashboardProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </DashboardProvider>
+  );
 }

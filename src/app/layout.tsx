@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { Alexandria, IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import "./globals.css";
-import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
-import BottomNav from "@/components/bottom-nav";
+import SiteChrome from "@/components/layout/site-chrome";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import AuthModal from "@/components/auth/auth-modal";
 
@@ -48,10 +47,7 @@ export default function RootLayout({
         className={`${alexandria.variable} ${ibmPlexArabic.variable} ${inter.variable} font-sans bg-background text-foreground antialiased selection:bg-primary selection:text-black min-h-screen flex flex-col`}
       >
         <AuthProvider>
-          <Navbar />
-          <main className="flex-1 pb-16 md:pb-0">{children}</main>
-          <Footer />
-          <BottomNav />
+          <SiteChrome footer={<Footer />}>{children}</SiteChrome>
           <AuthModal />
         </AuthProvider>
       </body>
