@@ -35,6 +35,8 @@ export interface AdminDailyTrendItem {
 
 export interface AdminPartnerApplication {
   id: string;
+  applicant_user_id: string | null;
+  applicant_email: string | null;
   venue_name: string;
   applicant_name: string;
   phone: string;

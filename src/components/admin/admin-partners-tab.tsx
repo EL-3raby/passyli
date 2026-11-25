@@ -56,7 +56,8 @@ export default function AdminPartnersTab({
     setBusyId(app.id);
     const welcomeCredit = credits[app.id] ?? app.welcome_credit ?? 150;
     const commissionPerSlot = commissions[app.id] ?? 15;
-    const ownerEmail = ownerEmails[app.id] || "";
+    const ownerEmail =
+      (ownerEmails[app.id] ?? app.applicant_email ?? "").trim();
 
     const res = await approvePartnerApp({
       appId: app.id,
@@ -71,10 +72,9 @@ export default function AdminPartnersTab({
       return;
     }
 
-    const trimmedOwnerEmail = ownerEmail.trim();
-    if (trimmedOwnerEmail) {
+    if (ownerEmail) {
       void sendPartnerWelcomeEmail({
-        ownerEmail: trimmedOwnerEmail,
+        ownerEmail,
         venueName: app.venue_name,
         welcomeCredit,
         commissionPerSlot,
@@ -82,8 +82,8 @@ export default function AdminPartnersTab({
     }
 
     onFeedback(
-      trimmedOwnerEmail
-        ? `تم اعتماد وتفعيل "${app.venue_name}" برصيد ترحيبي ${welcomeCredit} ج.م وإرسال بريد الترحيب للمالك.`
+      ownerEmail
+        ? `تم اعتماد وتفعيل "${app.venue_name}" برصيد ترحيبي ${welcomeCredit} ج.م وربط المالك (${ownerEmail}) بنجاح!`
         : `تم اعتماد وتفعيل "${app.venue_name}" برصيد ترحيبي ${welcomeCredit} ج.م بنجاح!`
     );
     await onRefresh();
@@ -189,6 +189,11 @@ export default function AdminPartnersTab({
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400 mt-1.5">
                   <span>مقدم الطلب: {app.applicant_name}</span>
+                  {app.applicant_email && (
+                    <span className="text-emerald-400 font-bold" dir="ltr">
+                      {app.applicant_email}
+                    </span>
+                  )}
                   <span className="flex items-center gap-1">
                     <MapPin className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
                     {app.city} — {app.district} ({app.address})
@@ -252,12 +257,12 @@ export default function AdminPartnersTab({
 
                   <div>
                     <label className="text-[11px] font-bold text-zinc-300 block mb-1">
-                      ربط إيميل المالك (اختياري)
+                      ربط إيميل المالك {app.applicant_email ? "(مربوط تلقائياً)" : "(اختياري)"}
                     </label>
                     <input
                       type="email"
                       dir="ltr"
-                      value={ownerEmails[app.id] || ""}
+                      value={ownerEmails[app.id] ?? app.applicant_email ?? ""}
                       onChange={(e) =>
                         setOwnerEmails((prev) => ({
                           ...prev,

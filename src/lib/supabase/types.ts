@@ -242,6 +242,72 @@ export type Database = {
           },
         ]
       }
+      partner_applications: {
+        Row: {
+          id: string
+          applicant_user_id: string | null
+          applicant_email: string | null
+          venue_name: string
+          applicant_name: string
+          phone: string
+          whatsapp_number: string
+          city: string
+          district: string
+          address: string
+          sports: string[]
+          courts_count: number
+          base_price_morning: number
+          base_price_evening: number
+          status: string
+          welcome_credit: number
+          admin_notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          applicant_user_id?: string | null
+          applicant_email?: string | null
+          venue_name: string
+          applicant_name: string
+          phone: string
+          whatsapp_number: string
+          city?: string
+          district: string
+          address: string
+          sports?: string[]
+          courts_count?: number
+          base_price_morning?: number
+          base_price_evening?: number
+          status?: string
+          welcome_credit?: number
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          applicant_user_id?: string | null
+          applicant_email?: string | null
+          venue_name?: string
+          applicant_name?: string
+          phone?: string
+          whatsapp_number?: string
+          city?: string
+          district?: string
+          address?: string
+          sports?: string[]
+          courts_count?: number
+          base_price_morning?: number
+          base_price_evening?: number
+          status?: string
+          welcome_credit?: number
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

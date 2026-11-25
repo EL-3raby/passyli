@@ -789,3 +789,33 @@ export async function createRecurringWalkin(params: {
   }
   return data as unknown as RecurringBookingResult;
 }
+
+export interface MyPartnerApplication {
+  id: string;
+  venue_name: string;
+  city: string;
+  district: string;
+  courts_count: number;
+  status: "pending" | "approved" | "rejected";
+  welcome_credit: number;
+  admin_notes: string | null;
+  created_at: string;
+}
+
+export async function getMyLatestPartnerApplication(
+  userId: string
+): Promise<MyPartnerApplication | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("partner_applications")
+    .select(
+      "id, venue_name, city, district, courts_count, status, welcome_credit, admin_notes, created_at"
+    )
+    .eq("applicant_user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data as unknown as MyPartnerApplication;
+}
