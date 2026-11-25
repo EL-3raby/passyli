@@ -15,7 +15,6 @@ import {
 import {
   getVenues,
   calculateDistanceKm,
-  DAMANHOUR_SEED_VENUES,
   type VenueWithCourts,
 } from "@/lib/api/venues";
 import type { SportType } from "@/lib/supabase/types";
@@ -75,7 +74,7 @@ export default function CourtsSection({
   externalSport,
   onVenuesReady,
 }: CourtsSectionProps = {}) {
-  const [venues, setVenues] = useState<VenueWithCourts[]>(DAMANHOUR_SEED_VENUES);
+  const [venues, setVenues] = useState<VenueWithCourts[]>([]);
   const [selectedSport, setSelectedSport] = useState<"all" | SportType>(
     externalSport || "all"
   );
@@ -85,7 +84,7 @@ export default function CourtsSection({
   const [isLocating, setIsLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState<"idle" | "located" | "denied">("idle");
   const [selectedSlots, setSelectedSlots] = useState<{ [courtId: string]: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -385,21 +384,42 @@ export default function CourtsSection({
             <span className="h-12 w-12 rounded-2xl bg-[#2e2e33] flex items-center justify-center text-primary">
               <Clock className="h-5 w-5" strokeWidth={1.5} />
             </span>
-            <div>
-              <h3 className="font-display text-base font-bold text-white mb-1">
-                مفيش ملاعب بالتصنيف ده دلوقتي
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                جرّب تختار رياضة تانية أو اتفرج على كل ملاعب دمنهور.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setSelectedSport("all")}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary px-6 text-xs font-bold text-black hover:bg-primary-hover transition-all"
-            >
-              عرض كل الملاعب
-            </button>
+            {venues.length === 0 ? (
+              <>
+                <div>
+                  <h3 className="font-display text-base font-bold text-white mb-1">
+                    لا توجد ملاعب مفعّلة حالياً
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    بانتظار اعتماد الملاعب الجديدة على المنصة. إذا كنت صاحب ملعب يمكنك الانضمام الآن.
+                  </p>
+                </div>
+                <Link
+                  href="/partner"
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary px-6 text-xs font-bold text-black hover:bg-primary-hover transition-all"
+                >
+                  سجّل ملعبك كشريك
+                </Link>
+              </>
+            ) : (
+              <>
+                <div>
+                  <h3 className="font-display text-base font-bold text-white mb-1">
+                    مفيش ملاعب بالتصنيف ده دلوقتي
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    جرّب تختار رياضة تانية أو عرض كل الملاعب المتاحة.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedSport("all")}
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary px-6 text-xs font-bold text-black hover:bg-primary-hover transition-all"
+                >
+                  عرض كل الملاعب
+                </button>
+              </>
+            )}
           </div>
         )}
 

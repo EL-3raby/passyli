@@ -22,7 +22,6 @@ import {
 import {
   getVenues,
   calculateDistanceKm,
-  DAMANHOUR_SEED_VENUES,
   type VenueWithCourts,
 } from "@/lib/api/venues";
 import type { SportType } from "@/lib/supabase/types";
@@ -73,15 +72,8 @@ function getEgyptianDays(): DayOption[] {
   });
 }
 
-const DAMANHOUR_DISTRICTS = [
-  { key: "all", label: "كل دمنهور" },
-  { key: "عبد السلام الشاذلي", label: "شارع عبد السلام الشاذلي" },
-  { key: "شبرا", label: "طريق شبرا" },
-  { key: "المعهد الديني", label: "شارع المعهد الديني" },
-];
-
 export default function CourtsCatalogPage() {
-  const [venues, setVenues] = useState<VenueWithCourts[]>(DAMANHOUR_SEED_VENUES);
+  const [venues, setVenues] = useState<VenueWithCourts[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSport, setSelectedSport] = useState<"all" | SportType>("all");
   const [availableDays] = useState<DayOption[]>(getEgyptianDays());
@@ -90,6 +82,13 @@ export default function CourtsCatalogPage() {
   const [sortBy, setSortBy] = useState<"default" | "distance" | "price_asc">("default");
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+
+  const districtOptions = [
+    { key: "all", label: "كل المناطق" },
+    ...Array.from(
+      new Set(venues.map((v) => v.district.trim()).filter(Boolean))
+    ).map((d) => ({ key: d, label: d })),
+  ];
 
   // Strict Body Scroll Lock when Filter Drawer is open
   useEffect(() => {
@@ -155,7 +154,7 @@ export default function CourtsCatalogPage() {
   const [isLocating, setIsLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState<"idle" | "located" | "denied">("idle");
   const [selectedSlots, setSelectedSlots] = useState<{ [courtId: string]: string }>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -564,27 +563,52 @@ export default function CourtsCatalogPage() {
           </div>
         )}
 
-        {/* 3. Empty Search State */}
+        {/* 3. Empty Search / No Live Venues State */}
         {!isLoading && !hasError && filteredVenues.length === 0 && (
           <div className="rounded-[18px] border border-white/[0.08] bg-[#242427] p-12 text-center flex flex-col items-center gap-4 max-w-lg mx-auto my-12">
             <span className="h-14 w-14 rounded-2xl bg-[#2e2e33] flex items-center justify-center text-primary">
-              <Search className="h-6 w-6" strokeWidth={1.5} />
+              {venues.length === 0 ? (
+                <Building2 className="h-6 w-6" strokeWidth={1.5} />
+              ) : (
+                <Search className="h-6 w-6" strokeWidth={1.5} />
+              )}
             </span>
-            <div>
-              <h3 className="font-display text-lg font-bold text-white mb-1">
-                مفيش ملاعب مطابقة لبحثك في دمنهور
-              </h3>
-              <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
-                جرّب البحث باسم شارع آخر مثل &quot;الشاذلي&quot; أو &quot;شبرا&quot;، أو أعد تعيين الفلاتر لعرض كل الملاعب.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={handleClearFilters}
-              className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary px-6 text-xs font-bold text-black hover:bg-primary-hover transition-all"
-            >
-              عرض كافة ملاعب دمنهور
-            </button>
+            {venues.length === 0 ? (
+              <>
+                <div>
+                  <h3 className="font-display text-lg font-bold text-white mb-1">
+                    لا توجد ملاعب متاحة للحجز حالياً
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                    بمجرد تفعيل واعتماد ملاعب جديدة ستظهر هنا مباشرة للحجز الفوري. هل تملك ملعباً؟
+                  </p>
+                </div>
+                <Link
+                  href="/partner"
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary px-6 text-xs font-bold text-black hover:bg-primary-hover transition-all"
+                >
+                  سجّل ملعبك كشريك الآن
+                </Link>
+              </>
+            ) : (
+              <>
+                <div>
+                  <h3 className="font-display text-lg font-bold text-white mb-1">
+                    مفيش ملاعب مطابقة لبحثك
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                    جرّب البحث باسم آخر أو أعد تعيين الفلاتر لعرض كافة الملاعب المتاحة.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleClearFilters}
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary px-6 text-xs font-bold text-black hover:bg-primary-hover transition-all"
+                >
+                  عرض كافة الملاعب
+                </button>
+              </>
+            )}
           </div>
         )}
 
@@ -892,7 +916,7 @@ export default function CourtsCatalogPage() {
                   المنطقة في دمنهور:
                 </span>
                 <div className="flex flex-col gap-2">
-                  {DAMANHOUR_DISTRICTS.map((district) => {
+                  {districtOptions.map((district) => {
                     const isSelected = selectedDistrict === district.key;
                     return (
                       <button

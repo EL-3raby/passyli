@@ -10,6 +10,7 @@ export type VenueCourt = {
   price_morning: number;
   price_evening: number;
   peak_hour_start: string;
+  is_active?: boolean;
   available_slots: string[];
 };
 
@@ -33,102 +34,37 @@ export interface VenueWithCourts {
   courts: VenueCourt[];
 }
 
-// Fallback Seed Data for Damanhour (Used when offline or during initial Supabase configuration)
-export const DAMANHOUR_SEED_VENUES: VenueWithCourts[] = [
-  {
-    id: "11111111-1111-1111-1111-111111111111",
-    name: "نادي دمنهور للبادل (Padel Club)",
-    slug: "damanhour-padel-club",
-    city: "دمنهور",
-    district: "شارع عبد السلام الشاذلي",
-    address: "شارع عبد السلام الشاذلي، بجوار النادي الاجتماعي، دمنهور، البحيرة",
-    latitude: 31.03845,
-    longitude: 30.4682,
-    phone: "01099887766",
-    whatsapp_number: "01099887766",
-    instapay_address: "damanhourpadel@instapay",
-    vodafone_cash_number: "01099887766",
-    deposit_amount: 100,
-    images: ["/images/hero-court.jpg"],
-    amenities: ["كشافات LED احترافية", "زجاج بانوراما دولي", "غرف تبديل ملابس", "موقف سيارات", "كافيتريا"],
-    distance_km: 1.4,
-    courts: [
-      {
-        id: "aaaa1111-1111-1111-1111-111111111111",
-        name: "كورت 1 — بانوراما خارجي",
-        sport: "padel",
-        surface: "panoramic_glass",
-        slot_duration_minutes: 90,
-        price_morning: 200,
-        price_evening: 280,
-        peak_hour_start: "18:00:00",
-        available_slots: ["08:00 م", "09:30 م", "11:00 م"],
-      },
-    ],
-  },
-  {
-    id: "22222222-2222-2222-2222-222222222222",
-    name: "ملعب الأبطال الخماسي",
-    slug: "champions-football-court",
-    city: "دمنهور",
-    district: "طريق شبرا",
-    address: "طريق شبرا الرئيسي، أمام المستشفى العسكري، دمنهور، البحيرة",
-    latitude: 31.0421,
-    longitude: 30.4815,
-    phone: "01122334455",
-    whatsapp_number: "01122334455",
-    instapay_address: "championscourt@instapay",
-    vodafone_cash_number: "01122334455",
-    deposit_amount: 100,
-    images: ["/images/hero-complex.jpg"],
-    amenities: ["نجيل ترتان تركي جيل ثالث", "إضاءة ملاعب عالية الجودة", "مدرج صغير", "غرف استحمام"],
-    distance_km: 2.1,
-    courts: [
-      {
-        id: "bbbb1111-1111-1111-1111-111111111111",
-        name: "الملعب الرئيسي (خماسي ترتان)",
-        sport: "football",
-        surface: "turf_3g",
-        slot_duration_minutes: 60,
-        price_morning: 150,
-        price_evening: 200,
-        peak_hour_start: "18:00:00",
-        available_slots: ["07:00 م", "08:00 م", "09:00 م"],
-      },
-    ],
-  },
-  {
-    id: "33333333-3333-3333-3333-333333333333",
-    name: "أكاديمية النصر للبادل",
-    slug: "alnasr-padel-academy",
-    city: "دمنهور",
-    district: "شارع المعهد الديني",
-    address: "شارع المعهد الديني، خلف كلية الشريعة، دمنهور، البحيرة",
-    latitude: 31.0328,
-    longitude: 30.4619,
-    phone: "01233445566",
-    whatsapp_number: "01233445566",
-    instapay_address: "alnasrpadel@instapay",
-    vodafone_cash_number: "01233445566",
-    deposit_amount: 100,
-    images: ["/images/hero-court.jpg"],
-    amenities: ["ملاعب بادل مغطاة", "أرضيات معتمدة دولياً WPT", "مدربين محترفين", "مواقف سيارات"],
-    distance_km: 3.2,
-    courts: [
-      {
-        id: "cccc1111-1111-1111-1111-111111111111",
-        name: "كورت النصر المغطى A",
-        sport: "padel",
-        surface: "covered_padel",
-        slot_duration_minutes: 90,
-        price_morning: 220,
-        price_evening: 250,
-        peak_hour_start: "18:00:00",
-        available_slots: ["06:30 م", "10:00 م", "11:30 م"],
-      },
-    ],
-  },
-];
+interface DbCourtRow {
+  id: string;
+  name: string;
+  sport: SportType;
+  surface: SurfaceType;
+  slot_duration_minutes: number;
+  price_morning: number;
+  price_evening: number;
+  peak_hour_start: string;
+  is_active: boolean;
+  available_slots?: string[] | null;
+}
+
+interface DbVenueRow {
+  id: string;
+  name: string;
+  slug: string;
+  city: string;
+  district: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  phone: string;
+  whatsapp_number: string;
+  instapay_address: string | null;
+  vodafone_cash_number: string | null;
+  deposit_amount: number;
+  images: string[] | null;
+  amenities: string[] | null;
+  courts: DbCourtRow[] | null;
+}
 
 // Haversine formula to compute GPS distance in km
 export function calculateDistanceKm(
@@ -137,7 +73,7 @@ export function calculateDistanceKm(
   lat2: number,
   lon2: number
 ): number {
-  const R = 6371; // Earth radius in km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -150,27 +86,67 @@ export function calculateDistanceKm(
   return Math.round(R * c * 10) / 10;
 }
 
-// Fetch all venues with optional user coordinates
-export async function getVenues(userLat?: number, userLon?: number): Promise<VenueWithCourts[]> {
-  try {
-    const supabase = createClient();
-    const { data: venues, error } = await supabase
-      .from("venues")
-      .select("*, courts(*)")
-      .eq("is_active", true);
+// Fetch live active venues from Supabase (never returns mock/seed fallback data)
+export async function getVenues(
+  userLat?: number,
+  userLon?: number
+): Promise<VenueWithCourts[]> {
+  const supabase = createClient();
+  const { data: venues, error } = await supabase
+    .from("venues")
+    .select("*, courts(*)")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
 
-    if (error || !venues || venues.length === 0) {
-      return sortAndEnrichVenues(DAMANHOUR_SEED_VENUES, userLat, userLon);
-    }
+  if (error) {
+    throw new Error(error.message);
+  }
 
-    const defaultPadelSlots = ["06:00 م", "07:30 م", "09:00 م", "10:30 م"];
-    const defaultFootballSlots = ["07:00 م", "08:00 م", "09:00 م", "10:00 م", "11:00 م"];
+  if (!venues || venues.length === 0) {
+    return [];
+  }
 
-    const enriched = venues.map((v: any) => ({
-      ...v,
-      images: Array.isArray(v.images) && v.images.length > 0 ? v.images : ["/images/hero-court.jpg"],
-      courts: (v.courts || []).map((c: any) => ({
-        ...c,
+  const defaultPadelSlots = ["06:00 م", "07:30 م", "09:00 م", "10:30 م"];
+  const defaultFootballSlots = [
+    "07:00 م",
+    "08:00 م",
+    "09:00 م",
+    "10:00 م",
+    "11:00 م",
+  ];
+
+  const rows = venues as unknown as DbVenueRow[];
+  const enriched: VenueWithCourts[] = rows.map((v) => ({
+    id: v.id,
+    name: v.name,
+    slug: v.slug,
+    city: v.city,
+    district: v.district,
+    address: v.address,
+    latitude: Number(v.latitude),
+    longitude: Number(v.longitude),
+    phone: v.phone,
+    whatsapp_number: v.whatsapp_number,
+    instapay_address: v.instapay_address,
+    vodafone_cash_number: v.vodafone_cash_number,
+    deposit_amount: v.deposit_amount,
+    images:
+      Array.isArray(v.images) && v.images.length > 0
+        ? v.images
+        : ["/images/hero-court.jpg"],
+    amenities: Array.isArray(v.amenities) ? v.amenities : [],
+    courts: (v.courts || [])
+      .filter((c) => c.is_active !== false)
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        sport: c.sport,
+        surface: c.surface,
+        slot_duration_minutes: c.slot_duration_minutes,
+        price_morning: c.price_morning,
+        price_evening: c.price_evening,
+        peak_hour_start: c.peak_hour_start,
+        is_active: c.is_active,
         available_slots:
           Array.isArray(c.available_slots) && c.available_slots.length > 0
             ? c.available_slots
@@ -178,16 +154,18 @@ export async function getVenues(userLat?: number, userLon?: number): Promise<Ven
             ? defaultPadelSlots
             : defaultFootballSlots,
       })),
-      distance_km:
-        userLat && userLon
-          ? calculateDistanceKm(userLat, userLon, Number(v.latitude), Number(v.longitude))
-          : undefined,
-    }));
+    distance_km:
+      userLat && userLon
+        ? calculateDistanceKm(
+            userLat,
+            userLon,
+            Number(v.latitude),
+            Number(v.longitude)
+          )
+        : undefined,
+  }));
 
-    return enriched;
-  } catch {
-    return sortAndEnrichVenues(DAMANHOUR_SEED_VENUES, userLat, userLon);
-  }
+  return sortAndEnrichVenues(enriched, userLat, userLon);
 }
 
 function sortAndEnrichVenues(
@@ -200,7 +178,12 @@ function sortAndEnrichVenues(
   return venues
     .map((v) => ({
       ...v,
-      distance_km: calculateDistanceKm(userLat, userLon, v.latitude, v.longitude),
+      distance_km: calculateDistanceKm(
+        userLat,
+        userLon,
+        v.latitude,
+        v.longitude
+      ),
     }))
     .sort((a, b) => (a.distance_km || 0) - (b.distance_km || 0));
 }
