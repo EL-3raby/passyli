@@ -1394,7 +1394,7 @@ export default function BookingModal({
 
                 {/* Gate Verification Stub & QR Code */}
                 <div className="rounded-xl bg-[#0e1013] border border-white/[0.08] p-3 flex items-center gap-3.5">
-                  <div className="shrink-0 p-1.5 rounded-xl bg-white border border-white/20 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                  <div className="shrink-0 p-1.5 rounded-xl bg-white border border-white/20 shadow-[0_0_20px_rgba(16,185,129,0.25)]">
                     <QRCodeSVG
                       value={ticketUrl}
                       size={76}
@@ -1406,7 +1406,7 @@ export default function BookingModal({
                   </div>
 
                   <div className="flex-1 space-y-1">
-                    <span className="text-[10px] text-zinc-400 block">كود الحجز المعتمد للبوابة</span>
+                    <span className="text-[10px] text-zinc-400 block font-medium">كود الحجز المعتمد</span>
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-black text-xs sm:text-sm text-primary tracking-wider select-all" dir="ltr">
                         {confirmedRef}
@@ -1435,42 +1435,26 @@ export default function BookingModal({
                   </div>
                 </div>
 
-                {/* Physical Ticket Perforation Cutout 2 */}
-                <div className="relative py-1 flex items-center justify-center -mx-4 sm:-mx-5">
-                  <div className="absolute -left-2.5 w-5 h-5 rounded-full bg-[#1c1c1f] border-r border-white/10 z-10" />
-                  <div className="absolute -right-2.5 w-5 h-5 rounded-full bg-[#1c1c1f] border-l border-white/10 z-10" />
-                  <div className="w-full border-t-2 border-dashed border-white/15 mx-3" />
-                </div>
-
-                {/* Financial Summary & Squad Cost Split */}
-                <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                    <div className="p-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                      <span className="text-[10px] text-zinc-400 block">العربون المسدد</span>
-                      <span className="font-bold text-emerald-400 text-xs tabular-nums">
-                        {depositRequired} ج.م (محول)
+                {/* Financial Summary (Single Sleek Capsule) */}
+                <div className="rounded-xl bg-white/[0.03] border border-white/[0.08] p-3 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="font-bold text-white block text-xs">
+                        المطلوب كاش من كل لاعب بالملعب:
+                      </span>
+                      <span className="text-[10px] text-zinc-400">
+                        (حسبة {playersCount} لاعبين)
                       </span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20">
-                      <span className="text-[10px] text-primary block font-bold">المتبقي كاش بالملعب</span>
-                      <span className="font-black text-xs sm:text-sm text-primary tabular-nums">
-                        {cashRemaining} ج.م
-                      </span>
-                    </div>
+                    <span className="font-display font-black text-lg text-primary tabular-nums">
+                      {perPlayerCash} <span className="text-xs font-normal text-zinc-300">ج.م</span>
+                    </span>
                   </div>
 
-                  <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-2.5 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-bold text-white block text-[11px]">
-                        نصيب كل لاعب كاش بالملعب:
-                      </span>
-                      <span className="text-[10px] text-zinc-400 block">
-                        (تقسيم {playersCount} لاعبين • الإجمالي {perPlayerTotal} ج.م)
-                      </span>
-                    </div>
-                    <span className="font-display font-black text-base text-primary tabular-nums">
-                      {perPlayerCash} <span className="text-[10px] font-normal">ج.م</span>
-                    </span>
+                  <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-400 tabular-nums">
+                    <span>العربون: <strong className="text-emerald-400 font-bold">{depositRequired} ج.م</strong></span>
+                    <span>•</span>
+                    <span>المتبقي: <strong className="text-primary font-bold">{cashRemaining} ج.م</strong></span>
                   </div>
                 </div>
 

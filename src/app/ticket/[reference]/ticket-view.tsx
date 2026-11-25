@@ -22,7 +22,7 @@ import {
   Share2,
   QrCode,
   Info,
-  Footprints,
+  Sparkles,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -443,39 +443,37 @@ export default function TicketView({
         )}
 
         {/* ========================================================================= */}
-        {/* THE AUTOMATIC ADAPTIVE STADIUM MATCH PASS (DESKTOP: HORIZONTAL | MOBILE: PORTRAIT) */}
+        {/* THE APPLE WALLET & UEFA VIP STADIUM PASS (Clean, Minimal, Architectural)  */}
         {/* ========================================================================= */}
-        <div className="relative rounded-[28px] bg-[#121316] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col md:flex-row items-stretch">
+        <div className="relative rounded-[32px] bg-[#111215] border border-white/10 shadow-[0_30px_70px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col md:flex-row items-stretch">
           
-          {/* Ambient Lighting Background */}
-          <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent pointer-events-none" />
+          {/* Subtle Stadium Light Flare */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* ---------------------------------------------------- */}
-          {/* RIGHT WING / TOP: MAIN MATCH PASS (قسيمة المباراة)   */}
-          {/* ---------------------------------------------------- */}
-          <div className="flex-1 p-5 sm:p-7 flex flex-col justify-between space-y-5 relative z-10 md:w-[63%]">
+          {/* --------------------------------------------------------------------- */}
+          {/* RIGHT WING (TOP ON MOBILE): THE MATCH EVENT BODY                      */}
+          {/* --------------------------------------------------------------------- */}
+          <div className="flex-1 p-6 sm:p-8 flex flex-col justify-between space-y-6 relative z-10 md:w-[64%]">
             
-            {/* Header: Brand Mark + Official Status Pill */}
+            {/* Header: Clean Typography Wordmark + Official Verification Pill */}
             <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
-              <div className="flex items-center gap-2">
-                <span className="font-display font-black text-xl text-white block leading-tight">
-                  باصي<span className="text-primary">لي</span>
-                </span>
-              </div>
+              <span className="font-display font-black text-2xl text-white tracking-tight">
+                باصي<span className="text-primary">لي</span>
+              </span>
 
               <div>
                 {isVerified ? (
-                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 border border-emerald-500/40 px-3 py-1 text-xs font-bold text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-3.5 py-1 text-xs font-bold text-emerald-400">
                     <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse" />
                     <span>تذكرة معتمدة ورسمية</span>
                   </div>
                 ) : isRejected ? (
-                  <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3 py-1 text-xs font-bold text-rose-400">
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3.5 py-1 text-xs font-bold text-rose-400">
                     <span className="h-2 w-2 rounded-full bg-rose-400" />
                     <span>تعذر اعتماد الإيصال</span>
                   </div>
                 ) : (
-                  <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-xs font-bold text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 border border-amber-500/30 px-3.5 py-1 text-xs font-bold text-amber-300">
                     <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
                     <span>قيد التأكيد والمراجعة</span>
                   </div>
@@ -483,136 +481,128 @@ export default function TicketView({
               </div>
             </div>
 
-            {/* Match Venue Details */}
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 mb-1">
-                <Footprints className="h-3 w-3" strokeWidth={1.5} />
-                <span>
-                  {booking.court.sport === "padel"
-                    ? "ملعب بادل بانوراما معتمد"
-                    : "ملعب كرة قدم خماسي معتمد"}
-                </span>
-              </div>
+            {/* Stadium Headline & Pitch Specification */}
+            <div className="space-y-1.5">
+              <span className="inline-block text-[11px] font-bold text-primary tracking-wide">
+                {booking.court.sport === "padel"
+                  ? "ملعب بادل بانوراما معتمد"
+                  : "ملعب كرة قدم خماسي معتمد"}
+              </span>
 
-              <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
+              <h1 className="font-display font-black text-3xl sm:text-4xl text-white tracking-tight leading-none">
                 {booking.venue.name}
               </h1>
+
               <p className="text-xs sm:text-sm text-zinc-400 font-medium">
-                {booking.court.name}
+                {booking.court.name} • نجيل ترتان تركي معتمد • إضاءة ليلية
               </p>
             </div>
 
-            {/* Stadium Billboard (Kickoff Time & Date) */}
-            <div className="rounded-2xl bg-[#18191d] border border-white/[0.08] p-4 space-y-3 shadow-inner">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center border-b border-white/[0.06] pb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
-                    <Clock className="h-5 w-5" strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-zinc-400 block font-medium">
-                      موعد ضربة البداية
-                    </span>
-                    <span className="font-display font-black text-base sm:text-lg text-primary tabular-nums block">
-                      {formatTimeArabic(booking.start_time)} — {formatTimeArabic(booking.end_time)}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-zinc-300 flex items-center justify-center shrink-0">
-                    <Calendar className="h-5 w-5" strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-zinc-400 block font-medium">
-                      يوم وتاريخ الماتش
-                    </span>
-                    <span className="text-xs sm:text-sm font-bold text-white block">
-                      {formatDateArabic(booking.booking_date)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Match Captain & Address */}
-              <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+            {/* The Kickoff Hero Billboard (High-Contrast Athletic Typography) */}
+            <div className="py-2 space-y-4">
+              
+              {/* Massive Kickoff Time */}
+              <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-white/[0.06] pb-4">
                 <div>
-                  <span className="text-[10px] text-zinc-400 block">كابتن الفرقة</span>
-                  <span className="font-bold text-white block text-xs truncate">
-                    {booking.booker_name || "كابتن الفرقة"}
+                  <span className="text-[11px] text-zinc-400 font-bold block mb-1">
+                    موعد ضربة البداية
                   </span>
-                  <span className="font-mono text-zinc-400 text-[11px] block tabular-nums" dir="ltr">
-                    {booking.booker_phone}
-                  </span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-display font-black text-2xl sm:text-3xl lg:text-4xl text-primary tabular-nums tracking-wide">
+                      {formatTimeArabic(booking.start_time)}
+                    </span>
+                    <span className="text-zinc-400 font-medium text-sm sm:text-base">
+                      إلى {formatTimeArabic(booking.end_time)}
+                    </span>
+                  </div>
                 </div>
 
-                <div>
-                  <span className="text-[10px] text-zinc-400 block">عنوان الملعب</span>
-                  <span className="font-bold text-zinc-200 block text-xs truncate">
-                    {booking.venue.address}
-                  </span>
-                  <span className="text-[10px] text-zinc-400 block">
+                <div className="self-start sm:self-auto">
+                  <span className="text-xs font-bold text-zinc-300 bg-white/[0.05] border border-white/10 px-3 py-1 rounded-full tabular-nums">
                     المدة {booking.court.slot_duration_minutes || 60} دقيقة
                   </span>
                 </div>
               </div>
-            </div>
 
-            {/* Financial Capsule & Squad Split */}
-            <div className="rounded-2xl bg-[#151619] border border-white/[0.06] p-3.5 space-y-2.5">
-              <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                  <span className="text-[10px] text-zinc-400 block">إجمالي الإيجار</span>
-                  <span className="font-bold text-xs sm:text-sm text-white tabular-nums">
-                    {booking.total_price} ج.م
-                  </span>
+              {/* Match Date & Captain Metadata Strip */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-lg bg-white/[0.04] text-zinc-300 flex items-center justify-center shrink-0">
+                    <Calendar className="h-4 w-4" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-500 block">تاريخ اللقاء</span>
+                    <span className="font-bold text-white text-xs sm:text-sm">
+                      {formatDateArabic(booking.booking_date)}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                  <span className="text-[10px] text-zinc-400 block">
-                    {isFullPayment ? "مسدد بالكامل" : "العربون المسدد"}
-                  </span>
-                  <span className="font-bold text-xs sm:text-sm text-emerald-400 tabular-nums">
-                    {booking.deposit_paid || booking.deposit_required} ج.م
-                  </span>
-                </div>
-
-                <div className="p-2 rounded-xl bg-primary/10 border border-primary/25">
-                  <span className="text-[10px] text-primary block font-bold">المتبقي بالملعب</span>
-                  <span className="font-black text-xs sm:text-sm text-primary tabular-nums">
-                    {booking.cash_remaining} ج.م
-                  </span>
+                <div className="flex items-center gap-2.5">
+                  <div className="h-8 w-8 rounded-lg bg-white/[0.04] text-zinc-300 flex items-center justify-center shrink-0">
+                    <MapPin className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                  </div>
+                  <div className="truncate">
+                    <span className="text-[10px] text-zinc-500 block">موقع الاستاد</span>
+                    <span className="font-bold text-zinc-200 text-xs truncate block">
+                      {booking.venue.address}
+                    </span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between text-xs pt-1 border-t border-white/[0.05]">
-                <div className="flex items-center gap-1.5 text-zinc-300">
-                  <Users className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                  <span className="font-bold text-[11px]">
+              {/* Booker / Captain Details */}
+              <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
+                <span className="text-zinc-400">
+                  كابتن الماتش:{" "}
+                  <strong className="text-white font-bold">
+                    {booking.booker_name || "كابتن الفرقة"}
+                  </strong>
+                </span>
+                <span className="font-mono text-zinc-400 tabular-nums" dir="ltr">
+                  {booking.booker_phone}
+                </span>
+              </div>
+            </div>
+
+            {/* Seamless Financial Capsule (No box inception, sleek single container) */}
+            <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-white block">
                     المطلوب كاش من كل لاعب بالملعب:
                   </span>
                   <span className="text-[10px] text-zinc-400">
-                    (تقسيم {playersCount} لاعبين)
+                    (حسبة تقسيم {playersCount} لاعبين)
                   </span>
                 </div>
-                <span className="font-display font-black text-lg text-primary tabular-nums">
-                  {cashPerPlayer} <span className="text-xs font-normal">ج.م</span>
+
+                <span className="font-display font-black text-2xl text-primary tabular-nums">
+                  {cashPerPlayer} <span className="text-xs font-normal text-zinc-300">ج.م</span>
                 </span>
+              </div>
+
+              {/* Micro Breakdown Strip */}
+              <div className="pt-2.5 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-zinc-400 tabular-nums">
+                <span>الإجمالي: <strong className="text-zinc-200 font-bold">{booking.total_price} ج.م</strong></span>
+                <span>•</span>
+                <span>العربون: <strong className="text-emerald-400 font-bold">{booking.deposit_paid || booking.deposit_required} ج.م</strong></span>
+                <span>•</span>
+                <span>المتبقي بالملعب: <strong className="text-primary font-bold">{booking.cash_remaining} ج.م</strong></span>
               </div>
             </div>
           </div>
 
-          {/* ---------------------------------------------------- */}
-          {/* RESPONSIVE PERFORATION DIVIDER                       */}
-          {/* On Desktop: Vertical divider with top/bottom notches */}
-          {/* On Mobile: Horizontal divider with left/right notches */}
-          {/* ---------------------------------------------------- */}
+          {/* --------------------------------------------------------------------- */}
+          {/* RESPONSIVE PERFORATION DIVIDER                                        */}
+          {/* Desktop: Vertical Divider | Mobile: Horizontal Divider                */}
+          {/* --------------------------------------------------------------------- */}
           
           {/* Desktop Vertical Perforation Divider (>= 768px) */}
           <div className="hidden md:flex relative flex-col justify-between items-center shrink-0 w-0 my-0">
-            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#09090b] border-b border-white/10 z-20 shadow-inner" />
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#09090b] border-b border-white/10 z-20 shadow-inner" />
             <div className="h-full border-r-2 border-dashed border-white/15 mx-0" />
-            <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#09090b] border-t border-white/10 z-20 shadow-inner" />
+            <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-[#09090b] border-t border-white/10 z-20 shadow-inner" />
           </div>
 
           {/* Mobile Horizontal Perforation Divider (< 768px) */}
@@ -622,27 +612,27 @@ export default function TicketView({
             <div className="absolute -right-4 w-8 h-8 rounded-full bg-[#09090b] border-l border-white/10 shadow-inner z-10" />
           </div>
 
-          {/* ---------------------------------------------------- */}
-          {/* LEFT WING / BOTTOM: GATE STUB (كعب التذكرة والبوابة) */}
-          {/* ---------------------------------------------------- */}
-          <div className="w-full md:w-[310px] lg:w-[330px] bg-gradient-to-b md:bg-gradient-to-l from-[#16171b] to-[#101114] p-5 sm:p-6 flex flex-col items-center justify-between text-center space-y-4 relative z-10 shrink-0">
+          {/* --------------------------------------------------------------------- */}
+          {/* LEFT WING (BOTTOM ON MOBILE): THE APPLE WALLET GATE STUB              */}
+          {/* --------------------------------------------------------------------- */}
+          <div className="w-full md:w-[310px] lg:w-[330px] bg-[#16171a] p-6 sm:p-7 flex flex-col items-center justify-between text-center space-y-5 relative z-10 shrink-0">
             
-            {/* Gate Pass Header */}
+            {/* Stub Title */}
             <div className="w-full flex items-center justify-between border-b border-white/[0.08] pb-3">
               <span className="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
-                <QrCode className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                <span>كعب تذكرة الدخول</span>
+                <QrCode className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                <span>بوابة الدخول والاستقبال</span>
               </span>
               <span className="text-[9px] text-zinc-500 font-mono tracking-wider">
-                GATE PASS STUB
+                GATE PASS
               </span>
             </div>
 
-            {/* Scannable SVG QR Code */}
-            <div className="p-3 rounded-2xl bg-white border border-white/20 shadow-[0_0_30px_rgba(16,185,129,0.22)]">
+            {/* Scannable SVG QR Code (Clean contrast frame, no harsh borders) */}
+            <div className="p-3.5 rounded-2xl bg-white border-2 border-primary/40 shadow-[0_0_35px_rgba(16,185,129,0.25)] transition-transform hover:scale-105">
               <QRCodeSVG
                 value={ticketUrl || `https://passyli.com/ticket/${booking.booking_reference}`}
-                size={140}
+                size={144}
                 bgColor="#ffffff"
                 fgColor="#09090b"
                 level="Q"
@@ -650,10 +640,10 @@ export default function TicketView({
               />
             </div>
 
-            {/* Booking Reference Code & Copy Button */}
+            {/* Booking Code with 1-Tap Copy */}
             <div className="w-full space-y-1.5">
-              <span className="text-[10px] text-zinc-400 block">
-                كود الحجز المعتمد للمباراة
+              <span className="text-[10px] text-zinc-400 block font-medium">
+                كود الحجز المعتمد
               </span>
               <div className="flex items-center justify-center gap-2">
                 <span
@@ -683,30 +673,15 @@ export default function TicketView({
               </div>
             </div>
 
-            {/* Gatekeeper Scan Instructions */}
-            <p className="text-[10px] sm:text-[11px] text-zinc-400 max-w-[240px] leading-relaxed">
-              امسح الرمز ضوئياً عند بوابة الدخول أو مع مسؤول الكنترول لتسجيل الحضور فوراً واستلام الكرة.
+            {/* Gate Scan Instructions */}
+            <p className="text-[11px] text-zinc-400 leading-relaxed max-w-[230px]">
+              امسح الرمز ضوئياً عند بوابة الاستاد أو مع الكنترول لتسجيل الحضور فوراً واستلام الكرة.
             </p>
 
-            {/* Security Hash Barcode */}
-            <div className="w-full pt-2 border-t border-white/[0.06]">
-              <div className="h-3 w-full bg-white/10 rounded flex items-center justify-around px-2 opacity-40">
-                {Array.from({ length: 24 }).map((_, i) => (
-                  <span
-                    key={i}
-                    className={`h-2 ${
-                      i % 3 === 0
-                        ? "w-1 bg-white"
-                        : i % 2 === 0
-                        ? "w-0.5 bg-white"
-                        : "w-1.5 bg-white"
-                    }`}
-                  />
-                ))}
-              </div>
-              <span className="text-[8px] text-zinc-500 font-mono block mt-1">
-                TAZKARTI PROTOCOL • SECURE GATE VERIFICATION
-              </span>
+            {/* Authentic Digital Protocol Seal (Clean & Professional) */}
+            <div className="w-full pt-2 border-t border-white/[0.06] flex items-center justify-center gap-1.5 text-[10px] font-mono text-zinc-500">
+              <ShieldCheck className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+              <span>PASSYLI SECURE PROTOCOL</span>
             </div>
           </div>
         </div>
@@ -754,7 +729,7 @@ export default function TicketView({
             <ExternalLink className="h-3 w-3 text-zinc-400" />
           </a>
 
-          {/* Tertiary Row: Save Image & Call Venue & Reschedule */}
+          {/* Tertiary Row: Save Image & Call Venue */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <button
               type="button"
