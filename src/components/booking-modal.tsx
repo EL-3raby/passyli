@@ -1316,18 +1316,10 @@ export default function BookingModal({
                 
                 {/* Pass Header */}
                 <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-7 w-7 rounded-lg bg-primary flex items-center justify-center font-display font-black text-black text-xs">
-                      P
-                    </div>
-                    <div>
-                      <span className="font-display font-black text-sm sm:text-base text-white block leading-tight">
-                        باصي<span className="text-primary">لي</span>
-                      </span>
-                      <span className="text-[9px] text-zinc-400 font-latin tracking-wide block">
-                        PASSYLI MATCH PASS
-                      </span>
-                    </div>
+                  <div>
+                    <span className="font-display font-black text-base sm:text-lg text-white block leading-tight">
+                      باصي<span className="text-primary">لي</span>
+                    </span>
                   </div>
 
                   <div className="text-left">

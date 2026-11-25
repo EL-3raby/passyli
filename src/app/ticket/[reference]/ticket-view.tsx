@@ -457,18 +457,10 @@ export default function TicketView({
             
             {/* Header: Brand Mark + Official Status Pill */}
             <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center font-display font-black text-black text-lg shadow-[0_2px_12px_rgba(16,185,129,0.35)]">
-                  P
-                </div>
-                <div>
-                  <span className="font-display font-black text-lg text-white block leading-tight">
-                    باصي<span className="text-primary">لي</span>
-                  </span>
-                  <span className="text-[10px] text-zinc-400 font-latin tracking-wide block">
-                    OFFICIAL STADIUM PASS
-                  </span>
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="font-display font-black text-xl text-white block leading-tight">
+                  باصي<span className="text-primary">لي</span>
+                </span>
               </div>
 
               <div>
