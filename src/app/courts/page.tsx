@@ -18,6 +18,8 @@ import {
   ArrowDownWideNarrow,
   Building2,
   Lock,
+  Star,
+  BellRing,
 } from "lucide-react";
 import {
   getVenues,
@@ -30,7 +32,11 @@ import FavoriteVenueButton from "@/components/favorite-venue-button";
 import {
   getActiveBookingsForDate,
   isSlotMatchingTime,
+  slotLabelToDbTime,
+  subscribeSlotWaitlist,
+  getVenueRatingSummaries,
   type ActiveSlotLock,
+  type VenueRatingSummary,
 } from "@/lib/api/bookings";
 import { createClient } from "@/lib/supabase/client";
 
@@ -162,8 +168,17 @@ export default function CourtsCatalogPage() {
   const [bookingModalData, setBookingModalData] = useState<BookingModalData | null>(null);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
 
-  // Active Realtime Slot Locks State
+  // Active Realtime Slot Locks, Ratings & Waitlist State
   const [activeBookings, setActiveBookings] = useState<ActiveSlotLock[]>([]);
+  const [ratingsMap, setRatingsMap] = useState<Record<string, VenueRatingSummary>>({});
+  const [watchedSlots, setWatchedSlots] = useState<
+    Record<string, { venueId: string; courtId: string; dateStr: string; slotLabel: string }>
+  >({});
+  const [freedAlert, setFreedAlert] = useState<{
+    venueId: string;
+    courtId: string;
+    slotLabel: string;
+  } | null>(null);
 
   const selectedDay = availableDays.find((d) => d.key === selectedDayKey) || availableDays[0];
 
@@ -178,7 +193,29 @@ export default function CourtsCatalogPage() {
         "postgres_changes",
         { event: "*", schema: "public", table: "bookings" },
         () => {
-          getActiveBookingsForDate(selectedDay.dateStr).then(setActiveBookings);
+          getActiveBookingsForDate(selectedDay.dateStr).then((nextLocks) => {
+            setActiveBookings(nextLocks);
+            setWatchedSlots((prevWatched) => {
+              const updated = { ...prevWatched };
+              for (const [key, item] of Object.entries(prevWatched)) {
+                if (item.dateStr !== selectedDay.dateStr) continue;
+                const stillLocked = nextLocks.some(
+                  (b) =>
+                    b.courtId === item.courtId &&
+                    isSlotMatchingTime(item.slotLabel, b.startTime)
+                );
+                if (!stillLocked) {
+                  setFreedAlert({
+                    venueId: item.venueId,
+                    courtId: item.courtId,
+                    slotLabel: item.slotLabel,
+                  });
+                  delete updated[key];
+                }
+              }
+              return updated;
+            });
+          });
         }
       )
       .subscribe();
@@ -231,13 +268,17 @@ export default function CourtsCatalogPage() {
     );
   };
 
-  // Load venues on mount
+  // Load venues and verified ratings in parallel on mount
   useEffect(() => {
     async function loadData() {
       try {
         setIsLoading(true);
-        const data = await getVenues();
+        const [data, ratingSummaries] = await Promise.all([
+          getVenues(),
+          getVenueRatingSummaries(),
+        ]);
         setVenues(data);
+        setRatingsMap(ratingSummaries);
       } catch {
         setHasError(true);
       } finally {
@@ -246,6 +287,26 @@ export default function CourtsCatalogPage() {
     }
     loadData();
   }, []);
+
+  const handleWatchSlot = async (
+    venueId: string,
+    courtId: string,
+    slotLabel: string
+  ) => {
+    const key = `${courtId}|${selectedDay.dateStr}|${slotLabel}`;
+    if (watchedSlots[key]) return;
+    const res = await subscribeSlotWaitlist({
+      courtId,
+      bookingDate: selectedDay.dateStr,
+      startTime: slotLabelToDbTime(slotLabel),
+    });
+    if (res.success) {
+      setWatchedSlots((prev) => ({
+        ...prev,
+        [key]: { venueId, courtId, dateStr: selectedDay.dateStr, slotLabel },
+      }));
+    }
+  };
 
   // Request Browser GPS Location
   const requestLocation = () => {
@@ -521,6 +582,52 @@ export default function CourtsCatalogPage() {
           )}
         </div>
 
+        {/* Waitlist Freed Slot Live Alert */}
+        {freedAlert && (
+          <div
+            role="status"
+            className="mb-6 p-4 rounded-2xl bg-primary/15 border border-primary/35 flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm"
+          >
+            <div className="flex items-center gap-2.5 text-white font-bold">
+              <BellRing className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
+              <span>
+                الساعة <strong className="text-primary tabular-nums">{freedAlert.slotLabel}</strong> أصبحت متاحة للحجز الآن!
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const v = venues.find((item) => item.id === freedAlert.venueId);
+                  const c = v?.courts.find((item) => item.id === freedAlert.courtId);
+                  if (v && c) {
+                    setBookingModalData({
+                      venue: v,
+                      court: c,
+                      bookingDate: selectedDay.dateStr,
+                      displayDate: selectedDay.displayDate,
+                      dayLabel: selectedDay.label,
+                      slotTime: freedAlert.slotLabel,
+                    });
+                    setIsBookingModalOpen(true);
+                  }
+                  setFreedAlert(null);
+                }}
+                className="min-h-[40px] px-4 rounded-xl bg-primary text-black font-black text-xs"
+              >
+                احجز الآن
+              </button>
+              <button
+                type="button"
+                onClick={() => setFreedAlert(null)}
+                className="min-h-[40px] px-3 rounded-xl bg-white/10 text-zinc-200 text-xs font-bold"
+              >
+                إغلاق
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* 1. Shimmer Skeleton State */}
         {isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -670,6 +777,16 @@ export default function CourtsCatalogPage() {
                         <FavoriteVenueButton venueId={venue.id} />
                       </div>
 
+                      {ratingsMap[venue.id] && (
+                        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full mb-2 tabular-nums">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" strokeWidth={1.5} />
+                          <span>{ratingsMap[venue.id].avg_rating}</span>
+                          <span className="text-zinc-400 font-normal">
+                            ({ratingsMap[venue.id].reviews_count} تقييم موثق)
+                          </span>
+                        </div>
+                      )}
+
                       <p className="text-xs text-muted-foreground mb-3 line-clamp-1">
                         {venue.address}
                       </p>
@@ -709,16 +826,39 @@ export default function CourtsCatalogPage() {
                               const locked = isSlotLocked(primaryCourt.id, slot);
 
                               if (locked) {
+                                const watchKey = `${primaryCourt.id}|${selectedDay.dateStr}|${slot}`;
+                                const isWatched = Boolean(watchedSlots[watchKey]);
                                 return (
                                   <button
                                     key={index}
                                     type="button"
-                                    disabled
-                                    className="min-h-[38px] rounded-lg px-2.5 py-1 text-xs font-bold tabular-nums transition-all bg-white/[0.03] text-zinc-600 border border-white/[0.04] cursor-not-allowed flex items-center gap-1 line-through"
-                                    title="الميعاد محجوز أو قيد الدفع حالياً"
+                                    onClick={() =>
+                                      void handleWatchSlot(
+                                        venue.id,
+                                        primaryCourt.id,
+                                        slot
+                                      )
+                                    }
+                                    className={`min-h-[38px] rounded-lg px-2.5 py-1 text-xs font-bold tabular-nums transition-all border flex items-center gap-1.5 ${
+                                      isWatched
+                                        ? "bg-amber-500/15 border-amber-500/35 text-amber-300"
+                                        : "bg-white/[0.03] hover:bg-white/[0.08] text-zinc-400 hover:text-amber-300 border-white/[0.06]"
+                                    }`}
+                                    title={
+                                      isWatched
+                                        ? "تتم مراقبة هذه الساعة — سننبهك فور توفرها"
+                                        : "الميعاد محجوز أو قيد الدفع — اضغط للتنبيه عند تحرره"
+                                    }
                                   >
-                                    <Lock className="h-3 w-3 text-zinc-600" />
-                                    <span>{slot}</span>
+                                    {isWatched ? (
+                                      <BellRing className="h-3 w-3 text-amber-400" strokeWidth={1.5} />
+                                    ) : (
+                                      <Lock className="h-3 w-3 text-zinc-500" strokeWidth={1.5} />
+                                    )}
+                                    <span className="line-through opacity-75">{slot}</span>
+                                    <span className="text-[10px]">
+                                      {isWatched ? "مراقب" : "نبّهني"}
+                                    </span>
                                   </button>
                                 );
                               }

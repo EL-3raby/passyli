@@ -32,6 +32,9 @@ export type Database = {
           is_walkin: boolean
           locked_by_session: string | null
           locked_until: string | null
+          payment_type: string | null
+          reschedule_requested_at: string | null
+          reschedule_requested_slot: string | null
           start_time: string
           status: Database["public"]["Enums"]["booking_status"]
           total_price: number
@@ -54,6 +57,9 @@ export type Database = {
           is_walkin?: boolean
           locked_by_session?: string | null
           locked_until?: string | null
+          payment_type?: string | null
+          reschedule_requested_at?: string | null
+          reschedule_requested_slot?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["booking_status"]
           total_price: number
@@ -76,6 +82,9 @@ export type Database = {
           is_walkin?: boolean
           locked_by_session?: string | null
           locked_until?: string | null
+          payment_type?: string | null
+          reschedule_requested_at?: string | null
+          reschedule_requested_slot?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["booking_status"]
           total_price?: number
@@ -868,6 +877,60 @@ export type Database = {
           p_booker_phone: string
           p_total_price: number
           p_amount_paid_per_slot?: number
+        }
+        Returns: Json
+      }
+      reschedule_booking: {
+        Args: {
+          p_booking_reference: string
+          p_new_date: string
+          p_new_start_time: string
+          p_new_end_time: string
+          p_session_id?: string | null
+        }
+        Returns: Json
+      }
+      get_matchmaking_participants: {
+        Args: {
+          p_post_ids: string[]
+        }
+        Returns: Json
+      }
+      join_matchmaking_post: {
+        Args: {
+          p_post_id: string
+          p_player_name: string
+          p_player_phone: string
+          p_position?: string
+        }
+        Returns: Json
+      }
+      leave_matchmaking_post: {
+        Args: {
+          p_post_id: string
+        }
+        Returns: Json
+      }
+      submit_venue_review: {
+        Args: {
+          p_booking_id: string
+          p_turf_rating: number
+          p_lighting_rating: number
+          p_service_rating: number
+          p_comment?: string | null
+        }
+        Returns: Json
+      }
+      get_venue_rating_summaries: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      subscribe_slot_waitlist: {
+        Args: {
+          p_court_id: string
+          p_booking_date: string
+          p_start_time: string
+          p_session_id: string
         }
         Returns: Json
       }

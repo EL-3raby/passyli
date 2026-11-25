@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/client";
 export interface MatchmakingPost {
   id: string;
   court_id: string;
+  creator_id?: string | null;
   sport: "football" | "padel";
   match_date: string;
   start_time: string;
@@ -72,6 +73,7 @@ export async function getMatchmakingPosts(
     .select(`
       id,
       court_id,
+      creator_id,
       sport,
       match_date,
       start_time,
@@ -162,7 +164,7 @@ export async function createMatchmakingPost(
     return { success: false, error: error.message || "تعذر نشر التقسيمة، يرجى إعادة المحاولة" };
   }
 
-  return data as any;
+  return data as { success: boolean; postId?: string; error?: string };
 }
 
 /**
@@ -184,7 +186,99 @@ export async function updateMatchmakingStatus(
     return { success: false, error: error.message || "تعذر تحديث حالة التقسيمة" };
   }
 
-  return data as any;
+  return data as { success: boolean; error?: string };
+}
+
+export interface MatchmakingParticipant {
+  id: string;
+  post_id: string;
+  user_id: string;
+  player_name: string;
+  position: string;
+  joined_at: string;
+  is_me: boolean;
+  player_phone: string | null;
+}
+
+export async function getMatchmakingParticipants(
+  postIds: string[]
+): Promise<Record<string, MatchmakingParticipant[]>> {
+  if (postIds.length === 0) return {};
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("get_matchmaking_participants", {
+    p_post_ids: postIds,
+  });
+
+  if (error || !Array.isArray(data)) {
+    return {};
+  }
+
+  const grouped: Record<string, MatchmakingParticipant[]> = {};
+  for (const row of data as unknown as MatchmakingParticipant[]) {
+    if (!grouped[row.post_id]) {
+      grouped[row.post_id] = [];
+    }
+    grouped[row.post_id].push(row);
+  }
+  return grouped;
+}
+
+export async function joinMatchmakingPost(params: {
+  postId: string;
+  playerName: string;
+  playerPhone: string;
+  position?: string;
+}): Promise<{
+  success: boolean;
+  players_needed?: number;
+  status?: string;
+  error?: string;
+}> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("join_matchmaking_post", {
+    p_post_id: params.postId,
+    p_player_name: params.playerName.trim(),
+    p_player_phone: params.playerPhone.trim().replace(/\s+/g, ""),
+    p_position: params.position || "أي مركز",
+  });
+
+  if (error) {
+    return {
+      success: false,
+      error: error.message || "تعذر الانضمام للتقسيمة",
+    };
+  }
+  return (data as {
+    success: boolean;
+    players_needed?: number;
+    status?: string;
+    error?: string;
+  }) ?? { success: false, error: "تعذر الانضمام للتقسيمة" };
+}
+
+export async function leaveMatchmakingPost(postId: string): Promise<{
+  success: boolean;
+  players_needed?: number;
+  status?: string;
+  error?: string;
+}> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("leave_matchmaking_post", {
+    p_post_id: postId,
+  });
+
+  if (error) {
+    return {
+      success: false,
+      error: error.message || "تعذر الانسحاب من التقسيمة",
+    };
+  }
+  return (data as {
+    success: boolean;
+    players_needed?: number;
+    status?: string;
+    error?: string;
+  }) ?? { success: false, error: "تعذر الانسحاب من التقسيمة" };
 }
 
 /**

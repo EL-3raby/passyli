@@ -111,6 +111,7 @@ export default function BookingModal({
   const [bookerName, setBookerName] = useState("");
   const [bookerPhone, setBookerPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [paymentType, setPaymentType] = useState<"deposit" | "full">("deposit");
 
   // Step 2: Lock & Countdown state
   const [lockData, setLockData] = useState<LockSlotResult | null>(null);
@@ -169,6 +170,7 @@ export default function BookingModal({
       setBookerName(profile?.full_name || "");
       setBookerPhone(profile?.phone || "");
       setPhoneError("");
+      setPaymentType("deposit");
       setLockData(null);
       setSecondsRemaining(8 * 60);
       setIsExpired(false);
@@ -256,15 +258,6 @@ export default function BookingModal({
 
   const { venue, court, bookingDate, displayDate, dayLabel, slotTime } = data;
 
-  // Calculate pricing breakdown
-  const isEvening = true;
-  const totalPrice = isEvening ? court.price_evening : court.price_morning;
-  const depositRequired = venue.deposit_amount || 100;
-  const cashRemaining = Math.max(totalPrice - depositRequired, 0);
-  const playersCount = court.sport === "padel" ? 4 : 10;
-  const perPlayerTotal = Math.ceil(totalPrice / playersCount);
-  const perPlayerCash = Math.ceil(cashRemaining / playersCount);
-
   // Convert slot to 24-hour start/end times
   const parseSlotTimes = (slot: string, durationMinutes: number) => {
     let hours = 20;
@@ -287,10 +280,24 @@ export default function BookingModal({
     const endM = String(endTotalMinutes % 60).padStart(2, "0");
     const endTime = `${endH}:${endM}:00`;
 
-    return { startTime, endTime };
+    return { startTime, endTime, startHour: hours };
   };
 
-  const { startTime, endTime } = parseSlotTimes(slotTime, court.slot_duration_minutes || 60);
+  const { startTime, endTime, startHour } = parseSlotTimes(
+    slotTime,
+    court.slot_duration_minutes || 60
+  );
+
+  // Calculate server-matching pricing breakdown (morning vs evening + deposit vs full)
+  const peakStartHour = parseInt((court.peak_hour_start || "17:00").split(":")[0], 10);
+  const isEvening = startHour >= peakStartHour || startHour < 6;
+  const totalPrice = isEvening ? court.price_evening : court.price_morning;
+  const baseDeposit = Math.min(venue.deposit_amount || 100, totalPrice);
+  const depositRequired = paymentType === "full" ? totalPrice : baseDeposit;
+  const cashRemaining = Math.max(totalPrice - depositRequired, 0);
+  const playersCount = court.sport === "padel" ? 4 : 10;
+  const perPlayerTotal = Math.ceil(totalPrice / playersCount);
+  const perPlayerCash = Math.ceil(cashRemaining / playersCount);
 
   // Validate Egyptian Phone (010, 011, 012, 015 - 11 digits)
   const validatePhone = (phone: string): boolean => {
@@ -668,6 +675,66 @@ export default function BookingModal({
                 </div>
               </div>
 
+              {/* Payment Option Toggle: Deposit Only vs Full Prepayment */}
+              <div className="space-y-2">
+                <span className="block text-xs font-bold text-zinc-300">
+                  اختر نظام السداد الإلكتروني:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentType("deposit")}
+                    className={`min-h-[54px] rounded-xl p-3 border text-right transition-all flex items-center justify-between gap-2 ${
+                      paymentType === "deposit"
+                        ? "bg-primary/12 border-primary text-white shadow-sm"
+                        : "bg-[#242427] border-white/[0.08] text-zinc-300 hover:border-white/20"
+                    }`}
+                  >
+                    <div>
+                      <span className="text-xs font-black block">
+                        دفع العربون فقط
+                      </span>
+                      <span className="text-[11px] text-zinc-400">
+                        تحوّل {baseDeposit} ج.م والباقي كاش بالملعب
+                      </span>
+                    </div>
+                    <span
+                      className={`h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                        paymentType === "deposit"
+                          ? "border-primary bg-primary"
+                          : "border-zinc-500"
+                      }`}
+                    />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentType("full")}
+                    className={`min-h-[54px] rounded-xl p-3 border text-right transition-all flex items-center justify-between gap-2 ${
+                      paymentType === "full"
+                        ? "bg-primary/12 border-primary text-white shadow-sm"
+                        : "bg-[#242427] border-white/[0.08] text-zinc-300 hover:border-white/20"
+                    }`}
+                  >
+                    <div>
+                      <span className="text-xs font-black block">
+                        سداد المبلغ بالكامل
+                      </span>
+                      <span className="text-[11px] text-emerald-400 font-bold">
+                        تحوّل {totalPrice} ج.م — بدون كاش في الملعب
+                      </span>
+                    </div>
+                    <span
+                      className={`h-4 w-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                        paymentType === "full"
+                          ? "border-primary bg-primary"
+                          : "border-zinc-500"
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+
               {/* Financial Breakdown (Transparent & Explicit) */}
               <div className="grid grid-cols-3 gap-2.5 text-center">
                 <div className="rounded-xl bg-[#242427] border border-white/[0.06] p-3">
@@ -678,7 +745,9 @@ export default function BookingModal({
                 </div>
 
                 <div className="rounded-xl bg-primary/10 border border-primary/30 p-3">
-                  <span className="text-[10px] text-primary font-bold block mb-1">العربون المطلوب</span>
+                  <span className="text-[10px] text-primary font-bold block mb-1">
+                    {paymentType === "full" ? "المطلوب سداده الآن" : "العربون المطلوب"}
+                  </span>
                   <span className="font-display font-black text-sm sm:text-base text-primary tabular-nums">
                     {depositRequired} <span className="text-[10px] font-normal">ج.م</span>
                   </span>
@@ -844,7 +913,9 @@ export default function BookingModal({
                   {/* Amount to transfer banner */}
                   <div className="flex items-center justify-between rounded-xl bg-[#242427] border border-white/[0.06] p-3.5">
                     <div>
-                      <span className="text-xs text-muted-foreground block">مبلغ العربون المطلوب تحويله</span>
+                      <span className="text-xs text-muted-foreground block">
+                        {paymentType === "full" ? "المبلغ الإجمالي المطلوب تحويله" : "مبلغ العربون المطلوب تحويله"}
+                      </span>
                       <span className="font-display font-black text-lg text-primary tabular-nums">
                         {depositRequired} <span className="text-xs font-normal">ج.م</span>
                       </span>

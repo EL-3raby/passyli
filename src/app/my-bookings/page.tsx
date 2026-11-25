@@ -22,9 +22,12 @@ import {
   LogIn,
   Loader2,
   Unlock,
+  RotateCcw,
+  Star,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
-import { cancelBookingLock } from "@/lib/api/bookings";
+import { cancelBookingLock, submitVenueReview } from "@/lib/api/bookings";
 import {
   updateMatchmakingStatus,
   formatDateArabic,
@@ -45,6 +48,7 @@ interface PlayerBooking {
   status: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
   locked_until: string | null;
   payment_type?: string;
+  has_review?: boolean;
   booker_name: string;
   booker_phone: string;
   created_at: string;
@@ -56,6 +60,7 @@ interface PlayerBooking {
     venue: {
       id: string;
       name: string;
+      slug?: string;
       city: string;
       district: string;
       address: string;
@@ -143,6 +148,50 @@ export default function MyBookingsPage() {
   const [updatingPostId, setUpdatingPostId] = useState<string | null>(null);
   const [releasingLockId, setReleasingLockId] = useState<string | null>(null);
   const [emailingRef, setEmailingRef] = useState<string | null>(null);
+
+  // Verified Review Modal state
+  const [reviewBooking, setReviewBooking] = useState<PlayerBooking | null>(null);
+  const [turfRating, setTurfRating] = useState(5);
+  const [lightingRating, setLightingRating] = useState(5);
+  const [serviceRating, setServiceRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  const handleOpenReview = (booking: PlayerBooking) => {
+    setTurfRating(5);
+    setLightingRating(5);
+    setServiceRating(5);
+    setReviewComment("");
+    setReviewError(null);
+    setReviewBooking(booking);
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!reviewBooking) return;
+    setSubmittingReview(true);
+    setReviewError(null);
+
+    const res = await submitVenueReview({
+      bookingId: reviewBooking.id,
+      turfRating,
+      lightingRating,
+      serviceRating,
+      comment: reviewComment,
+    });
+
+    setSubmittingReview(false);
+    if (!res.success) {
+      setReviewError(res.error || "تعذر إرسال التقييم");
+      return;
+    }
+
+    setReviewBooking(null);
+    setActionToast("شكراً لك! تم نشر تقييمك الموثق للملعب بنجاح.");
+    setTimeout(() => setActionToast(null), 5000);
+    void loadPlayerData(true);
+  };
 
   // Live 1-second tick for active 8-minute hold countdowns
   useEffect(() => {
@@ -729,6 +778,42 @@ export default function MyBookingsPage() {
                                   <span>إلغاء القفل وإتاحة الميعاد فوراً</span>
                                 </button>
                               )}
+
+                              {(booking.status === "confirmed" || booking.status === "completed") && (
+                                <div className="flex flex-wrap items-center gap-2">
+                                  {booking.court?.venue?.slug && (
+                                    <Link
+                                      href={`/courts#book?venue=${encodeURIComponent(
+                                        booking.court.venue.slug
+                                      )}&slot=${encodeURIComponent(
+                                        formatTimeArabic(booking.start_time)
+                                      )}`}
+                                      className="flex-1 min-h-[42px] rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.08] text-zinc-200 text-xs font-bold flex items-center justify-center gap-1.5 transition-all"
+                                    >
+                                      <RotateCcw className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                                      <span>احجز نفس الملعب تاني</span>
+                                    </Link>
+                                  )}
+
+                                  {booking.status === "completed" && !booking.has_review && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenReview(booking)}
+                                      className="flex-1 min-h-[42px] rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-black flex items-center justify-center gap-1.5 transition-all"
+                                    >
+                                      <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" strokeWidth={1.5} />
+                                      <span>قيّم تجربتك بالملعب</span>
+                                    </button>
+                                  )}
+
+                                  {booking.status === "completed" && booking.has_review && (
+                                    <span className="min-h-[42px] px-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold inline-flex items-center gap-1">
+                                      <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                                      <span>تم تقييم الماتش</span>
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
@@ -850,6 +935,104 @@ export default function MyBookingsPage() {
           </>
         )}
       </main>
+
+      {/* Verified Post-Match Review Modal */}
+      {reviewBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div
+            className="w-full max-w-md rounded-3xl bg-[#141418] border border-white/10 p-5 sm:p-6 shadow-2xl space-y-4"
+            dir="rtl"
+          >
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3.5">
+              <div>
+                <h3 className="font-display text-base font-black text-white">
+                  تقييم تجربتك الموثقة
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  {reviewBooking.court?.venue?.name} — {reviewBooking.court?.name}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setReviewBooking(null)}
+                aria-label="إغلاق"
+                className="min-h-[44px] min-w-[44px] rounded-xl bg-white/[0.05] text-zinc-400 flex items-center justify-center"
+              >
+                <X className="h-4 w-4" strokeWidth={1.5} />
+              </button>
+            </div>
+
+            {reviewError && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs font-bold text-rose-300">
+                {reviewError}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              {[
+                { label: "جودة الأرضية / النجيل", value: turfRating, setter: setTurfRating },
+                { label: "كفاءة الإضاءة والكشافات", value: lightingRating, setter: setLightingRating },
+                { label: "الالتزام بالمواعيد والتعامل", value: serviceRating, setter: setServiceRating },
+              ].map((criterion) => (
+                <div
+                  key={criterion.label}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-[#0e0e11] border border-white/[0.06] px-3.5 py-2.5"
+                >
+                  <span className="text-xs font-bold text-zinc-200">
+                    {criterion.label}
+                  </span>
+                  <div className="flex items-center gap-1" dir="ltr">
+                    {[1, 2, 3, 4, 5].map((score) => (
+                      <button
+                        key={score}
+                        type="button"
+                        onClick={() => criterion.setter(score)}
+                        aria-label={`${criterion.label}: ${score}`}
+                        className="min-h-[36px] min-w-[32px] flex items-center justify-center"
+                      >
+                        <Star
+                          className={`h-5 w-5 transition-colors ${
+                            score <= criterion.value
+                              ? "fill-amber-400 text-amber-400"
+                              : "text-zinc-600"
+                          }`}
+                          strokeWidth={1.5}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <div>
+                <label className="text-xs font-bold text-zinc-300 block mb-1.5">
+                  ملاحظة أو رأي مختصر (اختياري)
+                </label>
+                <textarea
+                  rows={3}
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder="شارك اللاعبين رأيك في الملعب..."
+                  className="w-full rounded-xl bg-[#09090b] border border-white/10 p-3 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-primary"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={submittingReview}
+                className="w-full min-h-[44px] rounded-xl bg-primary hover:bg-primary-hover disabled:opacity-50 text-black font-black text-xs inline-flex items-center justify-center gap-2 transition-all"
+              >
+                {submittingReview ? (
+                  <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2} />
+                ) : (
+                  <CheckCircle2 className="h-4 w-4" strokeWidth={2} />
+                )}
+                <span>{submittingReview ? "جاري النشر..." : "نشر التقييم الموثق"}</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

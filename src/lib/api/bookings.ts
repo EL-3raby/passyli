@@ -346,6 +346,16 @@ export async function getActiveBookingsForDate(dateStr: string): Promise<ActiveS
   }
 }
 
+export function slotLabelToDbTime(slotLabel: string): string {
+  const clean = slotLabel.replace(/[^0-9:]/g, "");
+  const [hStr, mStr] = clean.split(":");
+  let h = parseInt(hStr || "18", 10);
+  const m = parseInt(mStr || "0", 10);
+  if (slotLabel.includes("م") && h < 12) h += 12;
+  if (slotLabel.includes("ص") && h === 12) h = 0;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
+}
+
 /**
  * Checks whether a display slot (e.g. "06:00 م") matches a DB time (e.g. "18:00:00")
  */
@@ -378,6 +388,9 @@ export interface BookingDetails {
   deposit_required: number;
   deposit_paid: number;
   cash_remaining: number;
+  payment_type?: string | null;
+  reschedule_requested_at?: string | null;
+  reschedule_requested_slot?: string | null;
   status: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
   booker_name: string;
   booker_phone: string;
@@ -388,6 +401,9 @@ export interface BookingDetails {
     sport: "padel" | "football";
     surface: string;
     slot_duration_minutes: number;
+    price_morning?: number;
+    price_evening?: number;
+    peak_hour_start?: string;
   };
   venue: {
     id: string;
@@ -401,6 +417,31 @@ export interface BookingDetails {
     whatsapp_number: string;
     images: string[];
   };
+}
+
+interface JoinedVenueRow {
+  id: string;
+  name: string;
+  city: string;
+  district: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  phone: string;
+  whatsapp_number: string;
+  images: string[] | null;
+}
+
+interface JoinedCourtRow {
+  id: string;
+  name: string;
+  sport: "padel" | "football";
+  surface: string;
+  slot_duration_minutes: number | null;
+  price_morning: number;
+  price_evening: number;
+  peak_hour_start: string;
+  venues: JoinedVenueRow | null;
 }
 
 /**
@@ -419,8 +460,8 @@ export async function getBookingByReference(reference: string): Promise<BookingD
       return null;
     }
 
-    const c = data.courts as any;
-    const v = c.venues as any;
+    const c = data.courts as unknown as JoinedCourtRow;
+    const v = c.venues;
     if (!v) return null;
 
     return {
@@ -433,6 +474,9 @@ export async function getBookingByReference(reference: string): Promise<BookingD
       deposit_required: data.deposit_required,
       deposit_paid: data.deposit_paid,
       cash_remaining: data.cash_remaining,
+      payment_type: data.payment_type,
+      reschedule_requested_at: data.reschedule_requested_at,
+      reschedule_requested_slot: data.reschedule_requested_slot,
       status: data.status,
       booker_name: data.booker_name,
       booker_phone: data.booker_phone,
@@ -443,6 +487,9 @@ export async function getBookingByReference(reference: string): Promise<BookingD
         sport: c.sport,
         surface: c.surface,
         slot_duration_minutes: c.slot_duration_minutes || 60,
+        price_morning: c.price_morning,
+        price_evening: c.price_evening,
+        peak_hour_start: c.peak_hour_start,
       },
       venue: {
         id: v.id,
@@ -450,8 +497,8 @@ export async function getBookingByReference(reference: string): Promise<BookingD
         city: v.city,
         district: v.district,
         address: v.address,
-        latitude: v.latitude,
-        longitude: v.longitude,
+        latitude: Number(v.latitude),
+        longitude: Number(v.longitude),
         phone: v.phone,
         whatsapp_number: v.whatsapp_number,
         images: Array.isArray(v.images) && v.images.length > 0 ? v.images : ["/images/hero-court.jpg"],
@@ -460,6 +507,115 @@ export async function getBookingByReference(reference: string): Promise<BookingD
   } catch {
     return null;
   }
+}
+
+export async function rescheduleBooking(params: {
+  bookingReference: string;
+  newDate: string;
+  newStartTime: string;
+  newEndTime: string;
+}): Promise<{
+  success: boolean;
+  error?: string;
+  booking_date?: string;
+  start_time?: string;
+  end_time?: string;
+  total_price?: number;
+  cash_remaining?: number;
+}> {
+  const supabase = createClient();
+  const sessionId = getOrCreateBookingSessionId();
+  const { data, error } = await supabase.rpc("reschedule_booking", {
+    p_booking_reference: params.bookingReference,
+    p_new_date: params.newDate,
+    p_new_start_time: params.newStartTime,
+    p_new_end_time: params.newEndTime,
+    p_session_id: sessionId,
+  });
+
+  if (error) {
+    return { success: false, error: error.message || "تعذر تعديل الميعاد" };
+  }
+  return (data as {
+    success: boolean;
+    error?: string;
+    booking_date?: string;
+    start_time?: string;
+    end_time?: string;
+    total_price?: number;
+    cash_remaining?: number;
+  }) ?? { success: false, error: "تعذر تعديل الميعاد" };
+}
+
+export async function subscribeSlotWaitlist(params: {
+  courtId: string;
+  bookingDate: string;
+  startTime: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient();
+  const sessionId = getOrCreateBookingSessionId();
+  const normalizedTime = params.startTime.length === 5 ? `${params.startTime}:00` : params.startTime;
+
+  const { data, error } = await supabase.rpc("subscribe_slot_waitlist", {
+    p_court_id: params.courtId,
+    p_booking_date: params.bookingDate,
+    p_start_time: normalizedTime,
+    p_session_id: sessionId,
+  });
+
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  return (data as { success: boolean; error?: string }) ?? { success: false };
+}
+
+export interface VenueRatingSummary {
+  venue_id: string;
+  avg_rating: number;
+  reviews_count: number;
+}
+
+export async function getVenueRatingSummaries(): Promise<Record<string, VenueRatingSummary>> {
+  const supabase = createClient();
+  try {
+    const { data, error } = await supabase.rpc("get_venue_rating_summaries");
+    if (error || !Array.isArray(data)) return {};
+    const map: Record<string, VenueRatingSummary> = {};
+    for (const row of data as unknown as VenueRatingSummary[]) {
+      if (row.venue_id) {
+        map[row.venue_id] = {
+          venue_id: row.venue_id,
+          avg_rating: Number(row.avg_rating),
+          reviews_count: Number(row.reviews_count),
+        };
+      }
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
+export async function submitVenueReview(params: {
+  bookingId: string;
+  turfRating: number;
+  lightingRating: number;
+  serviceRating: number;
+  comment?: string;
+}): Promise<{ success: boolean; error?: string }> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("submit_venue_review", {
+    p_booking_id: params.bookingId,
+    p_turf_rating: params.turfRating,
+    p_lighting_rating: params.lightingRating,
+    p_service_rating: params.serviceRating,
+    p_comment: params.comment?.trim() || null,
+  });
+
+  if (error) {
+    return { success: false, error: error.message || "تعذر إرسال التقييم" };
+  }
+  return (data as { success: boolean; error?: string }) ?? { success: false };
 }
 
 
