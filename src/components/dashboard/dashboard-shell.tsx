@@ -194,22 +194,7 @@ export default function DashboardShell({
           className="flex items-center gap-2.5 min-w-0"
           title="باصيلي — لوحة الشريك"
         >
-          <span className="h-9 w-9 rounded-xl bg-[#09090b] border border-primary/50 flex items-center justify-center shrink-0 shadow-sm">
-            <svg
-              viewBox="0 0 32 32"
-              className="h-5 w-5"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M11 7h7.5a5.5 5.5 0 0 1 0 11H13l-1.5 7H8l3-18Z"
-                fill="#10b981"
-                transform="skewX(-12)"
-              />
-              <circle cx="17.5" cy="12.5" r="2.2" fill="#ffffff" />
-            </svg>
-          </span>
-          {!collapsed && (
+          {!collapsed ? (
             <div className="min-w-0">
               <span className="font-display text-lg font-black text-white leading-none block">
                 باصي&zwj;<span className="text-primary">&zwj;لي</span>
@@ -218,6 +203,10 @@ export default function DashboardShell({
                 بوابة الشريك
               </span>
             </div>
+          ) : (
+            <span className="font-display text-xs font-black text-white">
+              باصي&zwj;<span className="text-primary">&zwj;لي</span>
+            </span>
           )}
         </Link>
 
