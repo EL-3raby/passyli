@@ -154,7 +154,7 @@ export default function AuthModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200"
       dir="rtl"
     >
       <div className="relative w-full max-w-md bg-[#141418] border border-white/10 rounded-3xl shadow-2xl overflow-hidden max-h-[92dvh] flex flex-col">

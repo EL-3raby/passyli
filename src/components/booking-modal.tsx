@@ -857,12 +857,12 @@ export default function BookingModal({
                   <div className="h-12 w-12 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary mx-auto">
                     <LogIn className="h-6 w-6" strokeWidth={1.5} />
                   </div>
-                  <div className="space-y-1">
-                    <h4 className="font-display font-black text-base text-white">
-                      تسجيل الدخول إلزامي لحجز الملاعب
+                  <div className="space-y-1.5">
+                    <h4 className="font-display font-black text-base sm:text-lg text-white">
+                      خطوة أخيرة لحفظ ميعادك يا كابتن
                     </h4>
                     <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
-                      لحماية ميعادك وربط التذكرة بحسابك واستلام إشعارات تأكيد الإيصال الفورية، يرجى تسجيل الدخول أو إنشاء حسابك أولاً.
+                      سجّل برقمك في ثوانٍ لتأكيد حجز الماتش باسمك واستلام تذكرتك الرقمية وإشعارات الاعتماد مباشرة.
                     </p>
                   </div>
                   <button
@@ -871,7 +871,7 @@ export default function BookingModal({
                     className="w-full min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-[0_2px_15px_rgba(16,185,129,0.25)] active:scale-[0.99]"
                   >
                     <LogIn className="h-4 w-4" strokeWidth={2} />
-                    <span>تسجيل الدخول / إنشاء حساب</span>
+                    <span>تسجيل الدخول أو حساب جديد</span>
                   </button>
                 </div>
               ) : (

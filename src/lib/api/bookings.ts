@@ -392,6 +392,7 @@ export interface BookingDetails {
   reschedule_requested_at?: string | null;
   reschedule_requested_slot?: string | null;
   status: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
+  cancellation_reason?: string | null;
   booker_name: string;
   booker_phone: string;
   created_at: string;

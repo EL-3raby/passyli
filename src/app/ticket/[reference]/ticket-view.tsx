@@ -28,6 +28,8 @@ import {
 } from "@/lib/api/bookings";
 import { useAuth } from "@/components/auth/auth-provider";
 import { generateMatchBillBlob, downloadBillImage } from "@/lib/match-bill";
+import { createClient } from "@/lib/supabase/client";
+import { playReceiptChime } from "@/lib/sound";
 
 interface TicketViewProps {
   initialBooking: BookingDetails | null;
@@ -70,6 +72,49 @@ export default function TicketView({
       .then((locks) => setActiveLocks(locks))
       .finally(() => setLoadingSlots(false));
   }, [isRescheduleOpen, newDate, booking]);
+
+  // Realtime subscription for live booking updates on the ticket page
+  useEffect(() => {
+    if (!booking?.id) return;
+
+    const supabase = createClient();
+    const bookingId = booking.id;
+
+    const channel = supabase
+      .channel(`ticket-live-${bookingId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "bookings",
+          filter: `id=eq.${bookingId}`,
+        },
+        (payload) => {
+          const newBooking = payload.new as any;
+          if (!newBooking) return;
+          setBooking((prev) => {
+            if (!prev) return null;
+            const updated = {
+              ...prev,
+              status: newBooking.status || prev.status,
+              deposit_paid: newBooking.deposit_paid ?? prev.deposit_paid,
+              cash_remaining: newBooking.cash_remaining ?? prev.cash_remaining,
+              cancellation_reason: newBooking.cancellation_reason ?? prev.cancellation_reason,
+            };
+            if (newBooking.status === "confirmed" && prev.status !== "confirmed") {
+              playReceiptChime();
+            }
+            return updated;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [booking?.id]);
 
   const handleCopyLink = () => {
     if (typeof window === "undefined") return;

@@ -59,6 +59,33 @@ export default function Navbar() {
 
   const [playerNotifications, setPlayerNotifications] = useState<OperationalNotification[]>([]);
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
+  const [clearedIds, setClearedIds] = useState<Set<string>>(new Set());
+
+  const clearedIdsRef = useRef<Set<string>>(new Set());
+  clearedIdsRef.current = clearedIds;
+  const readIdsRef = useRef<Set<string>>(new Set());
+  readIdsRef.current = readIds;
+
+  // Restore persisted read and cleared notification IDs from localStorage
+  useEffect(() => {
+    if (!user) {
+      setReadIds(new Set());
+      setClearedIds(new Set());
+      return;
+    }
+    try {
+      const storedRead = localStorage.getItem(`passyli_read_notifs_${user.id}`);
+      if (storedRead) {
+        setReadIds(new Set(JSON.parse(storedRead)));
+      }
+      const storedCleared = localStorage.getItem(`passyli_cleared_notifs_${user.id}`);
+      if (storedCleared) {
+        setClearedIds(new Set(JSON.parse(storedCleared)));
+      }
+    } catch {
+      // LocalStorage access fallback
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -78,6 +105,8 @@ export default function Navbar() {
       if (error || !Array.isArray(bookingsData) || !isMounted) return;
 
       const notifs: OperationalNotification[] = [];
+      const currentCleared = clearedIdsRef.current;
+      const currentRead = readIdsRef.current;
 
       bookingsData.slice(0, 15).forEach((b: any) => {
         const venueName = b.court?.venue?.name || "الملعب";
@@ -87,37 +116,43 @@ export default function Navbar() {
         const time = b.start_time;
 
         if (b.status === "confirmed") {
+          const id = `notif-confirmed-${ref}`;
+          if (currentCleared.has(id)) return;
           notifs.push({
-            id: `notif-confirmed-${ref}`,
+            id,
             type: "booking",
             title: `حجز مؤكد في ${venueName}`,
             description: `ميعادك: ${bookingDate} الساعة ${time} (${courtName}) • كود: ${ref}`,
             timestamp: b.created_at || new Date().toISOString(),
-            isRead: readIds.has(`notif-confirmed-${ref}`),
+            isRead: currentRead.has(id),
             actionLabel: "عرض التذكرة",
             actionHref: `/ticket/${ref}`,
             priority: "success",
           });
         } else if (b.status === "pending_payment") {
+          const id = `notif-pending-${ref}`;
+          if (currentCleared.has(id)) return;
           notifs.push({
-            id: `notif-pending-${ref}`,
+            id,
             type: "receipt",
             title: `إيصالك قيد المراجعة في ${venueName}`,
             description: `جاري مراجعة إيصال التحويل لميعاد ${bookingDate} الساعة ${time}`,
             timestamp: b.created_at || new Date().toISOString(),
-            isRead: readIds.has(`notif-pending-${ref}`),
+            isRead: currentRead.has(id),
             actionLabel: "متابعة التذكرة",
             actionHref: `/ticket/${ref}`,
             priority: "normal",
           });
         } else if (b.status === "cancelled") {
+          const id = `notif-cancelled-${ref}`;
+          if (currentCleared.has(id)) return;
           notifs.push({
-            id: `notif-cancelled-${ref}`,
+            id,
             type: "dispute",
             title: `تم إلغاء حجز في ${venueName}`,
             description: b.cancellation_reason || `تم إلغاء ميعاد ${bookingDate} الساعة ${time}`,
             timestamp: b.created_at || new Date().toISOString(),
-            isRead: readIds.has(`notif-cancelled-${ref}`),
+            isRead: currentRead.has(id),
             actionLabel: "عرض التفاصيل",
             actionHref: `/ticket/${ref}`,
             priority: "urgent",
@@ -154,25 +189,46 @@ export default function Navbar() {
       isMounted = false;
       supabase.removeChannel(channel);
     };
-  }, [user, profile?.phone, readIds]);
+  }, [user, profile?.phone, clearedIds]);
 
   const handleMarkAllAsRead = () => {
+    if (!user) return;
     setReadIds((prev) => {
       const next = new Set(prev);
       playerNotifications.forEach((n) => next.add(n.id));
+      try {
+        localStorage.setItem(`passyli_read_notifs_${user.id}`, JSON.stringify(Array.from(next)));
+      } catch {}
       return next;
     });
     setPlayerNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
 
   const handleMarkAsRead = (id: string) => {
-    setReadIds((prev) => new Set(prev).add(id));
+    if (!user) return;
+    setReadIds((prev) => {
+      const next = new Set(prev);
+      next.add(id);
+      try {
+        localStorage.setItem(`passyli_read_notifs_${user.id}`, JSON.stringify(Array.from(next)));
+      } catch {}
+      return next;
+    });
     setPlayerNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
     );
   };
 
   const handleClearAll = () => {
+    if (!user) return;
+    setClearedIds((prev) => {
+      const next = new Set(prev);
+      playerNotifications.forEach((n) => next.add(n.id));
+      try {
+        localStorage.setItem(`passyli_cleared_notifs_${user.id}`, JSON.stringify(Array.from(next)));
+      } catch {}
+      return next;
+    });
     setPlayerNotifications([]);
   };
 
