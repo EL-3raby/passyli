@@ -19,7 +19,12 @@ import {
   Loader2,
   CheckCircle2,
   X,
+  Share2,
+  QrCode,
+  Info,
+  Footprints,
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import {
   getActiveBookingsForDate,
   rescheduleBooking,
@@ -42,8 +47,21 @@ export default function TicketView({
 }: TicketViewProps) {
   const { openAuthModal } = useAuth();
   const [booking, setBooking] = useState<BookingDetails | null>(initialBooking);
-  const [isCopied, setIsCopied] = useState(false);
+  const [isCopiedCode, setIsCopiedCode] = useState(false);
+  const [isCopiedLink, setIsCopiedLink] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [ticketUrl, setTicketUrl] = useState<string>(
+    initialBooking
+      ? `https://passyli.com/ticket/${initialBooking.booking_reference}`
+      : ""
+  );
+
+  // Sync ticketUrl safely on client mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setTicketUrl(window.location.href);
+    }
+  }, []);
 
   // Instant Reschedule Modal state
   const [isRescheduleOpen, setIsRescheduleOpen] = useState(false);
@@ -73,7 +91,7 @@ export default function TicketView({
       .finally(() => setLoadingSlots(false));
   }, [isRescheduleOpen, newDate, booking]);
 
-  // Realtime subscription for live booking updates on the ticket page
+  // Realtime subscription for live booking & receipt verification updates
   useEffect(() => {
     if (!booking?.id) return;
 
@@ -91,16 +109,24 @@ export default function TicketView({
           filter: `booking_id=eq.${bookingId}`,
         },
         (payload) => {
-          const newRec = payload.new as { status?: string; rejection_reason?: string } | undefined;
+          const newRec = payload.new as
+            | { status?: string; rejection_reason?: string }
+            | undefined;
           if (!newRec) return;
           setBooking((prev) => {
             if (!prev) return null;
             const updated = {
               ...prev,
-              receipt_status: (newRec.status as "submitted" | "verified" | "rejected") || prev.receipt_status,
-              rejection_reason: newRec.rejection_reason || prev.rejection_reason,
+              receipt_status:
+                (newRec.status as "submitted" | "verified" | "rejected") ||
+                prev.receipt_status,
+              rejection_reason:
+                newRec.rejection_reason || prev.rejection_reason,
             };
-            if (newRec.status === "verified" && prev.receipt_status !== "verified") {
+            if (
+              newRec.status === "verified" &&
+              prev.receipt_status !== "verified"
+            ) {
               playReceiptChime();
             }
             return updated;
@@ -125,7 +151,8 @@ export default function TicketView({
               status: newBooking.status || prev.status,
               deposit_paid: newBooking.deposit_paid ?? prev.deposit_paid,
               cash_remaining: newBooking.cash_remaining ?? prev.cash_remaining,
-              cancellation_reason: newBooking.cancellation_reason ?? prev.cancellation_reason,
+              cancellation_reason:
+                newBooking.cancellation_reason ?? prev.cancellation_reason,
             };
           });
         }
@@ -137,11 +164,18 @@ export default function TicketView({
     };
   }, [booking?.id]);
 
+  const handleCopyCode = () => {
+    if (!booking?.booking_reference) return;
+    void navigator.clipboard.writeText(booking.booking_reference);
+    setIsCopiedCode(true);
+    setTimeout(() => setIsCopiedCode(false), 2500);
+  };
+
   const handleCopyLink = () => {
     if (typeof window === "undefined") return;
     void navigator.clipboard.writeText(window.location.href);
-    setIsCopied(true);
-    setTimeout(() => setIsCopied(false), 2500);
+    setIsCopiedLink(true);
+    setTimeout(() => setIsCopiedLink(false), 2500);
   };
 
   const formatTimeArabic = (timeStr: string) => {
@@ -207,10 +241,36 @@ export default function TicketView({
     }
   };
 
+  const handleShareSquadWhatsApp = () => {
+    if (!booking) return;
+    const isPadel = booking.court.sport === "padel";
+    const playersCount = isPadel ? 4 : 10;
+    const cashPerPlayer = Math.ceil(booking.cash_remaining / playersCount);
+    const duration = booking.court.slot_duration_minutes || 60;
+
+    const message = [
+      "*تذكرة ماتش رسمية معتمدة على باصيلي (Passyli)*",
+      "",
+      `*الملعب:* ${booking.venue.name} — ${booking.court.name}`,
+      `*اليوم:* ${formatDateArabic(booking.booking_date)}`,
+      `*الميعاد:* ${formatTimeArabic(booking.start_time)} إلى ${formatTimeArabic(booking.end_time)} (${duration} دقيقة)`,
+      `*كابتن الفرقة:* ${booking.booker_name}`,
+      "",
+      `*المطلوب كاش من كل لاعب بالملعب:* ${cashPerPlayer} ج.م`,
+      `*(حسبة تقسيم ${playersCount} لاعبين)*`,
+      "",
+      `*رابط التذكرة واللوكيشن ورمز الدخول:*`,
+      ticketUrl,
+    ].join("\n");
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+  };
+
   if (!booking) {
     return (
       <div className="min-h-screen bg-[#09090b] text-white selection:bg-primary/20 selection:text-primary">
-        <main className="max-w-2xl mx-auto px-4 py-16 space-y-5 pb-28 md:pb-12">
+        <main className="max-w-xl mx-auto px-4 py-16 space-y-5 pb-28 md:pb-12" dir="rtl">
           <div className="text-center py-16 px-4 rounded-3xl bg-[#141416] border border-white/[0.08] space-y-4">
             <div className="h-14 w-14 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center mx-auto border border-red-500/20">
               <AlertCircle className="h-7 w-7" strokeWidth={1.5} />
@@ -292,10 +352,9 @@ export default function TicketView({
           l.startTime.slice(0, 5) === startTime.slice(0, 5)
       );
 
-      // Skip past times on today
       const candidateMs = new Date(`${newDate}T${startTime}`).getTime();
       if (mins >= 24 * 60) {
-        // early morning belongs to the chosen booking_date logic if needed, keep selectable if > now
+        // next morning slot
       } else if (candidateMs <= Date.now() + 30 * 60 * 1000) {
         continue;
       }
@@ -349,26 +408,32 @@ export default function TicketView({
 
   const todayIso = new Date().toISOString().split("T")[0];
 
+  const isVerified =
+    booking.receipt_status === "verified" || booking.status === "completed";
+  const isRejected =
+    booking.receipt_status === "rejected" || booking.status === "cancelled";
+
   return (
     <div className="min-h-screen bg-[#09090b] text-white selection:bg-primary/20 selection:text-primary">
       <main
-        className="max-w-2xl mx-auto px-4 py-6 sm:py-8 space-y-5 pb-28 md:pb-12"
+        className="max-w-xl mx-auto px-3.5 sm:px-4 py-5 sm:py-8 space-y-5 pb-28 md:pb-12"
         dir="rtl"
       >
+        {/* Dynamic Alerts */}
         {rescheduleSuccess && (
           <div
             role="status"
-            className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5"
+            className="p-3.5 sm:p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in fade-in"
           >
             <CheckCircle2 className="h-5 w-5 shrink-0" strokeWidth={1.5} />
             <span>{rescheduleSuccess}</span>
           </div>
         )}
 
-        {(booking.receipt_status === "rejected" || booking.status === "cancelled") && (
+        {isRejected && (
           <div
             role="alert"
-            className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs sm:text-sm font-bold flex items-center gap-2.5"
+            className="p-3.5 sm:p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs sm:text-sm font-bold flex items-center gap-2.5 animate-in fade-in"
           >
             <AlertCircle className="h-5 w-5 shrink-0 text-rose-400" strokeWidth={1.5} />
             <span>
@@ -377,300 +442,463 @@ export default function TicketView({
           </div>
         )}
 
-        {/* Header Badge & Reference */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#141416] border border-white/[0.08]">
-          <div className="flex items-center gap-2.5">
-            <span className="flex h-3 w-3 relative">
-              <span
-                className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  booking.receipt_status === "verified" || booking.status === "completed"
-                    ? "bg-emerald-400"
-                    : booking.receipt_status === "rejected" || booking.status === "cancelled"
-                    ? "bg-rose-400"
-                    : "bg-amber-400"
-                }`}
-              />
-              <span
-                className={`relative inline-flex rounded-full h-3 w-3 ${
-                  booking.receipt_status === "verified" || booking.status === "completed"
-                    ? "bg-emerald-500"
-                    : booking.receipt_status === "rejected" || booking.status === "cancelled"
-                    ? "bg-rose-500"
-                    : "bg-amber-500"
-                }`}
-              />
-            </span>
-            <div>
-              <span className="text-xs font-bold text-white block">
-                {booking.receipt_status === "verified" || booking.status === "completed"
-                  ? "تذكرة حجز مؤكدة ومعتمدة رسمياً"
-                  : booking.receipt_status === "rejected" || booking.status === "cancelled"
-                  ? "تعذر اعتماد إيصال التحويل"
-                  : "طلبك في مرحلة التأكيد والمراجعة من إدارة الملعب"}
-              </span>
-              <span className="text-[11px] text-zinc-400 font-latin">
-                Passyli Official Match Ticket
-              </span>
-            </div>
-          </div>
+        {/* ======================================================== */}
+        {/* THE TAZKARTI STADIUM-GRADE PHYSICAL MATCH PASS CONTAINER  */}
+        {/* ======================================================== */}
+        <div className="relative rounded-[28px] bg-[#121316] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden">
+          
+          {/* Subtle Ambient Stadium Lighting Backdrop */}
+          <div className="absolute top-0 inset-x-0 h-48 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent pointer-events-none" />
 
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <div
-              className="font-mono text-xs font-bold text-primary bg-primary/10 border border-primary/20 rounded-xl px-3 py-1.5 tabular-nums tracking-wider select-all"
-              dir="ltr"
-            >
-              {booking.booking_reference}
-            </div>
-            <button
-              type="button"
-              onClick={handleCopyLink}
-              aria-label="نسخ رابط الفاتورة"
-              className="inline-flex min-h-[44px] items-center gap-1.5 px-3 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] text-xs font-bold text-zinc-300 hover:text-white transition-colors"
-            >
-              {isCopied ? (
-                <>
-                  <Check className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
-                  <span className="text-primary font-bold">تم النسخ</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  <span>نسخ الرابط</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Squad Financial Hero Box */}
-        <div className="rounded-3xl bg-gradient-to-b from-[#18231c] via-[#141416] to-[#141416] border-2 border-primary/30 p-5 sm:p-6 space-y-5 shadow-2xl shadow-primary/5 relative overflow-hidden">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20 mb-2">
-                <Users className="h-3 w-3" strokeWidth={2} />
-                <span>
-                  حسبة الفرقة • تقسيم {playersCount} لاعبين (
-                  {isPadel ? "بادل 2 ضد 2" : "خماسي 5 ضد 5"})
+          {/* ---------------------------------------------------- */}
+          {/* 1. PASS HEADER: Brand Mark & Official Status Pill    */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative p-5 sm:p-6 pb-4 border-b border-white/[0.08] flex items-center justify-between gap-3">
+            {/* Brand Logo & Wordmark */}
+            <div className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center font-display font-black text-black text-lg shadow-[0_2px_12px_rgba(16,185,129,0.35)]">
+                P
+              </div>
+              <div>
+                <span className="font-display font-black text-lg text-white block leading-tight">
+                  باصي<span className="text-primary">لي</span>
                 </span>
-              </span>
-              <h2 className="font-display font-black text-lg text-white">
-                {isFullPayment
-                  ? "تم سداد قيمة الماتش بالكامل إلكترونياً"
-                  : "المطلوب كاش من كل لاعب يجهزه للملعب"}
-              </h2>
-            </div>
-          </div>
-
-          <div className="flex items-baseline gap-2 bg-black/40 rounded-2xl p-4 border border-primary/20">
-            <span className="font-display font-black text-4xl sm:text-5xl text-primary tabular-nums tracking-tight">
-              {cashPerPlayer}
-            </span>
-            <span className="text-sm font-bold text-zinc-300">
-              {isFullPayment
-                ? "ج.م كاش بالملعب (مسدد بالكامل)"
-                : "ج.م كاش في الملعب"}
-            </span>
-            <span className="text-xs text-zinc-400 mr-auto">
-              (إجمالي نصيب اللاعب:{" "}
-              <strong className="text-white tabular-nums">
-                {totalPerPlayer} ج.م
-              </strong>
-              )
-            </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2.5 pt-1 text-center">
-            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-[11px] text-zinc-400 block mb-0.5">
-                إجمالي إيجار الملعب
-              </span>
-              <span className="font-bold text-sm sm:text-base text-white tabular-nums">
-                {booking.total_price}{" "}
-                <span className="text-[10px] font-normal text-zinc-400">ج.م</span>
-              </span>
+                <span className="text-[10px] text-zinc-400 font-latin tracking-wide block">
+                  PASSYLI MATCH PASS
+                </span>
+              </div>
             </div>
 
-            <div className="p-3 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-              <span className="text-[11px] text-zinc-400 block mb-0.5">
-                {isFullPayment ? "المسدّد إلكترونياً" : "العربون المدفوع"}
-              </span>
-              <span className="font-bold text-sm sm:text-base text-emerald-400 tabular-nums">
-                {booking.deposit_paid || booking.deposit_required}{" "}
-                <span className="text-[10px] font-normal text-zinc-400">ج.م</span>
-              </span>
-            </div>
-
-            <div className="p-3 rounded-2xl bg-primary/10 border border-primary/30">
-              <span className="text-[11px] text-primary block mb-0.5 font-bold">
-                المتبقي كاش للملعب
-              </span>
-              <span className="font-black text-sm sm:text-base text-primary tabular-nums">
-                {booking.cash_remaining}{" "}
-                <span className="text-[10px] font-normal text-primary/80">ج.م</span>
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Match Information Card */}
-        <div className="rounded-3xl bg-[#141416] border border-white/[0.08] p-5 sm:p-6 space-y-4">
-          <div className="flex items-start justify-between gap-3 border-b border-white/[0.08] pb-4">
+            {/* Official Verification Status Pill */}
             <div>
-              <span className="inline-block text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full mb-1.5 border border-emerald-500/20">
-                {booking.court.sport === "padel"
-                  ? "ملعب بادل معتمد"
-                  : "ملعب كرة قدم خماسي معتمد"}
-              </span>
-              <h1 className="font-display font-black text-xl text-white">
+              {isVerified ? (
+                <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 border border-emerald-500/40 px-3 py-1 text-xs font-bold text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse" />
+                  <span>تذكرة معتمدة ورسمية</span>
+                </div>
+              ) : isRejected ? (
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3 py-1 text-xs font-bold text-rose-400">
+                  <span className="h-2 w-2 rounded-full bg-rose-400" />
+                  <span>تعذر اعتماد الإيصال</span>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-xs font-bold text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                  <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
+                  <span>قيد التأكيد والمراجعة</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* 2. MATCH & STADIUM IDENTITY (Primary Focus First)    */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative p-5 sm:p-6 space-y-4">
+            
+            {/* Sport Tag & Stadium Names */}
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 mb-2">
+                <Footprints className="h-3 w-3" strokeWidth={1.5} />
+                <span>
+                  {booking.court.sport === "padel"
+                    ? "ملعب بادل بانوراما معتمد"
+                    : "ملعب كرة قدم خماسي معتمد"}
+                </span>
+              </div>
+
+              <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
                 {booking.venue.name}
               </h1>
-              <span className="text-xs text-zinc-400 block mt-0.5">
+              <p className="text-xs sm:text-sm text-zinc-400 font-medium mt-0.5">
                 {booking.court.name}
-              </span>
+              </p>
             </div>
 
-            <div className="text-left shrink-0">
-              <span className="text-[10px] text-zinc-400 block">حاجز الماتش</span>
-              <span className="text-xs font-bold text-white block">
-                كابتن {booking.booker_name}
-              </span>
-            </div>
-          </div>
+            {/* Stadium Match Billboard: High-Contrast Kickoff Time & Date */}
+            <div className="rounded-2xl bg-[#18191d] border border-white/[0.08] p-4 sm:p-5 space-y-3.5 shadow-inner">
+              
+              {/* Kickoff Clock Strip */}
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+                    <Clock className="h-5 w-5" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <span className="text-[11px] text-zinc-400 block font-medium">
+                      موعد ضربة البداية
+                    </span>
+                    <span className="font-display font-black text-lg sm:text-xl text-primary tabular-nums tracking-wide block">
+                      {formatTimeArabic(booking.start_time)} — {formatTimeArabic(booking.end_time)}
+                    </span>
+                  </div>
+                </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#1c1c1f] border border-white/[0.06]">
-              <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <Calendar className="h-5 w-5" strokeWidth={1.5} />
-              </div>
-              <div>
-                <span className="text-[11px] text-zinc-400 block">تاريخ الماتش</span>
-                <span className="text-xs sm:text-sm font-bold text-white block">
-                  {formatDateArabic(booking.booking_date)}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#1c1c1f] border border-white/[0.06]">
-              <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <Clock className="h-5 w-5" strokeWidth={1.5} />
-              </div>
-              <div>
-                <span className="text-[11px] text-zinc-400 block">ساعة الماتش</span>
-                <span className="text-xs sm:text-sm font-bold text-white tabular-nums block">
-                  {formatTimeArabic(booking.start_time)} —{" "}
-                  {formatTimeArabic(booking.end_time)}
-                  <span className="text-[11px] font-normal text-zinc-400 mr-1.5">
-                    ({booking.court.slot_duration_minutes || 60} دقيقة)
+                <div className="text-left shrink-0">
+                  <span className="inline-block text-[11px] font-bold text-zinc-300 bg-white/[0.06] border border-white/10 px-2.5 py-1 rounded-lg tabular-nums">
+                    المدة {booking.court.slot_duration_minutes || 60} دقيقة
                   </span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Reschedule Section inside Match Card */}
-          {booking.status === "confirmed" && (
-            <div className="rounded-2xl bg-[#1c1c1f] border border-white/[0.06] p-3.5 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5 text-xs">
-                <CalendarClock
-                  className="h-4 w-4 text-primary shrink-0"
-                  strokeWidth={1.5}
-                />
-                {booking.reschedule_requested_at ? (
-                  <span className="text-zinc-400">
-                    تم تعديل موعد هذا الحجز مسبقاً (الموعد السابق:{" "}
-                    <strong dir="ltr" className="text-zinc-300 tabular-nums">
-                      {booking.reschedule_requested_slot}
-                    </strong>
-                    )
-                  </span>
-                ) : canReschedule ? (
-                  <span className="text-zinc-300 font-bold">
-                    هل طرأ ظرف طارئ؟ يمكنك تغيير الساعة مجاناً لمرة واحدة فوراً.
-                  </span>
-                ) : (
-                  <span className="text-zinc-500">
-                    التعديل الفوري متاح قبل موعد الماتش بـ 12 ساعة على الأقل.
-                  </span>
-                )}
+                </div>
               </div>
 
-              {canReschedule && (
-                <button
-                  type="button"
-                  onClick={() => setIsRescheduleOpen(true)}
-                  className="min-h-[44px] px-4 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary font-black text-xs inline-flex items-center gap-1.5 transition-all"
-                >
-                  <CalendarClock className="h-4 w-4" strokeWidth={1.5} />
-                  <span>تعديل الميعاد فوراً</span>
-                </button>
-              )}
-            </div>
-          )}
+              {/* Date & Day Strip */}
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-zinc-300 flex items-center justify-center shrink-0">
+                  <Calendar className="h-5 w-5" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <span className="text-[11px] text-zinc-400 block font-medium">
+                    يوم وتاريخ الماتش
+                  </span>
+                  <span className="text-xs sm:text-sm font-bold text-white block">
+                    {formatDateArabic(booking.booking_date)}
+                  </span>
+                </div>
+              </div>
 
-          {/* Venue Address & Google Maps */}
-          <div className="p-4 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] space-y-3">
-            <div className="flex items-start gap-2.5">
-              <MapPin
-                className="h-4 w-4 text-primary shrink-0 mt-0.5"
-                strokeWidth={1.5}
-              />
-              <div>
-                <span className="text-[11px] text-zinc-400 block">
-                  عنوان وموقع الملعب
-                </span>
-                <p className="text-xs font-bold text-zinc-200 leading-relaxed">
+              {/* Match Captain & Verified Booker */}
+              <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
+                <div>
+                  <span className="text-[10px] text-zinc-400 block">كابتن الفرقة</span>
+                  <span className="font-bold text-white block">
+                    {booking.booker_name || "كابتن الفرقة"}
+                  </span>
+                </div>
+
+                <div className="text-left">
+                  <span className="text-[10px] text-zinc-400 block">رقم الهاتف المسجل</span>
+                  <span className="font-mono text-zinc-300 font-bold tabular-nums" dir="ltr">
+                    {booking.booker_phone}
+                  </span>
+                </div>
+              </div>
+
+              {/* Venue Address Preview */}
+              <div className="pt-2 border-t border-white/[0.06] flex items-start gap-2 text-xs">
+                <MapPin className="h-4 w-4 text-primary shrink-0 mt-0.5" strokeWidth={1.5} />
+                <p className="text-zinc-300 text-[11px] sm:text-xs leading-relaxed">
                   {booking.venue.address}
                 </p>
               </div>
             </div>
 
-            <a
-              href={`https://www.google.com/maps/search/?api=1&query=${booking.venue.latitude},${booking.venue.longitude}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 px-4 text-xs font-bold text-white transition-all active:scale-[0.99]"
-            >
-              <Navigation className="h-4 w-4 text-primary" strokeWidth={1.5} />
-              <span>فتح موقع الملعب على Google Maps (اللوكيشن)</span>
-              <ExternalLink className="h-3 w-3 text-zinc-400" />
-            </a>
+            {/* Reschedule Badge if allowed */}
+            {booking.status === "confirmed" && (
+              <div className="rounded-xl bg-[#18191d] border border-white/[0.06] p-3 flex flex-wrap items-center justify-between gap-2.5 text-xs">
+                <div className="flex items-center gap-2">
+                  <CalendarClock className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
+                  {booking.reschedule_requested_at ? (
+                    <span className="text-zinc-400 text-[11px]">
+                      تم تعديل الموعد سابقاً إلى هذا التوقيت
+                    </span>
+                  ) : canReschedule ? (
+                    <span className="text-zinc-300 text-[11px] font-bold">
+                      يمكنك تعديل ميعاد الماتش مجاناً لمرة واحدة قبل 12 ساعة
+                    </span>
+                  ) : (
+                    <span className="text-zinc-500 text-[11px]">
+                      التعديل الفوري متاح قبل الماتش بـ 12 ساعة على الأقل
+                    </span>
+                  )}
+                </div>
+
+                {canReschedule && (
+                  <button
+                    type="button"
+                    onClick={() => setIsRescheduleOpen(true)}
+                    className="min-h-[36px] px-3 rounded-lg bg-primary/15 hover:bg-primary/25 border border-primary/30 text-primary font-black text-[11px] inline-flex items-center gap-1.5 transition-all"
+                  >
+                    <span>نقل الميعاد</span>
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* 3. PHYSICAL TICKET PERFORATION DIVIDER 1             */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative py-1 flex items-center justify-center">
+            {/* Left circular cutout notch */}
+            <div className="absolute -left-4 w-8 h-8 rounded-full bg-[#09090b] border-r border-white/10 shadow-inner z-10" />
+            {/* Right circular cutout notch */}
+            <div className="absolute -right-4 w-8 h-8 rounded-full bg-[#09090b] border-l border-white/10 shadow-inner z-10" />
+            {/* Perforated dashed stitch line */}
+            <div className="w-full border-t-2 border-dashed border-white/15 mx-5" />
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* 4. GATE VERIFICATION STUB & QR CODE (Tazkarti Style) */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative p-5 sm:p-6 bg-gradient-to-b from-[#15161a] to-[#121316] space-y-4">
+            
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-zinc-400 flex items-center gap-1.5">
+                <QrCode className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                <span>بوابة الدخول وتأكيد الحضور الإلكتروني</span>
+              </span>
+              <span className="text-[10px] text-zinc-500 font-mono">
+                GATE PASS VERIFICATION
+              </span>
+            </div>
+
+            <div className="rounded-2xl bg-[#0e1013] border border-white/[0.08] p-4 flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
+              
+              {/* Scannable SVG QR Code Box */}
+              <div className="shrink-0 p-2.5 rounded-2xl bg-white border border-white/20 shadow-[0_0_25px_rgba(16,185,129,0.18)]">
+                <QRCodeSVG
+                  value={ticketUrl || `https://passyli.com/ticket/${booking.booking_reference}`}
+                  size={120}
+                  bgColor="#ffffff"
+                  fgColor="#09090b"
+                  level="Q"
+                  includeMargin={false}
+                />
+              </div>
+
+              {/* Gate Pass Info & Booking Code */}
+              <div className="flex-1 text-center sm:text-right space-y-2.5 w-full">
+                <div>
+                  <span className="text-[10px] text-zinc-400 block mb-0.5">
+                    كود الحجز المعتمد للمباراة
+                  </span>
+                  <div className="flex items-center justify-center sm:justify-start gap-2">
+                    <span
+                      className="font-mono font-black text-base sm:text-lg text-primary tracking-wider select-all"
+                      dir="ltr"
+                    >
+                      {booking.booking_reference}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleCopyCode}
+                      aria-label="نسخ كود الحجز"
+                      className="inline-flex min-h-[36px] items-center gap-1 px-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
+                    >
+                      {isCopiedCode ? (
+                        <>
+                          <Check className="h-3.5 w-3.5" strokeWidth={2} />
+                          <span>تم</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          <span>نسخ</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                  امسح رمز الـ QR عند بوابة الدخول أو مع الكنترول لتسجيل الحضور فوراً واستلام الكرة.
+                </p>
+
+                {/* Verification Barcode Hash */}
+                <div className="pt-1">
+                  <div className="h-3.5 w-full bg-white/10 rounded flex items-center justify-around px-2 opacity-40">
+                    {Array.from({ length: 28 }).map((_, i) => (
+                      <span
+                        key={i}
+                        className={`h-2.5 ${
+                          i % 3 === 0
+                            ? "w-1 bg-white"
+                            : i % 2 === 0
+                            ? "w-0.5 bg-white"
+                            : "w-1.5 bg-white"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-[9px] text-zinc-500 font-mono block mt-1">
+                    PASSYLI STADIUM SECURITY PROTOCOL • VERIFIED PASS
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* 5. PHYSICAL TICKET PERFORATION DIVIDER 2             */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative py-1 flex items-center justify-center">
+            {/* Left circular cutout notch */}
+            <div className="absolute -left-4 w-8 h-8 rounded-full bg-[#09090b] border-r border-white/10 shadow-inner z-10" />
+            {/* Right circular cutout notch */}
+            <div className="absolute -right-4 w-8 h-8 rounded-full bg-[#09090b] border-l border-white/10 shadow-inner z-10" />
+            {/* Perforated dashed stitch line */}
+            <div className="w-full border-t-2 border-dashed border-white/15 mx-5" />
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* 6. CLEAN FINANCIAL CAPSULE & SQUAD SPLIT             */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative p-5 sm:p-6 bg-[#121316] space-y-4">
+            
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                <span>تفاصيل الحساب وحسبة الفرقة</span>
+              </span>
+              <span className="text-[10px] text-zinc-400">
+                تقسيم {playersCount} لاعبين ({isPadel ? "بادل 2 ضد 2" : "خماسي 5 ضد 5"})
+              </span>
+            </div>
+
+            {/* 3-Column Settlement Strip */}
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <span className="text-[10px] text-zinc-400 block mb-0.5">
+                  إجمالي الإيجار
+                </span>
+                <span className="font-bold text-xs sm:text-sm text-white tabular-nums">
+                  {booking.total_price} <span className="text-[10px] font-normal text-zinc-400">ج.م</span>
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <span className="text-[10px] text-zinc-400 block mb-0.5">
+                  {isFullPayment ? "المسدد بالكامل" : "العربون المدفوع"}
+                </span>
+                <span className="font-bold text-xs sm:text-sm text-emerald-400 tabular-nums">
+                  {booking.deposit_paid || booking.deposit_required}{" "}
+                  <span className="text-[10px] font-normal text-zinc-400">ج.م</span>
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-primary/10 border border-primary/30">
+                <span className="text-[10px] text-primary block mb-0.5 font-bold">
+                  المتبقي كاش بالملعب
+                </span>
+                <span className="font-black text-xs sm:text-sm text-primary tabular-nums">
+                  {booking.cash_remaining}{" "}
+                  <span className="text-[10px] font-normal text-primary/80">ج.م</span>
+                </span>
+              </div>
+            </div>
+
+            {/* Squad Split Highlight Pill */}
+            <div className="rounded-xl bg-gradient-to-r from-primary/15 via-primary/10 to-primary/5 border border-primary/25 p-3 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-white block">
+                  المطلوب كاش من كل لاعب في الملعب:
+                </span>
+                <span className="text-[10px] text-zinc-400 block">
+                  (إجمالي نصيب اللاعب شامل العربون: {totalPerPlayer} ج.م)
+                </span>
+              </div>
+
+              <div className="text-left">
+                <span className="font-display font-black text-xl text-primary tabular-nums">
+                  {cashPerPlayer}{" "}
+                  <span className="text-xs font-normal text-zinc-300">ج.م</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* 7. STADIUM RULES & RECOMMENDATIONS                   */}
+          {/* ---------------------------------------------------- */}
+          <div className="relative p-5 sm:p-6 bg-[#0e1013] border-t border-white/[0.06] space-y-2.5">
+            <span className="text-[11px] font-bold text-zinc-400 flex items-center gap-1.5">
+              <Info className="h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} />
+              <span>تعليمات وإرشادات هامة للماتش</span>
+            </span>
+
+            <ul className="text-[11px] text-zinc-400 space-y-1.5 leading-relaxed list-disc list-inside pr-1">
+              <li>
+                <strong className="text-zinc-300">الحضور المبكر:</strong> يرجى التواجد بالملعب قبل الميعاد بـ 15 دقيقة للتسخين واستلام الكرة وغرفة الملابس.
+              </li>
+              <li>
+                <strong className="text-zinc-300">الحذاء الرياضي:</strong> يُسمح فقط بالأحذية الرياضية المخصصة للترتان (Turf / TF) للحفاظ على أرضية الملعب.
+              </li>
+              <li>
+                <strong className="text-zinc-300">ضمان الميعاد:</strong> هذا الحجز رسمي ومحمي ضد أي تضارب أو حجز مزدوج بنظام باصيلي المعتمد.
+              </li>
+            </ul>
           </div>
         </div>
 
-        {/* Utility Actions */}
-        <div className="grid grid-cols-2 gap-3 pt-1">
+        {/* ======================================================== */}
+        {/* TACTICAL ACTION BAR (Mobile-First, 44px+ Touch Targets) */}
+        {/* ======================================================== */}
+        <div className="space-y-2.5 pt-1">
+          
+          {/* Primary: Share with Football Squad on WhatsApp */}
           <button
             type="button"
-            onClick={handleDownloadImage}
-            disabled={isDownloading}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#1c1c1f] hover:bg-[#242427] border border-white/[0.08] px-4 text-xs font-bold text-zinc-200 hover:text-white transition-all disabled:opacity-50"
+            onClick={handleShareSquadWhatsApp}
+            className="w-full min-h-[48px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] active:scale-[0.99] transition-all"
           >
-            <Download className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-            <span>{isDownloading ? "جاري التحميل..." : "حفظ الفاتورة كصورة"}</span>
+            <Share2 className="h-4 w-4" strokeWidth={2} />
+            <span>مشاركة تفاصيل الماتش وحسبة الفرقة على واتساب</span>
           </button>
 
+          {/* Secondary: Open Stadium GPS on Google Maps */}
           <a
-            href={`tel:${booking.venue.phone}`}
-            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-[#1c1c1f] hover:bg-[#242427] border border-white/[0.08] px-4 text-xs font-bold text-zinc-200 hover:text-white transition-all"
+            href={`https://www.google.com/maps/search/?api=1&query=${booking.venue.latitude},${booking.venue.longitude}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full min-h-[44px] rounded-xl bg-[#1c1c1f] hover:bg-[#242427] border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
           >
-            <Phone className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-            <span>اتصال بإدارة الملعب</span>
+            <Navigation className="h-4 w-4 text-primary" strokeWidth={1.5} />
+            <span>فتح موقع الملعب على Google Maps (اللوكيشن)</span>
+            <ExternalLink className="h-3 w-3 text-zinc-400" />
           </a>
+
+          {/* Tertiary Row: Save Image & Call Venue */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button
+              type="button"
+              onClick={handleDownloadImage}
+              disabled={isDownloading}
+              className="min-h-[44px] rounded-xl bg-[#141416] hover:bg-[#1c1c1f] border border-white/[0.08] text-zinc-200 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+            >
+              <Download className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+              <span>{isDownloading ? "جاري التحميل..." : "حفظ التذكرة كصورة"}</span>
+            </button>
+
+            <a
+              href={`tel:${booking.venue.phone}`}
+              className="min-h-[44px] rounded-xl bg-[#141416] hover:bg-[#1c1c1f] border border-white/[0.08] text-zinc-200 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all"
+            >
+              <Phone className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+              <span>اتصال بإدارة الملعب</span>
+            </a>
+          </div>
+
+          {/* Copy Ticket Link Utility */}
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            className="w-full min-h-[40px] rounded-xl bg-white/[0.03] hover:bg-white/[0.06] text-zinc-400 hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+          >
+            {isCopiedLink ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
+                <span className="text-primary font-bold">تم نسخ رابط التذكرة</span>
+              </>
+            ) : (
+              <>
+                <Copy className="h-3.5 w-3.5" strokeWidth={1.5} />
+                <span>نسخ رابط صفحة التذكرة للمشاركة</span>
+              </>
+            )}
+          </button>
         </div>
 
-        {/* Platform Guarantee Footer */}
-        <div className="text-center py-4 space-y-1">
+        {/* Platform Trust & Safety */}
+        <div className="text-center py-3 space-y-1">
           <div className="inline-flex items-center gap-1.5 text-xs text-zinc-500 font-bold">
             <ShieldCheck className="h-4 w-4 text-primary" strokeWidth={1.5} />
-            <span>حجز موثق ومؤكد عبر منصة باصيلي (Passyli)</span>
+            <span>حجز مؤكد بنظام منع التضارب الرياضي — باصيلي (Passyli)</span>
           </div>
-          <p className="text-[10px] text-zinc-600">
-            يضمن هذا الحجز عدم التضارب أو الحجز المزدوج. يرجى التواجد بالملعب قبل الميعاد بـ 15 دقيقة.
-          </p>
         </div>
       </main>
 
-      {/* Instant Reschedule Modal */}
+      {/* ======================================================== */}
+      {/* INSTANT RESCHEDULE MODAL                                 */}
+      {/* ======================================================== */}
       {isRescheduleOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
           <div
