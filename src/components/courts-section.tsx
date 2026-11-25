@@ -668,10 +668,30 @@ export default function CourtsSection({
                               <span>مواعيد {selectedDay.label}:</span>
                             </span>
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-primary flex items-center gap-1 tabular-nums">
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                                {(activeCourt.available_slots || []).filter((s) => !isSlotLocked(activeCourt.id, s)).length} فترة متاحة
-                              </span>
+                              {(() => {
+                                const availCount = (activeCourt.available_slots || []).filter((s) => !isSlotLocked(activeCourt.id, s)).length;
+                                if (availCount === 0) {
+                                  return (
+                                    <span className="font-bold text-zinc-400 flex items-center gap-1 tabular-nums text-[11px] bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-full">
+                                      مكتمل الحجز
+                                    </span>
+                                  );
+                                }
+                                if (availCount <= 3) {
+                                  return (
+                                    <span className="font-bold text-amber-300 flex items-center gap-1 tabular-nums text-[11px] bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                                      <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                                      باقي {availCount} فترات فقط
+                                    </span>
+                                  );
+                                }
+                                return (
+                                  <span className="font-bold text-primary flex items-center gap-1 tabular-nums">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                    {availCount} فترة متاحة
+                                  </span>
+                                );
+                              })()}
                               {(activeCourt.available_slots || []).length > 6 && (
                                 <button
                                   type="button"

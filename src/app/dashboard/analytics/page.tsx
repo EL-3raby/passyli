@@ -51,6 +51,7 @@ export default function DashboardAnalyticsPage() {
   const [preset, setPreset] = useState<DatePreset>("today");
   const [startDate, setStartDate] = useState<string>(todayStr);
   const [endDate, setEndDate] = useState<string>(todayStr);
+  const [dailyViewMode, setDailyViewMode] = useState<"chart" | "table">("chart");
 
   const [analytics, setAnalytics] = useState<VenueAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -392,32 +393,71 @@ export default function DashboardAnalyticsPage() {
           </p>
         </div>
 
-        {/* Occupancy Rate */}
+        {/* Occupancy / Utilization Rate */}
         <div className="p-5 rounded-3xl bg-[#141418] border border-white/[0.08] relative overflow-hidden group">
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-zinc-400">
-              نسبة إشغال المنشأة
+              نسبة تشغيل الملاعب
             </span>
-            <div className="h-8 w-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
-              <Activity className="h-4 w-4" strokeWidth={1.5} />
+            <div
+              className={`px-2 py-0.5 rounded-full text-[10px] font-black inline-flex items-center gap-1 border ${
+                (summary?.occupancy_rate ?? 0) >= 75
+                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                  : (summary?.occupancy_rate ?? 0) >= 45
+                  ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30"
+                  : "bg-amber-500/15 text-amber-300 border-amber-500/30"
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  (summary?.occupancy_rate ?? 0) >= 75
+                    ? "bg-emerald-400 animate-pulse"
+                    : (summary?.occupancy_rate ?? 0) >= 45
+                    ? "bg-cyan-400"
+                    : "bg-amber-400"
+                }`}
+              />
+              <span>
+                {(summary?.occupancy_rate ?? 0) >= 75
+                  ? "إقبال مرتفع"
+                  : (summary?.occupancy_rate ?? 0) >= 45
+                  ? "تشغيل مستقر"
+                  : "ساعات هادئة"}
+              </span>
             </div>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
             <span className="text-2xl sm:text-3xl font-black text-cyan-400 tabular-nums">
               {summary?.occupancy_rate ?? 0}%
             </span>
-            <span className="text-xs text-zinc-500 font-bold">
-              ({summary?.total_booked_hours ?? 0} ساعة محجوزة)
+            <span className="text-xs text-zinc-400 font-bold">
+              ({summary?.total_booked_hours ?? 0} س محجوزة)
             </span>
           </div>
           <div className="w-full bg-white/[0.06] rounded-full h-1.5 mt-2 overflow-hidden">
             <div
-              className="bg-cyan-400 h-full rounded-full transition-all duration-500"
+              className={`h-full rounded-full transition-all duration-500 ${
+                (summary?.occupancy_rate ?? 0) >= 75
+                  ? "bg-emerald-400"
+                  : (summary?.occupancy_rate ?? 0) >= 45
+                  ? "bg-cyan-400"
+                  : "bg-amber-400"
+              }`}
               style={{
                 width: `${Math.min(summary?.occupancy_rate ?? 0, 100)}%`,
               }}
             />
           </div>
+          <p className="text-[11px] text-zinc-500 mt-2 flex items-center justify-between">
+            <span>
+              {summary && summary.occupancy_rate < 100
+                ? "متبقي ساعات شاغرة يمكن استغلالها"
+                : "تم حجز كامل الساعات المتاحة"}
+            </span>
+            <span className="text-zinc-400 font-bold tabular-nums">
+              {summary ? `${summary.total_booked_hours} س نشطة` : "0 س"}
+            </span>
+          </p>
         </div>
       </div>
 
@@ -639,14 +679,50 @@ export default function DashboardAnalyticsPage() {
           <div className="flex items-center justify-between">
             <h3 className="font-display text-base font-black text-white flex items-center gap-2">
               <PieChart className="h-5 w-5 text-primary" strokeWidth={1.5} />
-              <span>توزيع قنوات الحجز</span>
+              <span>توزيع قنوات الحجز (Booking Channels)</span>
             </h3>
-            <span className="text-[11px] text-zinc-500 font-bold">
-              أونلاين vs بالملعب
+            <span className="text-[11px] text-zinc-400 font-bold">
+              مقارنة بيانية
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Segmented Visual Progress Bar */}
+          {(() => {
+            const onlineRev = channels?.online_revenue || 0;
+            const walkinRev = channels?.walkin_revenue || 0;
+            const total = onlineRev + walkinRev;
+            const onlinePct = total > 0 ? Math.round((onlineRev / total) * 100) : 50;
+            const walkinPct = total > 0 ? 100 - onlinePct : 50;
+
+            return (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className="text-primary flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    <span>أونلاين عبر باصيلي ({onlinePct}%)</span>
+                  </span>
+                  <span className="text-amber-300 flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-amber-400" />
+                    <span>كاش مباشر بالملعب ({walkinPct}%)</span>
+                  </span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-white/[0.06] overflow-hidden flex">
+                  <div
+                    className="bg-primary h-full transition-all duration-500"
+                    style={{ width: `${onlinePct}%` }}
+                    title={`أونلاين: ${onlinePct}%`}
+                  />
+                  <div
+                    className="bg-amber-400 h-full transition-all duration-500"
+                    style={{ width: `${walkinPct}%` }}
+                    title={`كاش بالملعب: ${walkinPct}%`}
+                  />
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="grid grid-cols-2 gap-3 pt-1">
             <div className="p-4 rounded-2xl bg-[#1c1c1f] border border-white/[0.04] space-y-1">
               <div className="flex items-center justify-between text-xs text-zinc-400 font-bold mb-1">
                 <span>أونلاين (باصيلي)</span>
@@ -692,6 +768,44 @@ export default function DashboardAnalyticsPage() {
               تدقيق مالي
             </span>
           </div>
+
+          {/* Segmented Payment Methods Bar */}
+          {(() => {
+            const insta = payments?.instapay_amount || 0;
+            const voda = payments?.vodafone_amount || 0;
+            const cash = payments?.cash_on_pitch_amount || 0;
+            const total = insta + voda + cash;
+            const instaPct = total > 0 ? Math.round((insta / total) * 100) : 0;
+            const vodaPct = total > 0 ? Math.round((voda / total) * 100) : 0;
+            const cashPct = total > 0 ? 100 - instaPct - vodaPct : 100;
+
+            return (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-bold">
+                  <span className="text-cyan-400">إنستا باي ({instaPct}%)</span>
+                  <span className="text-rose-400">فودافون كاش ({vodaPct}%)</span>
+                  <span className="text-amber-300">كاش بالملعب ({cashPct}%)</span>
+                </div>
+                <div className="w-full h-3 rounded-full bg-white/[0.06] overflow-hidden flex">
+                  <div
+                    className="bg-cyan-400 h-full transition-all duration-500"
+                    style={{ width: `${instaPct}%` }}
+                    title={`إنستا باي: ${instaPct}%`}
+                  />
+                  <div
+                    className="bg-rose-500 h-full transition-all duration-500"
+                    style={{ width: `${vodaPct}%` }}
+                    title={`فودافون كاش: ${vodaPct}%`}
+                  />
+                  <div
+                    className="bg-amber-400 h-full transition-all duration-500"
+                    style={{ width: `${cashPct}%` }}
+                    title={`كاش بالملعب: ${cashPct}%`}
+                  />
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="space-y-2.5 text-xs">
             <div className="p-3 rounded-2xl bg-[#1c1c1f] flex items-center justify-between border border-white/[0.04]">
@@ -800,53 +914,241 @@ export default function DashboardAnalyticsPage() {
         </div>
       </div>
 
-      {/* Daily Financial Ledger Table */}
-      {analytics && analytics.daily_timeline.length > 1 && (
-        <div className="p-6 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display text-base font-black text-white flex items-center gap-2">
-              <Activity className="h-5 w-5 text-primary" strokeWidth={1.5} />
-              <span>سجل الأيام التفصيلي في الفترة المختارة</span>
-            </h3>
-            <span className="text-xs text-zinc-500 font-bold">
-              {analytics.daily_timeline.length} يوم
-            </span>
+      {/* Daily Performance & Timeline: Interactive Chart + Table */}
+      {analytics && analytics.daily_timeline.length > 0 && (
+        <div className="p-6 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="font-display text-base font-black text-white flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                <span>الرسم البياني لتطور الإيرادات والماتشات اليومية</span>
+              </h3>
+              <p className="text-xs text-zinc-400">
+                متابعة حركة الإيراد اليومي والمحصل فعلياً خلال الفترة المختارة ({analytics.daily_timeline.length} يوم)
+              </p>
+            </div>
+
+            {/* View Mode Toggle (Chart vs Table) */}
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setDailyViewMode("chart")}
+                className={`min-h-[36px] px-3.5 rounded-xl text-xs font-black inline-flex items-center gap-1.5 transition-all ${
+                  dailyViewMode === "chart"
+                    ? "bg-primary text-black shadow-md shadow-primary/20"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                <BarChart3 className="h-3.5 w-3.5" strokeWidth={2} />
+                <span>رسم بياني</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDailyViewMode("table")}
+                className={`min-h-[36px] px-3.5 rounded-xl text-xs font-black inline-flex items-center gap-1.5 transition-all ${
+                  dailyViewMode === "table"
+                    ? "bg-primary text-black shadow-md shadow-primary/20"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                <Activity className="h-3.5 w-3.5" strokeWidth={2} />
+                <span>جدول رقمي</span>
+              </button>
+            </div>
           </div>
 
-          <div className="overflow-x-auto scrollbar-none">
-            <table className="w-full text-right text-xs">
-              <thead>
-                <tr className="border-b border-white/[0.08] text-zinc-400 font-bold">
-                  <th className="pb-3 pr-2">التاريخ</th>
-                  <th className="pb-3 px-2">عدد الماتشات</th>
-                  <th className="pb-3 px-2">إجمالي الإيجار</th>
-                  <th className="pb-3 px-2">المحصّل فعلياً</th>
-                  <th className="pb-3 pl-2">متبقي كاش</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/[0.04] font-medium text-zinc-300">
-                {analytics.daily_timeline.map((row) => (
-                  <tr key={row.date} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3 pr-2 font-bold text-white tabular-nums">
-                      {row.date}
-                    </td>
-                    <td className="py-3 px-2 tabular-nums">
-                      {row.bookings_count} ماتش
-                    </td>
-                    <td className="py-3 px-2 font-bold text-white tabular-nums">
-                      {row.gross_revenue.toLocaleString("en-US")} ج.م
-                    </td>
-                    <td className="py-3 px-2 text-emerald-400 font-bold tabular-nums">
-                      {row.collected_revenue.toLocaleString("en-US")} ج.م
-                    </td>
-                    <td className="py-3 pl-2 text-amber-300 font-bold tabular-nums">
-                      {row.pending_cash.toLocaleString("en-US")} ج.م
-                    </td>
+          {/* Chart View */}
+          {dailyViewMode === "chart" && (
+            <div className="space-y-4 pt-2">
+              {/* Chart Legend */}
+              <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-zinc-400">
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-primary" />
+                  <span>إجمالي القيمة الإيجارية</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-emerald-400" />
+                  <span>المحصّل فعلياً</span>
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="h-2.5 w-2.5 rounded-sm bg-amber-400" />
+                  <span>متبقي كاش بالملعب</span>
+                </span>
+              </div>
+
+              {/* Visual Bars Container */}
+              {(() => {
+                const maxRevenue = Math.max(
+                  ...analytics.daily_timeline.map((d) => d.gross_revenue),
+                  1
+                );
+
+                return (
+                  <div className="overflow-x-auto scrollbar-none pb-2">
+                    <div
+                      className="flex items-end gap-3 h-52 border-b border-white/[0.08] pb-2 px-2"
+                      style={{
+                        minWidth: `${Math.max(
+                          analytics.daily_timeline.length * 64,
+                          600
+                        )}px`,
+                      }}
+                    >
+                      {analytics.daily_timeline.map((day) => {
+                        const grossHeight =
+                          day.gross_revenue > 0
+                            ? Math.max(
+                                Math.round(
+                                  (day.gross_revenue / maxRevenue) * 100
+                                ),
+                                8
+                              )
+                            : 4;
+
+                        const collectedHeight =
+                          day.gross_revenue > 0 && day.collected_revenue > 0
+                            ? Math.max(
+                                Math.round(
+                                  (day.collected_revenue / maxRevenue) * 100
+                                ),
+                                6
+                              )
+                            : 0;
+
+                        return (
+                          <div
+                            key={day.date}
+                            className="flex-1 flex flex-col items-center justify-end h-full group relative"
+                          >
+                            {/* Hover Tooltip Card */}
+                            <div className="absolute -top-20 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 bg-[#1c1c1f] border border-white/10 p-2.5 rounded-xl text-xs font-bold text-white whitespace-nowrap shadow-2xl space-y-1">
+                              <span className="text-[11px] text-zinc-400 block border-b border-white/10 pb-1">
+                                {day.date} — {day.bookings_count} ماتش
+                              </span>
+                              <div className="text-white tabular-nums">
+                                إجمالي: {day.gross_revenue.toLocaleString("en-US")}{" "}
+                                ج.م
+                              </div>
+                              <div className="text-emerald-400 tabular-nums">
+                                محصل:{" "}
+                                {day.collected_revenue.toLocaleString("en-US")} ج.م
+                              </div>
+                              {day.pending_cash > 0 && (
+                                <div className="text-amber-300 tabular-nums">
+                                  متبقي كاش:{" "}
+                                  {day.pending_cash.toLocaleString("en-US")} ج.م
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Value Above Bar */}
+                            <div className="mb-1 text-center">
+                              <span className="text-[10px] font-black tabular-nums text-white block group-hover:text-primary transition-colors">
+                                {day.gross_revenue > 0
+                                  ? `${day.gross_revenue}`
+                                  : "0"}
+                              </span>
+                              {day.bookings_count > 0 && (
+                                <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-white/[0.05] text-zinc-400 font-bold block">
+                                  {day.bookings_count}م
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Dual Bars Side-by-side */}
+                            <div className="w-full flex items-end justify-center gap-1 h-full max-h-[140px]">
+                              {/* Gross Bar */}
+                              <div
+                                className={`w-1/2 max-w-[20px] rounded-t-lg transition-all duration-300 ${
+                                  day.gross_revenue > 0
+                                    ? "bg-primary group-hover:bg-primary-hover shadow-[0_0_12px_rgba(16,185,129,0.25)]"
+                                    : "bg-white/[0.04]"
+                                }`}
+                                style={{ height: `${grossHeight}%` }}
+                              />
+                              {/* Collected Bar */}
+                              <div
+                                className={`w-1/2 max-w-[20px] rounded-t-lg transition-all duration-300 ${
+                                  day.collected_revenue > 0
+                                    ? "bg-emerald-400 group-hover:bg-emerald-300"
+                                    : "bg-transparent"
+                                }`}
+                                style={{ height: `${collectedHeight}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Day Date Labels */}
+                    <div
+                      className="flex items-center justify-between pt-2 px-2 text-[10px] font-bold text-zinc-500 tabular-nums"
+                      style={{
+                        minWidth: `${Math.max(
+                          analytics.daily_timeline.length * 64,
+                          600
+                        )}px`,
+                      }}
+                    >
+                      {analytics.daily_timeline.map((day) => {
+                        const [, m, d] = day.date.split("-");
+                        return (
+                          <span
+                            key={day.date}
+                            className="flex-1 text-center truncate px-0.5"
+                          >
+                            {d}/{m}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+          {/* Table View */}
+          {dailyViewMode === "table" && (
+            <div className="overflow-x-auto scrollbar-none pt-1">
+              <table className="w-full text-right text-xs">
+                <thead>
+                  <tr className="border-b border-white/[0.08] text-zinc-400 font-bold">
+                    <th className="pb-3 pr-2">التاريخ</th>
+                    <th className="pb-3 px-2">عدد الماتشات</th>
+                    <th className="pb-3 px-2">إجمالي الإيجار</th>
+                    <th className="pb-3 px-2">المحصّل فعلياً</th>
+                    <th className="pb-3 pl-2">متبقي كاش</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-white/[0.04] font-medium text-zinc-300">
+                  {analytics.daily_timeline.map((row) => (
+                    <tr
+                      key={row.date}
+                      className="hover:bg-white/[0.02] transition-colors"
+                    >
+                      <td className="py-3 pr-2 font-bold text-white tabular-nums">
+                        {row.date}
+                      </td>
+                      <td className="py-3 px-2 tabular-nums">
+                        {row.bookings_count} ماتش
+                      </td>
+                      <td className="py-3 px-2 font-bold text-white tabular-nums">
+                        {row.gross_revenue.toLocaleString("en-US")} ج.م
+                      </td>
+                      <td className="py-3 px-2 text-emerald-400 font-bold tabular-nums">
+                        {row.collected_revenue.toLocaleString("en-US")} ج.م
+                      </td>
+                      <td className="py-3 pl-2 text-amber-300 font-bold tabular-nums">
+                        {row.pending_cash.toLocaleString("en-US")} ج.م
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>
