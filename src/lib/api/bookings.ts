@@ -393,6 +393,8 @@ export interface BookingDetails {
   reschedule_requested_slot?: string | null;
   status: "pending_payment" | "confirmed" | "completed" | "cancelled" | "expired";
   cancellation_reason?: string | null;
+  receipt_status?: "submitted" | "verified" | "rejected" | null;
+  rejection_reason?: string | null;
   booker_name: string;
   booker_phone: string;
   created_at: string;
@@ -453,7 +455,7 @@ export async function getBookingByReference(reference: string): Promise<BookingD
   try {
     const { data, error } = await supabase
       .from("bookings")
-      .select("*, courts(*, venues(*))")
+      .select("*, courts(*, venues(*)), receipts(status, rejection_reason, created_at)")
       .eq("booking_reference", reference.trim().toUpperCase())
       .maybeSingle();
 
@@ -464,6 +466,11 @@ export async function getBookingByReference(reference: string): Promise<BookingD
     const c = data.courts as unknown as JoinedCourtRow;
     const v = c.venues;
     if (!v) return null;
+
+    const receiptsList = Array.isArray(data.receipts) ? data.receipts : [];
+    const latestReceipt = receiptsList[receiptsList.length - 1] as { status?: string; rejection_reason?: string } | undefined;
+    const receiptStatus = (latestReceipt?.status as "submitted" | "verified" | "rejected") || null;
+    const rejectionReason = latestReceipt?.rejection_reason || data.cancellation_reason || null;
 
     return {
       id: data.id,
@@ -479,6 +486,9 @@ export async function getBookingByReference(reference: string): Promise<BookingD
       reschedule_requested_at: data.reschedule_requested_at,
       reschedule_requested_slot: data.reschedule_requested_slot,
       status: data.status,
+      cancellation_reason: data.cancellation_reason,
+      receipt_status: receiptStatus,
+      rejection_reason: rejectionReason,
       booker_name: data.booker_name,
       booker_phone: data.booker_phone,
       created_at: data.created_at,

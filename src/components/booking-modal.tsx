@@ -218,18 +218,19 @@ export default function BookingModal({
         .limit(1)
         .maybeSingle();
 
-      if (recData) {
-        if (recData.status === "verified") {
-          setVerificationStatus("confirmed");
-        } else if (recData.status === "rejected") {
-          setVerificationStatus("rejected");
-          setRejectionReason(recData.rejection_reason || "تم رفض الإيصال من إدارة المنشأة");
-        }
+      if (recData && recData.status === "verified") {
+        setVerificationStatus("confirmed");
+      } else if (recData && recData.status === "rejected") {
+        setVerificationStatus("rejected");
+        setRejectionReason(recData.rejection_reason || "تم رفض الإيصال من إدارة المنشأة");
+      } else {
+        // By default, if receipt is submitted or not yet verified by owner, ALWAYS keep under_review
+        setVerificationStatus("under_review");
       }
     };
     checkInitialStatus();
 
-    // Listen to changes on receipts table
+    // Listen to changes strictly on receipts table for admin review action
     const channel = supabase
       .channel(`booking-pass-status-${bookingId}`)
       .on(
@@ -249,6 +250,8 @@ export default function BookingModal({
           } else if (newRec.status === "rejected") {
             setVerificationStatus("rejected");
             setRejectionReason(newRec.rejection_reason || "تم رفض الإيصال من إدارة المنشأة");
+          } else if (newRec.status === "submitted") {
+            setVerificationStatus("under_review");
           }
         }
       )
@@ -263,9 +266,9 @@ export default function BookingModal({
         (payload) => {
           const newBooking = payload.new as { status?: string; cancellation_reason?: string } | undefined;
           if (!newBooking) return;
-          if (newBooking.status === "confirmed") {
-            setVerificationStatus("confirmed");
-          } else if (newBooking.status === "cancelled") {
+          // Note: booking.status is updated to 'confirmed' upon receipt upload to lock the slot in DB,
+          // but the human verification is exclusively determined by receipts.status === 'verified'.
+          if (newBooking.status === "cancelled") {
             setVerificationStatus("rejected");
             setRejectionReason(newBooking.cancellation_reason || "تم إلغاء الحجز من إدارة المنشأة");
           }
@@ -526,6 +529,7 @@ export default function BookingModal({
       // 3. Move to digital pass & send Gmail confirmation if user has email
       const ref = submitRes.bookingReference || lockData.bookingReference || "PAS-CONFIRMED";
       setConfirmedRef(ref);
+      setVerificationStatus("under_review");
       setStep("pass");
       if (onBookingSuccess) onBookingSuccess(ref);
 

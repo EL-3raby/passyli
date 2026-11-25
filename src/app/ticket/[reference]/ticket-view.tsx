@@ -85,6 +85,31 @@ export default function TicketView({
       .on(
         "postgres_changes",
         {
+          event: "*",
+          schema: "public",
+          table: "receipts",
+          filter: `booking_id=eq.${bookingId}`,
+        },
+        (payload) => {
+          const newRec = payload.new as { status?: string; rejection_reason?: string } | undefined;
+          if (!newRec) return;
+          setBooking((prev) => {
+            if (!prev) return null;
+            const updated = {
+              ...prev,
+              receipt_status: (newRec.status as "submitted" | "verified" | "rejected") || prev.receipt_status,
+              rejection_reason: newRec.rejection_reason || prev.rejection_reason,
+            };
+            if (newRec.status === "verified" && prev.receipt_status !== "verified") {
+              playReceiptChime();
+            }
+            return updated;
+          });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
           event: "UPDATE",
           schema: "public",
           table: "bookings",
@@ -95,17 +120,13 @@ export default function TicketView({
           if (!newBooking) return;
           setBooking((prev) => {
             if (!prev) return null;
-            const updated = {
+            return {
               ...prev,
               status: newBooking.status || prev.status,
               deposit_paid: newBooking.deposit_paid ?? prev.deposit_paid,
               cash_remaining: newBooking.cash_remaining ?? prev.cash_remaining,
               cancellation_reason: newBooking.cancellation_reason ?? prev.cancellation_reason,
             };
-            if (newBooking.status === "confirmed" && prev.status !== "confirmed") {
-              playReceiptChime();
-            }
-            return updated;
           });
         }
       )
@@ -344,30 +365,48 @@ export default function TicketView({
           </div>
         )}
 
+        {(booking.receipt_status === "rejected" || booking.status === "cancelled") && (
+          <div
+            role="alert"
+            className="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs sm:text-sm font-bold flex items-center gap-2.5"
+          >
+            <AlertCircle className="h-5 w-5 shrink-0 text-rose-400" strokeWidth={1.5} />
+            <span>
+              سبب عدم التأكيد: {booking.rejection_reason || "تم رفض إيصال التحويل لعدم مطابقة بيانات الدفع من إدارة المنشأة."}
+            </span>
+          </div>
+        )}
+
         {/* Header Badge & Reference */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-[#141416] border border-white/[0.08]">
           <div className="flex items-center gap-2.5">
             <span className="flex h-3 w-3 relative">
               <span
                 className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  booking.status === "confirmed" || booking.status === "completed"
+                  booking.receipt_status === "verified" || booking.status === "completed"
                     ? "bg-emerald-400"
+                    : booking.receipt_status === "rejected" || booking.status === "cancelled"
+                    ? "bg-rose-400"
                     : "bg-amber-400"
                 }`}
               />
               <span
                 className={`relative inline-flex rounded-full h-3 w-3 ${
-                  booking.status === "confirmed" || booking.status === "completed"
+                  booking.receipt_status === "verified" || booking.status === "completed"
                     ? "bg-emerald-500"
+                    : booking.receipt_status === "rejected" || booking.status === "cancelled"
+                    ? "bg-rose-500"
                     : "bg-amber-500"
                 }`}
               />
             </span>
             <div>
               <span className="text-xs font-bold text-white block">
-                {booking.status === "confirmed" || booking.status === "completed"
-                  ? "تذكرة حجز مؤكدة ومعتمدة"
-                  : "حجز قيد التحقق من الدفع"}
+                {booking.receipt_status === "verified" || booking.status === "completed"
+                  ? "تذكرة حجز مؤكدة ومعتمدة رسمياً"
+                  : booking.receipt_status === "rejected" || booking.status === "cancelled"
+                  ? "تعذر اعتماد إيصال التحويل"
+                  : "طلبك في مرحلة التأكيد والمراجعة من إدارة الملعب"}
               </span>
               <span className="text-[11px] text-zinc-400 font-latin">
                 Passyli Official Match Ticket
