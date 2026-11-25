@@ -253,18 +253,18 @@ export default function DashboardPage() {
                   strokeWidth={1.5}
                 />
                 <span>
-                  انخفض رصيد محفظة باصيلي إلى{" "}
+                  رصيد محفظتك في باصيلي نزل لـ{" "}
                   <strong className="tabular-nums text-amber-300">
                     {selectedVenue.prepaid_balance} ج.م
                   </strong>
-                  . اشحن الرصيد لضمان استمرار استقبال الحجوزات أونلاين.
+                  . اشحن المحفظة عشان الملاعب تفضل شغالة واستقبال الحجوزات أونلاين ميوقفش.
                 </span>
               </div>
               <Link
                 href="/dashboard/wallet"
                 className="min-h-[44px] px-4 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-black text-xs inline-flex items-center justify-center shrink-0 transition-all"
               >
-                شحن الرصيد الآن
+                شحن المحفظة دلوقتي
               </Link>
             </div>
           )}
@@ -347,7 +347,7 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* Clear Labelled Operations Actions (replacing unlabelled icon jungle) */}
+        {/* Clear Labelled Operations Actions */}
         <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
@@ -357,7 +357,7 @@ export default function DashboardPage() {
             className="min-h-[44px] px-4 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.08] text-xs font-bold text-zinc-200 inline-flex items-center gap-2 transition-all"
           >
             <Printer className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-            <span>كشف تشغيل اليوم</span>
+            <span>كشف ماتشات النهاردة</span>
           </button>
 
           {!isStaffMode && (
@@ -367,7 +367,7 @@ export default function DashboardPage() {
               className="min-h-[44px] px-4 rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.08] text-xs font-bold text-zinc-200 inline-flex items-center gap-2 transition-all"
             >
               <Repeat className="h-4 w-4 text-primary" strokeWidth={1.5} />
-              <span>حجز أسبوعي ثابت</span>
+              <span>حجز أسبوعي متكرر</span>
             </button>
           )}
         </div>
@@ -389,7 +389,7 @@ export default function DashboardPage() {
           >
             <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
             <span>
-              يوجد {pendingCount} إيصال تحويل بانتظار المراجعة والاعتماد
+              فيه {pendingCount} إيصالات عربون مستنية مراجعتك
             </span>
           </Link>
         )}
@@ -400,7 +400,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="p-4 rounded-2xl bg-[#141418] border border-white/[0.08] space-y-1">
             <span className="text-[11px] text-zinc-400 font-bold block">
-              ماتشات اليوم المؤكدة
+              ماتشات النهاردة المؤكدة
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-xl sm:text-2xl font-black text-white tabular-nums">
@@ -412,7 +412,7 @@ export default function DashboardPage() {
 
           <div className="p-4 rounded-2xl bg-[#141418] border border-white/[0.08] space-y-1">
             <span className="text-[11px] text-zinc-400 font-bold block">
-              إجمالي القيمة الإيجارية
+              إجمالي فلوس الحجوزات
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-xl sm:text-2xl font-black text-primary tabular-nums">
@@ -424,7 +424,7 @@ export default function DashboardPage() {
 
           <div className="p-4 rounded-2xl bg-[#141418] border border-white/[0.08] space-y-1">
             <span className="text-[11px] text-zinc-400 font-bold block">
-              المحصّل فعلياً (عربونات + كاش)
+              الفلوس اللي دخلت الخزنة (عربون + كاش)
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-xl sm:text-2xl font-black text-emerald-400 tabular-nums">
@@ -436,7 +436,7 @@ export default function DashboardPage() {
 
           <div className="p-4 rounded-2xl bg-[#141418] border border-white/[0.08] space-y-1">
             <span className="text-[11px] text-zinc-400 font-bold block">
-              المتبقي تحصيله بالملعب
+              باقي الحساب كاش مع الفرق بالملعب
             </span>
             <div className="flex items-baseline gap-2">
               <span className="text-xl sm:text-2xl font-black text-amber-400 tabular-nums">
@@ -454,7 +454,7 @@ export default function DashboardPage() {
               strokeWidth={1.5}
             />
             <span className="font-bold">
-              وضع الخصوصية نشط — تم إخفاء الإحصائيات المالية وصافي الأرباح.
+              وضع خصوصية الموظف شغال — الأرباح والفلوس مخفية عن موظف الدكة.
             </span>
           </div>
           <button
@@ -462,7 +462,7 @@ export default function DashboardPage() {
             onClick={() => setStaffMode(false)}
             className="text-xs text-amber-400 underline font-bold hover:text-white min-h-[36px]"
           >
-            إظهار الأرباح (وضع المالك)
+            إظهار الأرباح (وضع صاحب الملعب)
           </button>
         </div>
       )}
@@ -479,7 +479,7 @@ export default function DashboardPage() {
                 : "bg-[#141418] text-zinc-400 hover:text-white border border-white/[0.06]"
             }`}
           >
-            <span>جميع الملاعب ({allCourts.length})</span>
+            <span>كل الملاعب ({allCourts.length})</span>
           </button>
 
           {allCourts.map((court) => (
@@ -594,12 +594,12 @@ export default function DashboardPage() {
                         className="inline-flex min-h-[36px] items-center gap-1.5 px-3 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-bold hover:bg-amber-500/20 transition-all"
                       >
                         <Wrench className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        <span>معطل للصيانة</span>
+                        <span>صيانة حالياً</span>
                       </Link>
                     ) : (
                       <span className="inline-flex min-h-[36px] items-center gap-1.5 px-3 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold">
                         <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                        <span>نشط ومتاح</span>
+                        <span>شغال ومتاح</span>
                       </span>
                     )}
 
@@ -615,7 +615,7 @@ export default function DashboardPage() {
                       className="inline-flex min-h-[44px] items-center gap-1.5 px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/10 text-xs font-bold text-zinc-200 transition-all"
                     >
                       <Plus className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
-                      <span>حجز كاش</span>
+                      <span>حجز كاش سريع</span>
                     </button>
                   </div>
                 </div>
@@ -670,26 +670,26 @@ export default function DashboardPage() {
                             </span>
                           ) : isAvailable ? (
                             <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full tabular-nums">
-                              متاح ({slotPrice} ج.م)
+                              فاضي ({slotPrice} ج.م)
                             </span>
                           ) : booking?.status === "completed" ? (
                             <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
                               <Check className="h-3 w-3" strokeWidth={2} />
-                              <span>حضر وسدد</span>
+                              <span>حضروا وسددوا</span>
                             </span>
                           ) : booking?.status === "confirmed" ? (
                             <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full flex items-center gap-1">
                               <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                               <span>
                                 {booking.is_walkin
-                                  ? "كاش محلي"
-                                  : "مؤكد أونلاين"}
+                                  ? "كاش على الدكة"
+                                  : "محجوز أونلاين"}
                               </span>
                             </span>
                           ) : (
                             <span className="text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
                               <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                              <span>إيصال معلق</span>
+                              <span>مستني مراجعة العربون</span>
                             </span>
                           )}
                         </div>
@@ -711,7 +711,7 @@ export default function DashboardPage() {
                                 className="h-3.5 w-3.5 text-primary"
                                 strokeWidth={2}
                               />
-                              <span>قفل كاش فوري للفرقة</span>
+                              <span>احجز كاش سريع للفرقة دي</span>
                             </button>
                           ) : (
                             <div className="space-y-1.5">
@@ -738,13 +738,13 @@ export default function DashboardPage() {
 
                               <div className="flex items-center justify-between text-[11px] pt-1 border-t border-white/[0.04]">
                                 <span className="text-zinc-400">
-                                  المدفوع:{" "}
+                                  العربون المدفوع:{" "}
                                   <strong className="text-white tabular-nums">
                                     {booking?.deposit_paid} ج.م
                                   </strong>
                                 </span>
                                 <span className="text-zinc-400">
-                                  المتبقي:{" "}
+                                  الباقي كاش:{" "}
                                   <strong
                                     className={`tabular-nums ${
                                       booking?.cash_remaining === 0
@@ -765,7 +765,7 @@ export default function DashboardPage() {
                             {booking.status === "completed" ? (
                               <div className="text-center py-1">
                                 <span className="text-[11px] text-zinc-500 font-bold">
-                                  تم استلام الكاش وإنهاء الماتش
+                                  الماتش خلص واستلمنا الكاش تمام
                                 </span>
                               </div>
                             ) : booking.status === "confirmed" ? (
@@ -784,15 +784,15 @@ export default function DashboardPage() {
                                   />
                                   <span>
                                     {completingBookingId === booking.id
-                                      ? "جاري التسجيل..."
-                                      : `حضر واستلم المتبقي (${booking.cash_remaining} ج.م)`}
+                                      ? "بنحدث البيانات..."
+                                      : `حضروا واستلم الباقي (${booking.cash_remaining} ج.م)`}
                                   </span>
                                 </button>
 
                                 <button
                                   type="button"
                                   onClick={() => setCancellingBooking(booking)}
-                                  title="إلغاء الحجز وتحرير الساعة"
+                                  title="إلغاء الحجز وتفريغ الساعة"
                                   aria-label="إلغاء الحجز"
                                   className="min-h-[44px] min-w-[44px] rounded-xl bg-destructive/10 hover:bg-destructive/20 text-destructive flex items-center justify-center shrink-0 border border-destructive/20 transition-all"
                                 >

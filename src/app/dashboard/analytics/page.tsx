@@ -180,11 +180,11 @@ export default function DashboardAnalyticsPage() {
     if (!analytics || !selectedVenue) return;
 
     const headers = [
-      "التاريخ",
+      "اليوم",
       "عدد الماتشات",
-      "إجمالي الإيراد (ج.م)",
-      "المحصل فعلياً (ج.م)",
-      "المتبقي كاش (ج.م)",
+      "إجمالي الحجوزات (ج.م)",
+      "الفلوس المستلمة (ج.م)",
+      "باقي كاش مع الفرق (ج.م)",
     ];
 
     const rows = analytics.daily_timeline.map((d) => [
@@ -226,12 +226,12 @@ export default function DashboardAnalyticsPage() {
           <ShieldCheck className="h-6 w-6" strokeWidth={1.5} />
         </div>
         <h2 className="font-display text-lg font-black text-white">
-          وضع خصوصية الموظفين مفعّل
+          وضع خصوصية الموظف شغال
         </h2>
         <p className="text-xs text-zinc-400 leading-relaxed">
-          البيانات المالية وتقارير الأرباح مخفية في وضع الاستقبال لحماية سرية
-          حسابات المنشأة. يمكنك تعطيل وضع الخصوصية من الشريط العلوي لاستعراض
-          التقارير.
+          البيانات المالية والأرباح مخفية في وضع الاستقبال عشان سرية
+          حساباتك. تقدر توقف وضع الخصوصية من الشريط فوق عشان تشوف
+          كل التقارير.
         </p>
       </div>
     );
@@ -245,7 +245,7 @@ export default function DashboardAnalyticsPage() {
           strokeWidth={1.5}
         />
         <h2 className="text-base font-black text-white">
-          تعذر تحميل تقارير الأداء
+          مش عارفين نحمل أرقام وتقارير الأداء دلوقتي
         </h2>
         <p className="text-xs text-zinc-400">{venuesError || error}</p>
         <button
@@ -257,7 +257,7 @@ export default function DashboardAnalyticsPage() {
           className="inline-flex min-h-[44px] px-5 rounded-xl bg-primary text-black font-black text-xs items-center gap-2"
         >
           <RefreshCw className="h-4 w-4" strokeWidth={1.5} />
-          <span>إعادة المحاولة</span>
+          <span>جرب تاني</span>
         </button>
       </div>
     );
@@ -365,12 +365,12 @@ export default function DashboardAnalyticsPage() {
             </span>
             <div>
               <span className="text-xs font-black text-white block">
-                تحديد الملعب
+                اختار الملعب
               </span>
               <span className="text-[11px] text-zinc-400">
                 {selectedCourtId && activeCourt
-                  ? `أنت تشاهد إحصائيات: «${activeCourt.name}» فقط`
-                  : `عرض إجمالي لكافة ملاعب المنشأة (${availableCourts.length} ملاعب)`}
+                  ? `أنت بتشوف أرقام: «${activeCourt.name}» بس`
+                  : `أرقام كل الملاعب مع بعض (${availableCourts.length} ملاعب)`}
               </span>
             </div>
           </div>
@@ -386,7 +386,7 @@ export default function DashboardAnalyticsPage() {
                   : "text-zinc-400 hover:text-white"
               }`}
             >
-              جميع الملاعب ({availableCourts.length})
+              كل الملاعب ({availableCourts.length})
             </button>
             {availableCourts.map((c) => {
               const isSelected = selectedCourtId === c.id;
@@ -422,7 +422,7 @@ export default function DashboardAnalyticsPage() {
           {/* Preset Selector */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-zinc-400 ml-1">
-              الفترة الزمنية:
+              الفترة:
             </span>
             <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-[#1c1c1f] border border-white/[0.06]">
               <button
@@ -434,7 +434,7 @@ export default function DashboardAnalyticsPage() {
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
-                اليوم
+                النهاردة
               </button>
               <button
                 type="button"
@@ -445,7 +445,7 @@ export default function DashboardAnalyticsPage() {
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
-                آخر 7 أيام
+                آخر أسبوع
               </button>
               <button
                 type="button"
@@ -456,7 +456,7 @@ export default function DashboardAnalyticsPage() {
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
-                هذا الشهر
+                الشهر ده
               </button>
               <button
                 type="button"
@@ -467,7 +467,7 @@ export default function DashboardAnalyticsPage() {
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
-                مخصص
+                تاريخ معين
               </button>
             </div>
           </div>
@@ -482,7 +482,7 @@ export default function DashboardAnalyticsPage() {
                   onChange={(e) => setStartDate(e.target.value)}
                   className="min-h-[40px] px-3 rounded-xl bg-[#1c1c1f] border border-white/10 text-xs text-white font-bold tabular-nums focus:outline-none focus:border-primary"
                 />
-                <span className="text-zinc-500 text-xs">إلى</span>
+                <span className="text-zinc-500 text-xs">لحد</span>
                 <input
                   type="date"
                   value={endDate}
@@ -514,7 +514,7 @@ export default function DashboardAnalyticsPage() {
               className="min-h-[40px] px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/10 border border-white/[0.08] text-xs font-bold text-zinc-200 inline-flex items-center gap-2 transition-all disabled:opacity-40"
             >
               <Download className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-              <span>تصدير CSV</span>
+              <span>تحميل إكسيل (CSV)</span>
             </button>
 
             <button
@@ -525,7 +525,7 @@ export default function DashboardAnalyticsPage() {
               title="طباعة التقرير أو حفظه PDF"
             >
               <Printer className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-              <span>طباعة</span>
+              <span>طباعة التقرير</span>
             </button>
           </div>
         </div>
@@ -539,7 +539,7 @@ export default function DashboardAnalyticsPage() {
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-zinc-200">
-                  تصفية التقرير لملعب محدد:{" "}
+                  أنت محدد ملعب:{" "}
                   <strong className="text-white font-black text-sm">
                     {activeCourt.name}
                   </strong>{" "}
@@ -549,12 +549,12 @@ export default function DashboardAnalyticsPage() {
                 </span>
                 {activeCourtContributionPct > 0 && (
                   <span className="px-2 py-0.5 rounded-md bg-primary/20 text-primary border border-primary/30 text-[10px] font-black tabular-nums">
-                    يساهم بنسبة {activeCourtContributionPct}% من إجمالي أرباح المنشأة
+                    بيدخّل {activeCourtContributionPct}% من دخل المنشأة كله
                   </span>
                 )}
               </div>
               <span className="text-[11px] text-zinc-400 block mt-0.5">
-                جميع المؤشرات المالية والمواعيد أدناه تخص هذا الملعب فقط
+                كل الفلوس والمواعيد المعروضة تحت تخص الملعب ده بس
               </span>
             </div>
           </div>
@@ -564,7 +564,7 @@ export default function DashboardAnalyticsPage() {
             className="text-xs font-black text-primary hover:text-white flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/30 shrink-0 self-start sm:self-auto print:hidden"
           >
             <X className="h-3.5 w-3.5" strokeWidth={2} />
-            <span>عرض كافة الملاعب (إلغاء التحديد)</span>
+            <span>دوس هنا عشان تشوف كل الملاعب</span>
           </button>
         </div>
       )}
@@ -576,7 +576,7 @@ export default function DashboardAnalyticsPage() {
           <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all pointer-events-none" />
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-zinc-400">
-              إجمالي القيمة الإيجارية
+              إجمالي فلوس الحجوزات
             </span>
             <div className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
               <TrendingUp className="h-4 w-4" strokeWidth={1.5} />
@@ -603,7 +603,7 @@ export default function DashboardAnalyticsPage() {
         <div className="p-5 rounded-3xl bg-[#141418] border border-white/[0.08] relative overflow-hidden group">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-zinc-400">
-              المحصّل فعلياً
+              الفلوس اللي دخلت الخزنة
             </span>
             <div className="h-8 w-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
               <CheckCircle2 className="h-4 w-4" strokeWidth={1.5} />
@@ -617,7 +617,7 @@ export default function DashboardAnalyticsPage() {
           </div>
           <p className="text-[11px] text-zinc-500 flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            <span>عربونات أونلاين + كاش الماتشات المكتملة</span>
+            <span>عربونات أونلاين + كاش الماتشات اللي خلصت</span>
           </p>
         </div>
 
@@ -625,7 +625,7 @@ export default function DashboardAnalyticsPage() {
         <div className="p-5 rounded-3xl bg-[#141418] border border-white/[0.08] relative overflow-hidden group">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-zinc-400">
-              متبقي تحصيله كاش بالملعب
+              باقي الحساب كاش مع الفرق
             </span>
             <div className="h-8 w-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
               <Banknote className="h-4 w-4" strokeWidth={1.5} />
@@ -639,7 +639,7 @@ export default function DashboardAnalyticsPage() {
           </div>
           <p className="text-[11px] text-zinc-500 flex items-center gap-1.5">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-            <span>مستحق من الفرق عند وصولهم</span>
+            <span>باقي الفلوس اللي هتستلمها كاش على الدكة</span>
           </p>
         </div>
 
@@ -686,10 +686,10 @@ export default function DashboardAnalyticsPage() {
                   />
                   <span>
                     {safeOccupancy >= 75
-                      ? "إقبال ممتاز"
+                      ? "الملعب عليه ضغط وشغال تمام"
                       : safeOccupancy >= 40
-                      ? "تشغيل مستقر"
-                      : "ساعات هادئة"}
+                      ? "شغال بنسبة كويسة"
+                      : "ساعات رايقة كتير"}
                   </span>
                 </div>
               </div>
@@ -718,8 +718,8 @@ export default function DashboardAnalyticsPage() {
               <p className="text-[11px] text-zinc-500 mt-2 flex items-center justify-between">
                 <span>
                   {remainingHours > 0
-                    ? `متبقي ${remainingHours} ساعة شاغرة`
-                    : "تم استغلال كامل الساعات المتاحة"}
+                    ? `باقي ${remainingHours} ساعة فاضية`
+                    : "الملعب full ومفيش ساعات فاضية"}
                 </span>
                 <span className="text-zinc-400 font-bold tabular-nums">
                   {summary?.total_bookings || 0} ماتش
@@ -736,24 +736,24 @@ export default function DashboardAnalyticsPage() {
           <div>
             <h3 className="font-display text-base font-black text-white flex items-center gap-2">
               <Layers className="h-5 w-5 text-primary" strokeWidth={1.5} />
-              <span>أداء ومقارنة الملاعب الفردية</span>
+              <span>مقارنة دخل وشغل كل ملعب لوحده</span>
             </h3>
             <p className="text-xs text-zinc-400">
-              انقر على أي ملعب لتخصيص كامل الإحصائيات والمواعيد له وحده
+              دوس على أي ملعب عشان تشوف إحصائياته وحساباته لوحده
             </p>
           </div>
           <Link
             href="/dashboard/courts"
             className="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1 transition-all self-start sm:self-auto"
           >
-            <span>إعدادات الأسعار</span>
+            <span>تعديل الأسعار والملاعب</span>
             <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
           </Link>
         </div>
 
         {courts.length === 0 ? (
           <div className="p-8 rounded-3xl bg-[#141418] border border-white/[0.08] text-center text-zinc-400 text-xs">
-            لا توجد ملاعب نشطة مسجلة في هذه المنشأة حالياً.
+            مفيش ملاعب شغالة متسجلة للمنشأة دي دلوقتي.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -794,7 +794,7 @@ export default function DashboardAnalyticsPage() {
                       {court.is_star && (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-[10px] font-black shrink-0">
                           <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                          <span>الأعلى طلباً</span>
+                          <span>الملعب الأكتر حجزاً</span>
                         </span>
                       )}
                     </div>
@@ -803,7 +803,7 @@ export default function DashboardAnalyticsPage() {
                     <div className="grid grid-cols-2 gap-3 py-3 border-y border-white/[0.06] my-3">
                       <div>
                         <span className="text-[10px] text-zinc-400 block mb-0.5 font-bold">
-                          الإيراد المحقق
+                          دخل الملعب
                         </span>
                         <div className="flex items-baseline gap-1">
                           <span className="text-lg font-black text-white tabular-nums">
@@ -833,7 +833,7 @@ export default function DashboardAnalyticsPage() {
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-zinc-400 text-[11px]">
-                          نسبة إشغال الملعب:
+                          نسبة تشغيل الملعب:
                         </span>
                         <span className="font-black text-white tabular-nums">
                           {Math.max(0, court.occupancy_rate)}%
@@ -864,12 +864,12 @@ export default function DashboardAnalyticsPage() {
                       {isCurrentSelected ? (
                         <>
                           <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
-                          <span>الملعب محدد حالياً (إلغاء التحديد)</span>
+                          <span>الملعب ده محدد دلوقتي (إلغاء التحديد)</span>
                         </>
                       ) : (
                         <>
                           <Layers className="h-3.5 w-3.5" strokeWidth={1.5} />
-                          <span>عرض إحصائيات هذا الملعب فقط ⬅</span>
+                          <span>شوف أرقام الملعب ده لوحده ⬅</span>
                         </>
                       )}
                     </button>
@@ -903,15 +903,15 @@ export default function DashboardAnalyticsPage() {
               <div>
                 <h3 className="font-display text-base font-black text-white flex flex-wrap items-center gap-2">
                   <Clock className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                  <span>توزيع الإقبال وساعات الذروة والركود</span>
+                  <span>ساعات الزحمة والضغط vs الساعات الرايقة</span>
                   {selectedCourtId && activeCourt && (
                     <span className="text-[11px] font-black text-primary bg-primary/15 border border-primary/30 px-2.5 py-0.5 rounded-full">
-                      خاص بـ: {activeCourt.name}
+                      أرقام: {activeCourt.name}
                     </span>
                   )}
                 </h3>
                 <p className="text-xs text-zinc-400">
-                  متابعة أوقات الإقبال العالي مقارنة بالساعات الهادئة لتعديل أسعار التشغيل وزيادة الأرباح
+                  شوف الساعات اللي فيها ضغط كبير والساعات الفاضية عشان تظبط أسعارك وتزود دخلك
                 </p>
               </div>
 
@@ -927,7 +927,7 @@ export default function DashboardAnalyticsPage() {
                   }`}
                 >
                   <Layers className="h-3.5 w-3.5" strokeWidth={2} />
-                  <span>شبكة الساعات (مبسطة)</span>
+                  <span>شبكة الساعات</span>
                 </button>
                 <button
                   type="button"
@@ -939,7 +939,7 @@ export default function DashboardAnalyticsPage() {
                   }`}
                 >
                   <BarChart3 className="h-3.5 w-3.5" strokeWidth={2} />
-                  <span>مخطط بياني</span>
+                  <span>رسم بياني</span>
                 </button>
               </div>
             </div>
@@ -951,7 +951,7 @@ export default function DashboardAnalyticsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-white flex items-center gap-1.5">
                     <Moon className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                    <span>الذروة المسائية (5م — 1ص)</span>
+                    <span>فترة بالليل والضغط (5م — 1ص)</span>
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-primary/20 text-primary border border-primary/30">
                     {eveningPct}% من الحجوزات
@@ -961,12 +961,12 @@ export default function DashboardAnalyticsPage() {
                   <span className="text-2xl font-black text-white tabular-nums">
                     {eveningMatches}
                   </span>
-                  <span className="text-xs text-zinc-400 font-bold">ماتش مسائي</span>
+                  <span className="text-xs text-zinc-400 font-bold">ماتش بالليل</span>
                 </div>
                 <p className="text-[11px] text-zinc-400">
-                  الساعة الأنشط:{" "}
+                  أكتر ساعة زحمة:{" "}
                   <strong className="text-primary tabular-nums">
-                    {topHour && topHour.is_peak ? `${topHour.slot_label} (${topHour.bookings_count} ماتش)` : "مساءً"}
+                    {topHour && topHour.is_peak ? `${topHour.slot_label} (${topHour.bookings_count} ماتش)` : "بالليل"}
                   </strong>
                 </p>
               </div>
@@ -976,7 +976,7 @@ export default function DashboardAnalyticsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
                     <SunMedium className="h-4 w-4 text-cyan-400" strokeWidth={1.5} />
-                    <span>الفترة الصباحية (9ص — 4م)</span>
+                    <span>فترة الصبح الهادية (9ص — 4م)</span>
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
                     {morningPct}% من الحجوزات
@@ -986,10 +986,10 @@ export default function DashboardAnalyticsPage() {
                   <span className="text-2xl font-black text-zinc-200 tabular-nums">
                     {morningMatches}
                   </span>
-                  <span className="text-xs text-zinc-500 font-bold">ماتش صباحي</span>
+                  <span className="text-xs text-zinc-500 font-bold">ماتش الصبح</span>
                 </div>
                 <p className="text-[11px] text-zinc-400">
-                  ساعات هادئة: فرصة لتخفيض السعر لجذب الأكاديميات
+                  ساعات رايقة: نزل سعرها شوية وهات أكاديميات وحجوزات زيادة
                 </p>
               </div>
 
@@ -998,10 +998,10 @@ export default function DashboardAnalyticsPage() {
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
                     <Activity className="h-4 w-4 text-amber-400" strokeWidth={1.5} />
-                    <span>جاهزية الساعات اليوم</span>
+                    <span>حالة الساعات خلال الفترة</span>
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-white/[0.05] text-zinc-400 border border-white/10">
-                    {hourly.length} فترات تشغيل
+                    {hourly.length} فترات متاحة
                   </span>
                 </div>
                 <div className="flex items-baseline gap-2">
@@ -1009,7 +1009,7 @@ export default function DashboardAnalyticsPage() {
                     {bookedSlotsCount}
                   </span>
                   <span className="text-xs text-zinc-400 font-bold">
-                    ساعة محجوزة ({vacantSlotsCount} شاغرة)
+                    ساعة محجوزة ({vacantSlotsCount} ساعة فاضية)
                   </span>
                 </div>
                 <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
@@ -1026,11 +1026,11 @@ export default function DashboardAnalyticsPage() {
               <div className="flex items-center justify-between text-xs font-bold">
                 <span className="text-primary flex items-center gap-1.5">
                   <Moon className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  <span>إشغال المساء: {eveningPct}% ({eveningMatches} ماتش)</span>
+                  <span>ماتشات بالليل: {eveningPct}% ({eveningMatches} ماتش)</span>
                 </span>
                 <span className="text-cyan-400 flex items-center gap-1.5">
                   <SunMedium className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  <span>إشغال الصباح: {morningPct}% ({morningMatches} ماتش)</span>
+                  <span>ماتشات الصبح: {morningPct}% ({morningMatches} ماتش)</span>
                 </span>
               </div>
               <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden flex">
@@ -1059,10 +1059,10 @@ export default function DashboardAnalyticsPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-white flex items-center gap-1.5">
                       <Moon className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                      <span>فترة المساء والذروة (05:00 م — 01:00 ص)</span>
+                      <span>فترة بالليل والضغط (05:00 م — 01:00 ص)</span>
                     </span>
                     <span className="text-[11px] font-bold text-zinc-400">
-                      محجوز: <span className="text-primary font-black tabular-nums">{eveningMatches}</span> من {eveningSlots.length} فترات
+                      محجوز: <span className="text-primary font-black tabular-nums">{eveningMatches}</span> من أصل {eveningSlots.length} مواعيد
                     </span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
@@ -1087,7 +1087,7 @@ export default function DashboardAnalyticsPage() {
                             </span>
                           ) : (
                             <span className="text-[10px] text-zinc-500 font-bold block py-1">
-                              شاغر
+                              فاضي
                             </span>
                           )}
                         </div>
@@ -1101,10 +1101,10 @@ export default function DashboardAnalyticsPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-black text-white flex items-center gap-1.5">
                       <SunMedium className="h-3.5 w-3.5 text-cyan-400" strokeWidth={1.5} />
-                      <span>الفترة الصباحية (09:00 ص — 04:00 م)</span>
+                      <span>فترة الصبح الهادية (09:00 ص — 04:00 م)</span>
                     </span>
                     <span className="text-[11px] font-bold text-zinc-400">
-                      محجوز: <span className="text-cyan-400 font-black tabular-nums">{morningMatches}</span> من {morningSlots.length} فترات
+                      محجوز: <span className="text-cyan-400 font-black tabular-nums">{morningMatches}</span> من أصل {morningSlots.length} مواعيد
                     </span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2">
@@ -1129,7 +1129,7 @@ export default function DashboardAnalyticsPage() {
                             </span>
                           ) : (
                             <span className="text-[10px] text-zinc-500 font-bold block py-1">
-                              شاغر
+                              فاضي
                             </span>
                           )}
                         </div>
@@ -1144,15 +1144,15 @@ export default function DashboardAnalyticsPage() {
             {hourlyViewMode === "chart" && (
               <div className="space-y-3 pt-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] font-bold text-zinc-400 gap-2">
-                  <span>منحنى الساعات الزمني: من الصباح 09:00 ص (يميناً) ⬅ إلى منتصف الليل 01:00 ص (يساراً)</span>
+                  <span>ترتيب الساعات: من أول الصبح 09:00 ص (يمين) لحد نص الليل 01:00 ص (شمال)</span>
                   <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1.5 text-primary">
                       <span className="h-2 w-2 rounded-full bg-primary" />
-                      <span>ذروة مسائية</span>
+                      <span>بالليل (ضغط)</span>
                     </span>
                     <span className="flex items-center gap-1.5 text-cyan-400">
                       <span className="h-2 w-2 rounded-full bg-cyan-400" />
-                      <span>صباح هادئ</span>
+                      <span>الصبح (هادي)</span>
                     </span>
                   </div>
                 </div>
@@ -1175,7 +1175,7 @@ export default function DashboardAnalyticsPage() {
                         >
                           {/* Tooltip on Hover */}
                           <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 bg-[#1c1c1f] border border-white/10 px-2.5 py-1 rounded-xl text-[10px] font-bold text-white whitespace-nowrap shadow-xl">
-                            {h.slot_label}: {h.bookings_count} ماتش {h.is_peak ? "(ذروة مسائية)" : "(صباحي)"}
+                            {h.slot_label}: {h.bookings_count} ماتش {h.is_peak ? "(بالليل ضغط)" : "(الصبح)"}
                           </div>
 
                           {isBooked ? (
@@ -1222,10 +1222,10 @@ export default function DashboardAnalyticsPage() {
               <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" strokeWidth={1.5} />
               <div className="space-y-1">
                 <span className="font-bold text-zinc-200 block">
-                  نصيحة باصيلي الذكية لتعظيم الأرباح:
+                  نصيحة باصيلي عشان تزود دخلك:
                 </span>
                 <p className="leading-relaxed">
-                  الفترة الصباحية تشهد عدداً محدوداً من الحجوزات ({morningMatches} ماتش)؛ يمكنك استغلال {vacantSlotsCount} ساعة شاغرة عبر تفعيل تسعير مخفض من شاشة «الملاعب والأسعار» لجذب الأكاديميات وحجوزات الطلاب ومضاعفة دخلك في الفترات الهادئة.
+                  فترة الصبح فيها ماتشات قليلة ({morningMatches} ماتش بس)؛ عندك {vacantSlotsCount} ساعة فاضية تقدر تستغلهم لو نزلت سعر الساعة الصباحية شوية من صفحة «الملاعب والأسعار»، وده هيشجع الأكاديميات والشباب يحجزوا الصبح ودخلك يزيد في الأوقات الرايقة.
                 </p>
               </div>
             </div>
@@ -1240,10 +1240,10 @@ export default function DashboardAnalyticsPage() {
           <div className="flex items-center justify-between">
             <h3 className="font-display text-base font-black text-white flex items-center gap-2">
               <PieChart className="h-5 w-5 text-primary" strokeWidth={1.5} />
-              <span>توزيع قنوات الحجز (Booking Channels)</span>
+              <span>الفرق حجزت إزاي؟ (أونلاين ولا كاش)</span>
             </h3>
             <span className="text-[11px] text-zinc-400 font-bold">
-              مقارنة بيانية
+              نسب الحجز
             </span>
           </div>
 
@@ -1260,11 +1260,11 @@ export default function DashboardAnalyticsPage() {
                 <div className="flex items-center justify-between text-xs font-bold">
                   <span className="text-primary flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-primary" />
-                    <span>أونلاين عبر باصيلي ({onlinePct}%)</span>
+                    <span>أونلاين من أبلكيشن باصيلي ({onlinePct}%)</span>
                   </span>
                   <span className="text-amber-300 flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-amber-400" />
-                    <span>كاش مباشر بالملعب ({walkinPct}%)</span>
+                    <span>حجز مباشر كاش على الدكة ({walkinPct}%)</span>
                   </span>
                 </div>
                 <div className="w-full h-3 rounded-full bg-white/[0.06] overflow-hidden flex">
@@ -1286,7 +1286,7 @@ export default function DashboardAnalyticsPage() {
           <div className="grid grid-cols-2 gap-3 pt-1">
             <div className="p-4 rounded-2xl bg-[#1c1c1f] border border-white/[0.04] space-y-1">
               <div className="flex items-center justify-between text-xs text-zinc-400 font-bold mb-1">
-                <span>أونلاين (باصيلي)</span>
+                <span>حجوزات أونلاين (باصيلي)</span>
                 <Smartphone className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
               </div>
               <div className="flex items-baseline gap-1">
@@ -1302,7 +1302,7 @@ export default function DashboardAnalyticsPage() {
 
             <div className="p-4 rounded-2xl bg-[#1c1c1f] border border-white/[0.04] space-y-1">
               <div className="flex items-center justify-between text-xs text-zinc-400 font-bold mb-1">
-                <span>حجز مباشر (كاش بالملعب)</span>
+                <span>حجوزات كاش على الدكة</span>
                 <Banknote className="h-3.5 w-3.5 text-amber-400" strokeWidth={1.5} />
               </div>
               <div className="flex items-baseline gap-1">
@@ -1312,7 +1312,7 @@ export default function DashboardAnalyticsPage() {
                 <span className="text-xs text-zinc-500">ج.م</span>
               </div>
               <span className="text-[11px] text-zinc-500 block">
-                {channels?.walkin_count || 0} حجز مباشر
+                {channels?.walkin_count || 0} حجز كاش مباشر
               </span>
             </div>
           </div>
@@ -1323,10 +1323,10 @@ export default function DashboardAnalyticsPage() {
           <div className="flex items-center justify-between">
             <h3 className="font-display text-base font-black text-white flex items-center gap-2">
               <ShieldCheck className="h-5 w-5 text-emerald-400" strokeWidth={1.5} />
-              <span>مطابقة تحصيل الوردية ومنع العجز</span>
+              <span>تصفية الوردية وحساب درج الكاش (عشان ميبقاش فيه عجز)</span>
             </h3>
             <span className="text-[11px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-              تدقيق مالي
+              تأكيد الحسابات
             </span>
           </div>
 
@@ -1343,15 +1343,15 @@ export default function DashboardAnalyticsPage() {
             return (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-[11px] font-bold">
-                  <span className="text-cyan-400">إنستا باي ({instaPct}%)</span>
+                  <span className="text-cyan-400">إنستاباي ({instaPct}%)</span>
                   <span className="text-rose-400">فودافون كاش ({vodaPct}%)</span>
-                  <span className="text-amber-300">كاش بالملعب ({cashPct}%)</span>
+                  <span className="text-amber-300">كاش في الدرج ({cashPct}%)</span>
                 </div>
                 <div className="w-full h-3 rounded-full bg-white/[0.06] overflow-hidden flex">
                   <div
                     className="bg-cyan-400 h-full transition-all duration-500"
                     style={{ width: `${instaPct}%` }}
-                    title={`إنستا باي: ${instaPct}%`}
+                    title={`إنستاباي: ${instaPct}%`}
                   />
                   <div
                     className="bg-rose-500 h-full transition-all duration-500"
@@ -1371,7 +1371,7 @@ export default function DashboardAnalyticsPage() {
           <div className="space-y-2.5 text-xs">
             <div className="p-3 rounded-2xl bg-[#1c1c1f] flex items-center justify-between border border-white/[0.04]">
               <span className="text-zinc-400 font-bold">
-                تحويلات إنستا باي المعتمدة
+                تحويلات إنستاباي المتأكدة
               </span>
               <span className="font-black text-white tabular-nums">
                 {payments?.instapay_amount.toLocaleString("en-US") || 0} ج.م{" "}
@@ -1383,7 +1383,7 @@ export default function DashboardAnalyticsPage() {
 
             <div className="p-3 rounded-2xl bg-[#1c1c1f] flex items-center justify-between border border-white/[0.04]">
               <span className="text-zinc-400 font-bold">
-                تحويلات فودافون كاش المعتمدة
+                تحويلات فودافون كاش المتأكدة
               </span>
               <span className="font-black text-white tabular-nums">
                 {payments?.vodafone_amount.toLocaleString("en-US") || 0} ج.م{" "}
@@ -1395,7 +1395,7 @@ export default function DashboardAnalyticsPage() {
 
             <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
               <span className="text-amber-200 font-bold">
-                الكاش الفعلي المطلوب في درج الاستقبال
+                الكاش المطلوب تلاقيه في الدرج دلوقتي
               </span>
               <span className="font-black text-amber-300 text-sm tabular-nums">
                 {payments?.cash_on_pitch_amount.toLocaleString("en-US") || 0} ج.م
@@ -1411,10 +1411,10 @@ export default function DashboardAnalyticsPage() {
           <div>
             <h3 className="font-display text-base font-black text-white flex items-center gap-2">
               <Star className="h-5 w-5 text-amber-400 fill-amber-400" strokeWidth={1.5} />
-              <span>مؤشر رضا اللاعبين وجودة الملعب (Player Satisfaction)</span>
+              <span>رأي وتقييم اللاعبين في الملعب</span>
             </h3>
             <p className="text-xs text-zinc-400">
-              تقييمات موثقة من اللاعبين بعد اكتمال مبارياتهم عبر المنصة
+              تقييمات حقيقية من الفرق واللعيبة بعد ما لعبوا الماتش
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -1422,7 +1422,7 @@ export default function DashboardAnalyticsPage() {
               {ratings?.avg_overall || 5}
             </span>
             <span className="text-xs text-zinc-500 font-bold">
-              من 5 ({ratings?.reviews_count || 0} تقييم موثق)
+              من 5 ({ratings?.reviews_count || 0} تقييم من اللعيبة)
             </span>
           </div>
         </div>
@@ -1430,7 +1430,7 @@ export default function DashboardAnalyticsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
           <div className="p-4 rounded-2xl bg-[#1c1c1f] border border-white/[0.04] space-y-1.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400 font-bold">جودة النجيل والأرضية</span>
+              <span className="text-zinc-400 font-bold">حالة وأرضية النجيل</span>
               <span className="font-black text-white tabular-nums">
                 {ratings?.avg_turf || 5} / 5
               </span>
@@ -1445,7 +1445,7 @@ export default function DashboardAnalyticsPage() {
 
           <div className="p-4 rounded-2xl bg-[#1c1c1f] border border-white/[0.04] space-y-1.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400 font-bold">شدة ونقاء الإضاءة</span>
+              <span className="text-zinc-400 font-bold">إضاءة وكشافات الملعب</span>
               <span className="font-black text-white tabular-nums">
                 {ratings?.avg_lighting || 5} / 5
               </span>
@@ -1460,7 +1460,7 @@ export default function DashboardAnalyticsPage() {
 
           <div className="p-4 rounded-2xl bg-[#1c1c1f] border border-white/[0.04] space-y-1.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400 font-bold">مستوى الاستقبال والخدمة</span>
+              <span className="text-zinc-400 font-bold">معاملة الاستقبال ونظافة المكان</span>
               <span className="font-black text-white tabular-nums">
                 {ratings?.avg_service || 5} / 5
               </span>
@@ -1482,15 +1482,15 @@ export default function DashboardAnalyticsPage() {
             <div>
               <h3 className="font-display text-base font-black text-white flex flex-wrap items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.5} />
-                <span>الرسم البياني لتطور الإيرادات والماتشات اليومية</span>
+                <span>حركة الدخل والماتشات يوم بيوم</span>
                 {selectedCourtId && activeCourt && (
                   <span className="text-[11px] font-black text-primary bg-primary/15 border border-primary/30 px-2.5 py-0.5 rounded-full">
-                    خاص بـ: {activeCourt.name}
+                    أرقام: {activeCourt.name}
                   </span>
                 )}
               </h3>
               <p className="text-xs text-zinc-400">
-                متابعة حركة الإيراد اليومي والمحصل فعلياً خلال الفترة المختارة ({analytics.daily_timeline.length} يوم)
+                تفاصيل الفلوس اللي دخلت والماتشات في كل يوم خلال الفترة دي ({analytics.daily_timeline.length} يوم)
               </p>
             </div>
 
@@ -1518,7 +1518,7 @@ export default function DashboardAnalyticsPage() {
                 }`}
               >
                 <Activity className="h-3.5 w-3.5" strokeWidth={2} />
-                <span>جدول رقمي</span>
+                <span>جدول تفصيلي</span>
               </button>
             </div>
           </div>
@@ -1530,15 +1530,15 @@ export default function DashboardAnalyticsPage() {
               <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-zinc-400">
                 <span className="flex items-center gap-1.5">
                   <span className="h-2.5 w-2.5 rounded-sm bg-primary" />
-                  <span>إجمالي القيمة الإيجارية</span>
+                  <span>إجمالي فلوس الحجوزات</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-2.5 w-2.5 rounded-sm bg-emerald-400" />
-                  <span>المحصّل فعلياً</span>
+                  <span>الفلوس اللي دخلت الخزنة</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="h-2.5 w-2.5 rounded-sm bg-amber-400" />
-                  <span>متبقي كاش بالملعب</span>
+                  <span>باقي الحساب كاش</span>
                 </span>
               </div>
 
@@ -1592,16 +1592,16 @@ export default function DashboardAnalyticsPage() {
                                 {day.date} — {day.bookings_count} ماتش
                               </span>
                               <div className="text-white tabular-nums">
-                                إجمالي: {day.gross_revenue.toLocaleString("en-US")}{" "}
+                                إجمالي الحجوزات: {day.gross_revenue.toLocaleString("en-US")}{" "}
                                 ج.م
                               </div>
                               <div className="text-emerald-400 tabular-nums">
-                                محصل:{" "}
+                                الفلوس المستلمة:{" "}
                                 {day.collected_revenue.toLocaleString("en-US")} ج.م
                               </div>
                               {day.pending_cash > 0 && (
                                 <div className="text-amber-300 tabular-nums">
-                                  متبقي كاش:{" "}
+                                  باقي كاش مع الفرق:{" "}
                                   {day.pending_cash.toLocaleString("en-US")} ج.م
                                 </div>
                               )}
@@ -1681,11 +1681,11 @@ export default function DashboardAnalyticsPage() {
               <table className="w-full text-right text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.08] text-zinc-400 font-bold">
-                    <th className="pb-3 pr-2">التاريخ</th>
+                    <th className="pb-3 pr-2">اليوم</th>
                     <th className="pb-3 px-2">عدد الماتشات</th>
-                    <th className="pb-3 px-2">إجمالي الإيجار</th>
-                    <th className="pb-3 px-2">المحصّل فعلياً</th>
-                    <th className="pb-3 pl-2">متبقي كاش</th>
+                    <th className="pb-3 px-2">إجمالي الحجوزات</th>
+                    <th className="pb-3 px-2">الفلوس المستلمة</th>
+                    <th className="pb-3 pl-2">باقي كاش مع الفرق</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.04] font-medium text-zinc-300">

@@ -92,8 +92,8 @@ export default function NotificationsPopover({
   onMarkAllAsRead,
   onMarkAsRead,
   onClearAll,
-  title = "تنبيهات المنشأة الحية",
-  emptyMessage = "جميع العمليات محدثة، لا توجد تنبيهات معلقة حالياً",
+  title = "الإشعارات والتنبيهات",
+  emptyMessage = "كل الماتشات وإيصالات العربون متراجعة ومفيش حاجة معلقة دلوقتي",
   align = "left",
 }: NotificationsPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -146,7 +146,7 @@ export default function NotificationsPopover({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-label="عرض التنبيهات والإشعارات"
         aria-expanded={isOpen}
-        title="مركز الإشعارات والتنبيهات الحية"
+        title="مركز الإشعارات والتنبيهات"
         className={`relative min-h-[38px] min-w-[38px] px-2.5 rounded-xl border transition-all inline-flex items-center justify-center gap-1.5 ${
           isOpen
             ? "bg-primary/15 border-primary/40 text-primary shadow-sm shadow-primary/20"
@@ -185,10 +185,10 @@ export default function NotificationsPopover({
                   <span className="text-[11px] text-zinc-400 font-bold mt-1 block">
                     {unreadCount > 0 ? (
                       <span className="text-amber-300">
-                        لديك {unreadCount} تنبيهات غير مقروءة
+                        فيه {unreadCount} إشعارات جديدة محتاجة تأكيدك
                       </span>
                     ) : (
-                      "جميع التنبيهات مقروءة"
+                      "مفيش إشعارات جديدة دلوقتي"
                     )}
                   </span>
                 </div>
@@ -202,7 +202,7 @@ export default function NotificationsPopover({
                   className="text-[11px] font-bold text-primary hover:text-white transition-colors inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 hover:bg-primary/20 border border-primary/20"
                 >
                   <CheckCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  <span>تحديد الكل كمقروء</span>
+                  <span>علم على كله مقروء</span>
                 </button>
               )}
             </div>
@@ -229,7 +229,7 @@ export default function NotificationsPopover({
                     : "text-zinc-400 hover:text-white"
                 }`}
               >
-                غير المقروء ({unreadCount})
+                الجديد بس ({unreadCount})
               </button>
             </div>
           </div>
@@ -243,7 +243,7 @@ export default function NotificationsPopover({
                 </div>
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-white">
-                    {filter === "unread" ? "لا توجد تنبيهات غير مقروءة" : "لا توجد تنبيهات"}
+                    {filter === "unread" ? "مفيش إشعارات جديدة" : "مفيش أي إشعارات دلوقتي"}
                   </p>
                   <p className="text-[11px] text-zinc-500 leading-relaxed px-4">
                     {emptyMessage}
@@ -346,7 +346,7 @@ export default function NotificationsPopover({
                 onClick={onClearAll}
                 className="hover:text-white transition-colors px-2 py-1 rounded-lg hover:bg-white/[0.04]"
               >
-                مسح السجل
+                مسح سجل الإشعارات
               </button>
             </div>
           )}

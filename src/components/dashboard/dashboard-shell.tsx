@@ -41,28 +41,28 @@ interface NavItem {
 
 const ROUTE_TITLES: Record<string, { title: string; subtitle: string }> = {
   "/dashboard": {
-    title: "الجدول اليومي",
-    subtitle: "إدارة مواعيد اليوم والحجوزات الفورية",
+    title: "جدول النهاردة",
+    subtitle: "ماتشات النهاردة والحجز السريع على الدكة",
   },
   "/dashboard/receipts": {
-    title: "مراجعة الإيصالات",
-    subtitle: "التحقق من إيصالات إنستا باي وفودافون كاش",
+    title: "إيصالات العربون",
+    subtitle: "تأكيد تحويلات إنستاباي وفودافون كاش من اللعيبة",
   },
   "/dashboard/analytics": {
-    title: "التقارير والإحصائيات",
-    subtitle: "تحليل الأداء المالي وإشغال الملاعب وساعات الذروة",
+    title: "الأرباح وحسابات الملاعب",
+    subtitle: "شوف دخل كل ملعب وساعات الزحمة والرواق بالتفصيل",
   },
   "/dashboard/courts": {
     title: "الملاعب والأسعار",
-    subtitle: "إعداد الساعات والأسعار وحالة الصيانة",
+    subtitle: "ظبط أسعار الصبح والليل وحالة الصيانة لكل ملعب",
   },
   "/dashboard/wallet": {
-    title: "المحفظة والعمولات",
-    subtitle: "رصيد العمولات المسبق وحسابات استلام العربون",
+    title: "المحفظة وحسابات باصيلي",
+    subtitle: "شحن رصيد العمولات وأرقام كاش بتاعتك",
   },
   "/dashboard/settings": {
     title: "الموظفين والإعدادات",
-    subtitle: "رمز دخول الاستقبال وتفضيلات التشغيل",
+    subtitle: "باسورد الدكة ومواعيد فتح وقفل الملعب",
   },
 };
 
@@ -101,14 +101,14 @@ export default function DashboardShell({
 
   const navItems: NavItem[] = [
     {
-      label: "الجدول اليومي",
+      label: "جدول النهاردة",
       shortLabel: "الجدول",
       href: "/dashboard",
       icon: Calendar,
       group: "ops",
     },
     {
-      label: "مراجعة الإيصالات",
+      label: "إيصالات العربون",
       shortLabel: "الإيصالات",
       href: "/dashboard/receipts",
       icon: FileCheck2,
@@ -116,8 +116,8 @@ export default function DashboardShell({
       badgeCount: pendingCount,
     },
     {
-      label: "التقارير والإحصائيات",
-      shortLabel: "الإحصائيات",
+      label: "الأرباح وحسابات الملاعب",
+      shortLabel: "الأرباح",
       href: "/dashboard/analytics",
       icon: BarChart3,
       group: "manage",
@@ -130,7 +130,7 @@ export default function DashboardShell({
       group: "manage",
     },
     {
-      label: "المحفظة والعمولات",
+      label: "المحفظة وحسابات باصيلي",
       shortLabel: "المحفظة",
       href: "/dashboard/wallet",
       icon: Wallet,
@@ -596,8 +596,8 @@ export default function DashboardShell({
               onMarkAllAsRead={markAllNotificationsAsRead}
               onMarkAsRead={markNotificationAsRead}
               onClearAll={clearNotificationsHistory}
-              title="تنبيهات المنشأة الحية"
-              emptyMessage="جميع الإيصالات والحجوزات مراجعة، لا توجد تنبيهات معلقة حالياً"
+              title="الإشعارات والتنبيهات"
+              emptyMessage="كل الماتشات وإيصالات العربون متراجعة ومفيش حاجة معلقة دلوقتي"
             />
 
             <button
@@ -649,7 +649,7 @@ export default function DashboardShell({
             >
               <div className="flex items-center gap-2.5 font-bold">
                 <span className="h-2 w-2 rounded-full bg-primary animate-ping shrink-0" />
-                <span>وصل إيصال تحويل جديد من لاعب الآن.</span>
+                <span>فيه لاعب حوّل إيصال عربون جديد دلوقتي.</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Link

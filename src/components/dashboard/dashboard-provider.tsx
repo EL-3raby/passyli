@@ -193,10 +193,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
               {
                 id,
                 type: "booking",
-                title: "حجز جديد على الملعب",
-                description: `حجز جديد للكابتن ${b.booker_name || "لاعب"} بقيمة ${
+                title: "ماتش جديد اتحجز",
+                description: `الكابتن ${b.booker_name || "لاعب"} حجز ماتش بـ ${
                   b.total_price || 0
-                } ج.م بتاريخ ${b.booking_date || ""}`,
+                } ج.م يوم ${b.booking_date || ""}`,
                 timestamp: new Date().toISOString(),
                 isRead: false,
                 actionLabel: "عرض الجدول ⬅",
@@ -216,10 +216,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
               {
                 id,
                 type: "booking",
-                title: "تم إلغاء حجز",
-                description: `تم إلغاء حجز الكابتن ${
+                title: "ماتش اتلغى",
+                description: `الكابتن ${
                   b.booker_name || "لاعب"
-                } وأصبحت الساعة شاغرة مجدداً.`,
+                } لغى حجزه، والساعة بقت فاضية ومتاحة للحجز تاني.`,
                 timestamp: new Date().toISOString(),
                 isRead: false,
                 actionLabel: "عرض الجدول ⬅",
@@ -249,12 +249,12 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
               {
                 id,
                 type: "receipt",
-                title: "وصل إيصال دفع جديد الآن",
-                description: `قام ${r.sender_name || "لاعب"} بتحويل ${
+                title: "إيصال عربون جديد وصل دلوقتي",
+                description: `الكابتن ${r.sender_name || "لاعب"} حوّل عربون ${
                   r.amount_paid || 0
-                } ج.م عبر ${
+                } ج.م عن طريق ${
                   r.payment_method === "instapay" ? "إنستاباي" : "فودافون كاش"
-                } وبانتظار اعتمادك.`,
+                } ومستني تأكيدك.`,
                 timestamp: new Date().toISOString(),
                 isRead: false,
                 actionLabel: "مراجعة الإيصال ⬅",
@@ -351,10 +351,10 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       list.push({
         id,
         type: "receipt",
-        title: "إيصال دفع بانتظار المراجعة",
-        description: `قام ${r.sender_name} بتحويل ${r.amount_paid} ج.م عبر ${
+        title: "فيه إيصال عربون مستني مراجعتك",
+        description: `الكابتن ${r.sender_name} حوّل عربون ${r.amount_paid} ج.م عن طريق ${
           r.payment_method === "instapay" ? "إنستاباي" : "فودافون كاش"
-        } (مرجع: ${r.reference_number || "—"})`,
+        } (رقم العملية: ${r.reference_number || "—"})`,
         timestamp: r.created_at,
         isRead: readNotificationIds.has(id),
         actionLabel: "مراجعة الإيصال ⬅",
@@ -373,8 +373,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       list.push({
         id,
         type: "wallet",
-        title: "تنبيه: رصيد المحفظة قارب على النفاد",
-        description: `الرصيد المتبقي هو ${selectedVenue.prepaid_balance} ج.م. يرجى الشحن لضمان استمرار ظهور ملاعبك في الحجز الأونلاين.`,
+        title: "تنبيه: رصيد محفظتك قرب يخلص",
+        description: `باقي في محفظتك ${selectedVenue.prepaid_balance} ج.م بس. اشحن المحفظة عشان الملاعب تفضل شغالة في الحجز الأونلاين ومتقفش فجأة.`,
         timestamp: new Date().toISOString(),
         isRead: readNotificationIds.has(id),
         actionLabel: "شحن المحفظة ⬅",
