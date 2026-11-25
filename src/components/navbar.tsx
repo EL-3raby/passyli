@@ -15,6 +15,11 @@ import {
   KeyRound,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
+import NotificationsPopover, {
+  type OperationalNotification,
+} from "@/components/shared/notifications-popover";
+import { createClient } from "@/lib/supabase/client";
+import { playReceiptChime } from "@/lib/sound";
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "المشرف العام",
@@ -51,6 +56,125 @@ export default function Navbar() {
   const isSuperAdmin = Boolean(user) && role === "super_admin";
 
   const showPartnerLink = !user || canManageVenues;
+
+  const [playerNotifications, setPlayerNotifications] = useState<OperationalNotification[]>([]);
+  const [readIds, setReadIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!user) {
+      setPlayerNotifications([]);
+      return;
+    }
+
+    const supabase = createClient();
+    let isMounted = true;
+
+    const fetchNotifications = async () => {
+      const { data: bookingsData, error } = await supabase.rpc("get_player_bookings", {
+        p_phone: profile?.phone || null,
+        p_user_id: user.id,
+      });
+
+      if (error || !Array.isArray(bookingsData) || !isMounted) return;
+
+      const notifs: OperationalNotification[] = [];
+
+      bookingsData.slice(0, 15).forEach((b: any) => {
+        const venueName = b.court?.venue?.name || "الملعب";
+        const courtName = b.court?.name || "";
+        const ref = b.booking_reference;
+        const bookingDate = b.booking_date;
+        const time = b.start_time;
+
+        if (b.status === "confirmed") {
+          notifs.push({
+            id: `notif-confirmed-${ref}`,
+            type: "booking",
+            title: `حجز مؤكد في ${venueName}`,
+            description: `ميعادك: ${bookingDate} الساعة ${time} (${courtName}) • كود: ${ref}`,
+            timestamp: b.created_at || new Date().toISOString(),
+            isRead: readIds.has(`notif-confirmed-${ref}`),
+            actionLabel: "عرض التذكرة",
+            actionHref: `/ticket/${ref}`,
+            priority: "success",
+          });
+        } else if (b.status === "pending_payment") {
+          notifs.push({
+            id: `notif-pending-${ref}`,
+            type: "receipt",
+            title: `إيصالك قيد المراجعة في ${venueName}`,
+            description: `جاري مراجعة إيصال التحويل لميعاد ${bookingDate} الساعة ${time}`,
+            timestamp: b.created_at || new Date().toISOString(),
+            isRead: readIds.has(`notif-pending-${ref}`),
+            actionLabel: "متابعة التذكرة",
+            actionHref: `/ticket/${ref}`,
+            priority: "normal",
+          });
+        } else if (b.status === "cancelled") {
+          notifs.push({
+            id: `notif-cancelled-${ref}`,
+            type: "dispute",
+            title: `تم إلغاء حجز في ${venueName}`,
+            description: b.cancellation_reason || `تم إلغاء ميعاد ${bookingDate} الساعة ${time}`,
+            timestamp: b.created_at || new Date().toISOString(),
+            isRead: readIds.has(`notif-cancelled-${ref}`),
+            actionLabel: "عرض التفاصيل",
+            actionHref: `/ticket/${ref}`,
+            priority: "urgent",
+          });
+        }
+      });
+
+      setPlayerNotifications(notifs);
+    };
+
+    fetchNotifications();
+
+    const channel = supabase
+      .channel(`player-navbar-notifications-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bookings",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          fetchNotifications();
+          const newBooking = payload.new as any;
+          if (newBooking?.status === "confirmed") {
+            playReceiptChime();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, [user, profile?.phone, readIds]);
+
+  const handleMarkAllAsRead = () => {
+    setReadIds((prev) => {
+      const next = new Set(prev);
+      playerNotifications.forEach((n) => next.add(n.id));
+      return next;
+    });
+    setPlayerNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  };
+
+  const handleMarkAsRead = (id: string) => {
+    setReadIds((prev) => new Set(prev).add(id));
+    setPlayerNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+    );
+  };
+
+  const handleClearAll = () => {
+    setPlayerNotifications([]);
+  };
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -171,6 +295,18 @@ export default function Navbar() {
 
         {/* Auth & Primary CTA */}
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {user && (
+            <NotificationsPopover
+              notifications={playerNotifications}
+              onMarkAllAsRead={handleMarkAllAsRead}
+              onMarkAsRead={handleMarkAsRead}
+              onClearAll={handleClearAll}
+              align="left"
+              title="تنبيهاتك وماتشاتك"
+              emptyMessage="لا توجد تنبيهات جديدة حالياً. كل تحديثات حجوزاتك وإيصالاتك هتظهر هنا أول بأول."
+            />
+          )}
+
           {isLoading ? (
             <div className="h-[44px] w-24 rounded-full bg-white/[0.06] animate-pulse" />
           ) : user ? (

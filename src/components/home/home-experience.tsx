@@ -21,6 +21,8 @@ import {
   ExternalLink,
   User,
   Phone,
+  CheckCircle2,
+  RotateCcw,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import CourtsSection from "@/components/courts-section";
@@ -54,6 +56,7 @@ export default function HomeExperience() {
   const [heroSportFilter, setHeroSportFilter] = useState<"all" | SportType>("all");
   const [loadedVenues, setLoadedVenues] = useState<VenueWithCourts[]>([]);
   const [nextBooking, setNextBooking] = useState<NextBookingPreview | null>(null);
+  const [recentPastBooking, setRecentPastBooking] = useState<NextBookingPreview | null>(null);
   const [confirmedCount, setConfirmedCount] = useState<number>(0);
 
   const isSignedIn = !authLoading && Boolean(user);
@@ -64,6 +67,7 @@ export default function HomeExperience() {
   const loadUserHomeSnapshot = useCallback(async () => {
     if (!user) {
       setNextBooking(null);
+      setRecentPastBooking(null);
       setConfirmedCount(0);
       return;
     }
@@ -76,7 +80,8 @@ export default function HomeExperience() {
 
     if (error || !Array.isArray(data)) return;
 
-    const todayStr = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const todayStr = now.toISOString().split("T")[0];
     const list = data as unknown as NextBookingPreview[];
 
     const confirmed = list.filter(
@@ -84,19 +89,55 @@ export default function HomeExperience() {
     ).length;
     setConfirmedCount(confirmed);
 
+    // Accurate Match Time Check: has this slot's time passed?
+    const isUpcomingMatch = (b: NextBookingPreview) => {
+      if (b.status === "cancelled" || b.status === "expired" || b.status === "completed") {
+        return false;
+      }
+      if (b.booking_date > todayStr) return true;
+      if (b.booking_date < todayStr) return false;
+
+      // booking_date === todayStr: calculate match end time (slot start + 60 minutes)
+      const cleanTime = b.start_time.replace(/[^0-9:]/g, "");
+      let hours = 0;
+      let minutes = 0;
+      if (cleanTime.includes(":")) {
+        const parts = cleanTime.split(":");
+        hours = parseInt(parts[0], 10) || 0;
+        minutes = parseInt(parts[1], 10) || 0;
+      }
+      if (b.start_time.includes("م") && hours < 12) hours += 12;
+      if (b.start_time.includes("ص") && hours === 12) hours = 0;
+
+      const matchEnd = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        hours + 1,
+        minutes,
+        0
+      );
+      return now < matchEnd;
+    };
+
     const upcoming = list
-      .filter(
-        (b) =>
-          b.booking_date >= todayStr &&
-          b.status !== "cancelled" &&
-          b.status !== "expired"
-      )
+      .filter(isUpcomingMatch)
       .sort((a, b) => {
         const dCmp = a.booking_date.localeCompare(b.booking_date);
         return dCmp !== 0 ? dCmp : a.start_time.localeCompare(b.start_time);
       });
 
     setNextBooking(upcoming[0] || null);
+
+    // Most recent completed or past match (to show relevant action card instead of a stale upcoming match)
+    const past = list
+      .filter((b) => !isUpcomingMatch(b) && b.status !== "cancelled" && b.status !== "expired")
+      .sort((a, b) => {
+        const dCmp = b.booking_date.localeCompare(a.booking_date);
+        return dCmp !== 0 ? dCmp : b.start_time.localeCompare(a.start_time);
+      });
+
+    setRecentPastBooking(past[0] || null);
   }, [user, profile?.phone]);
 
   useEffect(() => {
@@ -104,6 +145,7 @@ export default function HomeExperience() {
       loadUserHomeSnapshot();
     } else {
       setNextBooking(null);
+      setRecentPastBooking(null);
       setConfirmedCount(0);
     }
   }, [isSignedIn, loadUserHomeSnapshot]);
@@ -414,6 +456,65 @@ export default function HomeExperience() {
                       </div>
                     );
                   })()
+                ) : recentPastBooking ? (
+                  <div className="rounded-3xl bg-[#141418]/95 backdrop-blur-2xl border border-white/10 p-5 sm:p-6 space-y-4 shadow-[0_12px_40px_rgba(0,0,0,0.6)] relative overflow-hidden transition-all">
+                    {/* Header: Ended Match Status */}
+                    <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-800 text-zinc-300 text-[11px] font-bold border border-white/10">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} />
+                          <span>انتهى الماتش السابق</span>
+                        </span>
+                        <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-white/[0.06] text-zinc-400 border border-white/[0.08]">
+                          {recentPastBooking.court?.sport === "padel" ? "بادل PAD" : "خماسي 5V5"}
+                        </span>
+                      </div>
+                      <span className="font-mono text-xs text-zinc-500 tabular-nums" dir="ltr">
+                        {recentPastBooking.booking_reference}
+                      </span>
+                    </div>
+
+                    {/* Venue & Time Summary */}
+                    <div className="space-y-1">
+                      <h3 className="font-display text-lg font-black text-white">
+                        {recentPastBooking.court?.venue?.name || "ملعب باصيلي"} — {recentPastBooking.court?.name || "الملعب"}
+                      </h3>
+                      <p className="text-xs text-zinc-400 flex items-center gap-2 pt-0.5">
+                        <Calendar className="h-3.5 w-3.5 text-primary shrink-0" strokeWidth={1.5} />
+                        <span>{formatDateArabic(recentPastBooking.booking_date)}</span>
+                        <span>•</span>
+                        <Clock className="h-3.5 w-3.5 text-primary shrink-0" strokeWidth={1.5} />
+                        <span className="font-bold text-zinc-300">{formatTimeArabic(recentPastBooking.start_time)}</span>
+                      </p>
+                    </div>
+
+                    {/* Re-book / Next Match CTA */}
+                    <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-xs text-zinc-300 space-y-1">
+                      <span className="font-bold text-white block">جاهز لماتشك الجاي يا كابتن؟</span>
+                      <span className="text-[11px] text-zinc-400 block">
+                        احجز نفس الملعب للأسبوع القادم، أو انضم لتقسيمات مفتوحة مع لاعيبة دمنهور.
+                      </span>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleHeroSportJump("all")}
+                        className="flex-1 min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-[0_2px_14px_rgba(16,185,129,0.28)]"
+                      >
+                        <RotateCcw className="h-4 w-4" strokeWidth={2} />
+                        <span>احجز ماتش جديد الآن</span>
+                      </button>
+
+                      <Link
+                        href="/my-bookings"
+                        className="min-h-[46px] px-4 rounded-xl bg-white/[0.06] hover:bg-white/10 text-white font-bold text-xs flex items-center justify-center transition-all border border-white/[0.08]"
+                      >
+                        سجل تذاكري
+                      </Link>
+                    </div>
+                  </div>
                 ) : (
                   <div className="rounded-2xl bg-[#141418]/90 backdrop-blur-xl border border-white/10 p-6 space-y-4 shadow-2xl">
                     <div className="flex items-center justify-between">

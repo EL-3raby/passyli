@@ -26,9 +26,12 @@ import {
   ExternalLink,
   Users,
   Mail,
+  LogIn,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import CreatePostModal from "@/components/matchmaking/create-post-modal";
+import { createClient } from "@/lib/supabase/client";
+import { playReceiptChime } from "@/lib/sound";
 import {
   lockCourtSlot,
   cancelBookingLock,
@@ -132,6 +135,8 @@ export default function BookingModal({
 
   // Step 3: Digital Pass & Squad Bill Image Sharing
   const [confirmedRef, setConfirmedRef] = useState<string>("");
+  const [verificationStatus, setVerificationStatus] = useState<"under_review" | "confirmed" | "rejected">("under_review");
+  const [rejectionReason, setRejectionReason] = useState<string>("");
   const [isGeneratingBill, setIsGeneratingBill] = useState(false);
   const [billPreviewUrl, setBillPreviewUrl] = useState<string | null>(null);
   const [billBlob, setBillBlob] = useState<Blob | null>(null);
@@ -184,6 +189,9 @@ export default function BookingModal({
       setIsGeneratingBill(false);
       setBillPreviewUrl(null);
       setBillBlob(null);
+      setConfirmedRef("");
+      setVerificationStatus("under_review");
+      setRejectionReason("");
       setShareSuccessToast("");
       setEmailSentToast(false);
       setIsPreviewModalOpen(false);
@@ -192,6 +200,83 @@ export default function BookingModal({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Realtime subscription for receipt confirmation / approval from venue dashboard
+  useEffect(() => {
+    if (step !== "pass" || !lockData?.bookingId) return;
+
+    const supabase = createClient();
+    const bookingId = lockData.bookingId;
+
+    // Fetch initial status in case it was already reviewed or approved
+    const checkInitialStatus = async () => {
+      const { data: recData } = await supabase
+        .from("receipts")
+        .select("status, rejection_reason")
+        .eq("booking_id", bookingId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (recData) {
+        if (recData.status === "verified") {
+          setVerificationStatus("confirmed");
+        } else if (recData.status === "rejected") {
+          setVerificationStatus("rejected");
+          setRejectionReason(recData.rejection_reason || "تم رفض الإيصال من إدارة المنشأة");
+        }
+      }
+    };
+    checkInitialStatus();
+
+    // Listen to changes on receipts table
+    const channel = supabase
+      .channel(`booking-pass-status-${bookingId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "receipts",
+          filter: `booking_id=eq.${bookingId}`,
+        },
+        (payload) => {
+          const newRec = payload.new as { status?: string; rejection_reason?: string } | undefined;
+          if (!newRec) return;
+          if (newRec.status === "verified") {
+            setVerificationStatus("confirmed");
+            playReceiptChime();
+          } else if (newRec.status === "rejected") {
+            setVerificationStatus("rejected");
+            setRejectionReason(newRec.rejection_reason || "تم رفض الإيصال من إدارة المنشأة");
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "bookings",
+          filter: `id=eq.${bookingId}`,
+        },
+        (payload) => {
+          const newBooking = payload.new as { status?: string; cancellation_reason?: string } | undefined;
+          if (!newBooking) return;
+          if (newBooking.status === "confirmed") {
+            setVerificationStatus("confirmed");
+          } else if (newBooking.status === "cancelled") {
+            setVerificationStatus("rejected");
+            setRejectionReason(newBooking.cancellation_reason || "تم إلغاء الحجز من إدارة المنشأة");
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [step, lockData?.bookingId]);
 
   // Pre-fill profile details if user signs in while modal is open
   useEffect(() => {
@@ -310,6 +395,11 @@ export default function BookingModal({
   const handleStartHold = async (e: React.FormEvent) => {
     e.preventDefault();
     setPhoneError("");
+
+    if (!user) {
+      openAuthModal("signin");
+      return;
+    }
 
     if (!bookerName.trim()) {
       setPhoneError("يرجى إدخال اسمك بالكامل");
@@ -761,47 +851,71 @@ export default function BookingModal({
                 </div>
               </div>
 
-              {/* Booker Inputs */}
-              <div className="space-y-3.5">
-                <div>
-                  <label className="block text-xs font-bold text-zinc-300 mb-1.5">
-                    اسم الكابتن / الحاجز <span className="text-primary">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={bookerName}
-                    onChange={(e) => setBookerName(e.target.value)}
-                    placeholder="مثال: أحمد عبد الرحمن"
-                    className="w-full min-h-[46px] rounded-xl bg-[#242427] border border-white/[0.08] px-4 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-primary transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-zinc-300 mb-1.5">
-                    رقم الموبايل والواتساب <span className="text-primary">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    required
-                    dir="ltr"
-                    value={bookerPhone}
-                    onChange={(e) => setBookerPhone(e.target.value)}
-                    placeholder="01012345678"
-                    className="w-full min-h-[46px] rounded-xl bg-[#242427] border border-white/[0.08] px-4 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-primary transition-all text-right"
-                  />
-                  <span className="text-[11px] text-muted-foreground mt-1 block">
-                    هنبعتلك التذكرة وتأكيد الحجز على رقم الواتساب ده مباشرة.
-                  </span>
-                </div>
-
-                {phoneError && (
-                  <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 flex items-center gap-2 text-xs text-red-400">
-                    <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.5} />
-                    <span>{phoneError}</span>
+              {/* Booker Inputs or Auth Gate */}
+              {!user ? (
+                <div className="rounded-2xl bg-[#242427] border border-primary/25 p-5 text-center space-y-3.5 shadow-lg my-2">
+                  <div className="h-12 w-12 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center text-primary mx-auto">
+                    <LogIn className="h-6 w-6" strokeWidth={1.5} />
                   </div>
-                )}
-              </div>
+                  <div className="space-y-1">
+                    <h4 className="font-display font-black text-base text-white">
+                      تسجيل الدخول إلزامي لحجز الملاعب
+                    </h4>
+                    <p className="text-xs text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                      لحماية ميعادك وربط التذكرة بحسابك واستلام إشعارات تأكيد الإيصال الفورية، يرجى تسجيل الدخول أو إنشاء حسابك أولاً.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => openAuthModal("signin")}
+                    className="w-full min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-[0_2px_15px_rgba(16,185,129,0.25)] active:scale-[0.99]"
+                  >
+                    <LogIn className="h-4 w-4" strokeWidth={2} />
+                    <span>تسجيل الدخول / إنشاء حساب</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-300 mb-1.5">
+                      اسم الكابتن / الحاجز <span className="text-primary">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={bookerName}
+                      onChange={(e) => setBookerName(e.target.value)}
+                      placeholder="مثال: أحمد عبد الرحمن"
+                      className="w-full min-h-[46px] rounded-xl bg-[#242427] border border-white/[0.08] px-4 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-primary transition-all"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-zinc-300 mb-1.5">
+                      رقم الموبايل والواتساب <span className="text-primary">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      dir="ltr"
+                      value={bookerPhone}
+                      onChange={(e) => setBookerPhone(e.target.value)}
+                      placeholder="01012345678"
+                      className="w-full min-h-[46px] rounded-xl bg-[#242427] border border-white/[0.08] px-4 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-primary transition-all text-right"
+                    />
+                    <span className="text-[11px] text-muted-foreground mt-1 block">
+                      هنبعتلك التذكرة وتأكيد الحجز على رقم الواتساب ده مباشرة.
+                    </span>
+                  </div>
+
+                  {phoneError && (
+                    <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-3 flex items-center gap-2 text-xs text-red-400">
+                      <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                      <span>{phoneError}</span>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Anti-Double-Booking Notice */}
               <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-3.5 flex items-start gap-2.5">
@@ -811,45 +925,38 @@ export default function BookingModal({
                 </p>
               </div>
 
-              {!user && (
-                <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <Mail className="h-4 w-4 text-primary shrink-0" strokeWidth={1.5} />
-                    <span className="text-[11px] font-bold text-zinc-200 leading-snug">
-                      سجّل بحساب Google لحفظ تذكرتك واستلام نسخة على Gmail
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => openAuthModal("signin")}
-                    className="min-h-[36px] px-3 rounded-lg bg-primary text-black text-[11px] font-black shrink-0 hover:bg-primary-hover transition-colors"
-                  >
-                    دخول سريع
-                  </button>
-                </div>
-              )}
-
             </div>
 
             {/* 3. Sticky Action Footer (Always pinned at bottom of mobile screen) */}
             <div className="shrink-0 p-4 border-t border-white/[0.08] bg-[#141416] pb-[max(1rem,env(safe-area-inset-bottom))]">
-              <button
-                type="submit"
-                disabled={isPending}
-                className="w-full min-h-[48px] rounded-xl bg-primary text-black font-black text-sm hover:bg-primary-hover active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] disabled:opacity-50"
-              >
-                {isPending ? (
-                  <>
-                    <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                    <span>بنقفل الميعاد باسمك في السيستم...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>احجز الميعاد وابدأ مهلة الـ 8 دقائق</span>
-                    <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
-                  </>
-                )}
-              </button>
+              {!user ? (
+                <button
+                  type="button"
+                  onClick={() => openAuthModal("signin")}
+                  className="w-full min-h-[48px] rounded-xl bg-primary text-black font-black text-sm hover:bg-primary-hover active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)]"
+                >
+                  <LogIn className="h-4 w-4" strokeWidth={2} />
+                  <span>سجّل دخولك لمتابعة الحجز وقفل الميعاد</span>
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="w-full min-h-[48px] rounded-xl bg-primary text-black font-black text-sm hover:bg-primary-hover active:scale-[0.99] transition-all flex items-center justify-center gap-2 shadow-[0_2px_15px_rgba(16,185,129,0.3)] disabled:opacity-50"
+                >
+                  {isPending ? (
+                    <>
+                      <span className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                      <span>بنقفل الميعاد باسمك في السيستم...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>احجز الميعاد وابدأ مهلة الـ 8 دقائق</span>
+                      <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
+                    </>
+                  )}
+                </button>
+              )}
             </div>
 
           </form>
@@ -1154,15 +1261,47 @@ export default function BookingModal({
             {/* Scrollable Pass Body */}
             <div className="flex-1 overflow-y-auto overscroll-contain p-5 sm:p-6 space-y-4 scrollbar-none">
               
-              {/* Success Badge */}
-              <div className="text-center space-y-1">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3.5 py-1 text-xs font-bold text-emerald-400">
-                  <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                  <span>تم استلام الإيصال وحجز الميعاد بنجاح</span>
-                </span>
-                <h3 className="font-display font-black text-lg sm:text-xl text-white">
-                  تذكرتك الرقمية جاهزة للماتش
-                </h3>
+              {/* Verification Status Badge */}
+              <div className="text-center space-y-1.5">
+                {verificationStatus === "confirmed" ? (
+                  <>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/40 px-3.5 py-1 text-xs font-bold text-emerald-400">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                      <span>تم تأكيد واعتماد الحجز رسمياً!</span>
+                    </span>
+                    <h3 className="font-display font-black text-lg sm:text-xl text-white">
+                      تذكرتك الرقمية معتمدة وجاهزة للعب
+                    </h3>
+                  </>
+                ) : verificationStatus === "rejected" ? (
+                  <>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3.5 py-1 text-xs font-bold text-rose-400">
+                      <AlertCircle className="h-3.5 w-3.5" />
+                      <span>تعذر اعتماد إيصال التحويل</span>
+                    </span>
+                    <h3 className="font-display font-black text-lg sm:text-xl text-white">
+                      رفضت إدارة الملعب هذا الإيصال
+                    </h3>
+                    {rejectionReason && (
+                      <p className="text-xs text-rose-300 max-w-sm mx-auto bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">
+                        السبب: {rejectionReason}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3.5 py-1 text-xs font-bold text-amber-300">
+                      <span className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
+                      <span>طلبك في مرحلة التأكيد والمراجعة من إدارة الملعب</span>
+                    </span>
+                    <h3 className="font-display font-black text-lg sm:text-xl text-white">
+                      تم استلام إيصالك وتجميد الميعاد لك
+                    </h3>
+                    <p className="text-xs text-zinc-400 max-w-md mx-auto leading-relaxed">
+                      جاري مراجعة رقم العملية وصورة الإيصال من إدارة المنشأة، وستتحدث التذكرة تلقائياً فور الاعتماد دون الحاجة لتحديث الصفحة.
+                    </p>
+                  </>
+                )}
               </div>
 
               {/* Boarding Pass Container */}
@@ -1181,10 +1320,22 @@ export default function BookingModal({
 
                   <div className="text-left">
                     <span className="text-[10px] text-muted-foreground block">حالة التذكرة</span>
-                    <span className="inline-flex items-center gap-1 text-xs font-bold text-primary">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      <span>مؤكد ومحجوز</span>
-                    </span>
+                    {verificationStatus === "confirmed" ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-primary">
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        <span>مؤكد ومحجوز</span>
+                      </span>
+                    ) : verificationStatus === "rejected" ? (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-rose-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-400" />
+                        <span>مرفوض / ملغي</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-400">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+                        <span>قيد المراجعة والتأكيد</span>
+                      </span>
+                    )}
                   </div>
                 </div>
 
