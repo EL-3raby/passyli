@@ -26,6 +26,8 @@ import {
   Smartphone,
   Banknote,
   Sparkles,
+  SunMedium,
+  Moon,
 } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/dashboard-provider";
 import {
@@ -52,6 +54,7 @@ export default function DashboardAnalyticsPage() {
   const [startDate, setStartDate] = useState<string>(todayStr);
   const [endDate, setEndDate] = useState<string>(todayStr);
   const [dailyViewMode, setDailyViewMode] = useState<"chart" | "table">("chart");
+  const [hourlyViewMode, setHourlyViewMode] = useState<"grid" | "chart">("grid");
 
   const [analytics, setAnalytics] = useState<VenueAnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -601,95 +604,352 @@ export default function DashboardAnalyticsPage() {
         )}
       </div>
 
-      {/* Hourly Demand & Heatmap (Peak vs Dead Hours) */}
-      <div className="p-6 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h3 className="font-display text-base font-black text-white flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" strokeWidth={1.5} />
-              <span>خريطة ساعات الذروة والركود (Hourly Demand Heatmap)</span>
-            </h3>
-            <p className="text-xs text-zinc-400">
-              توزيع الحجوزات على ساعات اليوم لمعرفة أوقات الإقبال والساعات الهادئة
-            </p>
-          </div>
-          <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5 text-zinc-400 font-medium">
-              <span className="h-2 w-2 rounded-full bg-primary" />
-              <span>ساعات الذروة المسائية</span>
-            </span>
-            <span className="flex items-center gap-1.5 text-zinc-400 font-medium">
-              <span className="h-2 w-2 rounded-full bg-zinc-600" />
-              <span>ساعات الصباح الهادئة</span>
-            </span>
-          </div>
-        </div>
+      {/* Hourly Demand & Heatmap (Peak vs Dead Hours - Simplified & Redesigned) */}
+      {(() => {
+        const morningSlots = hourly.filter((h) => !h.is_peak);
+        const eveningSlots = hourly.filter((h) => h.is_peak);
+        const morningMatches = morningSlots.reduce((sum, h) => sum + h.bookings_count, 0);
+        const eveningMatches = eveningSlots.reduce((sum, h) => sum + h.bookings_count, 0);
+        const totalMatches = morningMatches + eveningMatches;
+        const eveningPct = totalMatches > 0 ? Math.round((eveningMatches / totalMatches) * 100) : 0;
+        const morningPct = totalMatches > 0 ? 100 - eveningPct : 0;
+        const sortedByDemand = [...hourly].sort((a, b) => b.bookings_count - a.bookings_count);
+        const topHour = sortedByDemand[0]?.bookings_count > 0 ? sortedByDemand[0] : null;
+        const bookedSlotsCount = hourly.filter((h) => h.bookings_count > 0).length;
+        const vacantSlotsCount = Math.max(0, hourly.length - bookedSlotsCount);
+        const utilizationPct = hourly.length > 0 ? Math.round((bookedSlotsCount / hourly.length) * 100) : 0;
 
-        {/* Bar Chart Visualization */}
-        <div className="pt-4 overflow-x-auto scrollbar-none pb-2">
-          <div className="min-w-[700px] flex items-end gap-2 h-44 border-b border-white/[0.08] pb-2 px-1">
-            {hourly.map((h) => {
-              const heightPercent =
-                h.bookings_count > 0
-                  ? Math.max(
-                      Math.round((h.bookings_count / maxHourlyCount) * 100),
-                      12
-                    )
-                  : 4;
+        return (
+          <div className="p-6 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-5">
+            {/* Header & Controls */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="font-display text-base font-black text-white flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" strokeWidth={1.5} />
+                  <span>توزيع الإقبال وساعات الذروة والركود</span>
+                </h3>
+                <p className="text-xs text-zinc-400">
+                  متابعة أوقات الإقبال العالي مقارنة بالساعات الهادئة لتعديل أسعار التشغيل وزيادة الأرباح
+                </p>
+              </div>
 
-              return (
-                <div
-                  key={h.hour_24}
-                  className="flex-1 flex flex-col items-center justify-end h-full group relative"
+              {/* View Switcher Toggle */}
+              <div className="flex items-center gap-1 p-1 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setHourlyViewMode("grid")}
+                  className={`min-h-[36px] px-3.5 rounded-xl text-xs font-black inline-flex items-center gap-1.5 transition-all ${
+                    hourlyViewMode === "grid"
+                      ? "bg-primary text-black shadow-md shadow-primary/20"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
                 >
-                  {/* Tooltip on Hover */}
-                  <div className="absolute -top-9 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 bg-[#1c1c1f] border border-white/10 px-2 py-1 rounded-lg text-[10px] font-bold text-white whitespace-nowrap shadow-lg">
-                    {h.slot_label}: {h.bookings_count} ماتش
-                  </div>
+                  <Layers className="h-3.5 w-3.5" strokeWidth={2} />
+                  <span>شبكة الساعات (مبسطة)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHourlyViewMode("chart")}
+                  className={`min-h-[36px] px-3.5 rounded-xl text-xs font-black inline-flex items-center gap-1.5 transition-all ${
+                    hourlyViewMode === "chart"
+                      ? "bg-primary text-black shadow-md shadow-primary/20"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  <BarChart3 className="h-3.5 w-3.5" strokeWidth={2} />
+                  <span>مخطط بياني</span>
+                </button>
+              </div>
+            </div>
 
-                  <span className="text-[10px] font-black tabular-nums text-zinc-400 mb-1 group-hover:text-primary transition-colors">
-                    {h.bookings_count > 0 ? h.bookings_count : ""}
+            {/* Top 3 Strategic Stat Cards (Instant Executive Overview) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+              {/* Card 1: Evening Peak */}
+              <div className="p-4 rounded-2xl bg-gradient-to-l from-primary/[0.12] to-[#1c1c1f] border border-primary/25 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Moon className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                    <span>الذروة المسائية (5م — 1ص)</span>
                   </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-primary/20 text-primary border border-primary/30">
+                    {eveningPct}% من الحجوزات
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-white tabular-nums">
+                    {eveningMatches}
+                  </span>
+                  <span className="text-xs text-zinc-400 font-bold">ماتش مسائي</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  الساعة الأنشط:{" "}
+                  <strong className="text-primary tabular-nums">
+                    {topHour && topHour.is_peak ? `${topHour.slot_label} (${topHour.bookings_count} ماتش)` : "مساءً"}
+                  </strong>
+                </p>
+              </div>
 
+              {/* Card 2: Morning Off-peak */}
+              <div className="p-4 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+                    <SunMedium className="h-4 w-4 text-cyan-400" strokeWidth={1.5} />
+                    <span>الفترة الصباحية (9ص — 4م)</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-500/10 text-cyan-300 border border-cyan-500/20">
+                    {morningPct}% من الحجوزات
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-zinc-200 tabular-nums">
+                    {morningMatches}
+                  </span>
+                  <span className="text-xs text-zinc-500 font-bold">ماتش صباحي</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  ساعات هادئة: فرصة لتخفيض السعر لجذب الأكاديميات
+                </p>
+              </div>
+
+              {/* Card 3: Operating Hours Utilization */}
+              <div className="p-4 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-zinc-300 flex items-center gap-1.5">
+                    <Activity className="h-4 w-4 text-amber-400" strokeWidth={1.5} />
+                    <span>جاهزية الساعات اليوم</span>
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-white/[0.05] text-zinc-400 border border-white/10">
+                    {hourly.length} فترات تشغيل
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-black text-emerald-400 tabular-nums">
+                    {bookedSlotsCount}
+                  </span>
+                  <span className="text-xs text-zinc-400 font-bold">
+                    ساعة محجوزة ({vacantSlotsCount} شاغرة)
+                  </span>
+                </div>
+                <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
                   <div
-                    className={`w-full rounded-t-lg transition-all duration-300 ${
-                      h.bookings_count > 0
-                        ? h.is_peak
-                          ? "bg-primary group-hover:bg-primary-hover shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-                          : "bg-cyan-500 group-hover:bg-cyan-400"
-                        : "bg-white/[0.04]"
-                    }`}
-                    style={{ height: `${heightPercent}%` }}
+                    className="h-full rounded-full bg-primary transition-all duration-500"
+                    style={{ width: `${utilizationPct}%` }}
                   />
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            </div>
 
-          {/* Hour Labels */}
-          <div className="min-w-[700px] flex items-center justify-between pt-2 px-1 text-[10px] font-bold text-zinc-500 tabular-nums">
-            {hourly.map((h) => (
-              <span key={h.hour_24} className="flex-1 text-center truncate">
-                {h.slot_label.split(" ")[0]}
-                <span className="text-[8px] text-zinc-600 block">
-                  {h.slot_label.split(" ")[1]}
+            {/* Segmented Period Ratio Ribbon */}
+            <div className="p-3.5 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] space-y-2">
+              <div className="flex items-center justify-between text-xs font-bold">
+                <span className="text-primary flex items-center gap-1.5">
+                  <Moon className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <span>إشغال المساء: {eveningPct}% ({eveningMatches} ماتش)</span>
                 </span>
-              </span>
-            ))}
-          </div>
-        </div>
+                <span className="text-cyan-400 flex items-center gap-1.5">
+                  <SunMedium className="h-3.5 w-3.5" strokeWidth={1.5} />
+                  <span>إشغال الصباح: {morningPct}% ({morningMatches} ماتش)</span>
+                </span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-white/[0.06] overflow-hidden flex">
+                {totalMatches > 0 ? (
+                  <>
+                    <div
+                      className="bg-primary h-full transition-all duration-500"
+                      style={{ width: `${eveningPct}%` }}
+                    />
+                    <div
+                      className="bg-cyan-400 h-full transition-all duration-500"
+                      style={{ width: `${morningPct}%` }}
+                    />
+                  </>
+                ) : (
+                  <div className="w-full h-full bg-white/10" />
+                )}
+              </div>
+            </div>
 
-        {/* Actionable Strategy Tip */}
-        <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-xs text-zinc-400 flex items-start gap-2.5">
-          <Sparkles className="h-4 w-4 text-primary shrink-0 mt-0.5" strokeWidth={1.5} />
-          <span>
-            <strong className="text-zinc-200">نصيحة باصيلي لتطوير الأرباح:</strong>{" "}
-            إذا كانت الساعات الصباحية (11 ص إلى 4 م) تشهد معدل إشغال منخفض، يمكنك
-            تطبيق تخفيض على السعر الصباحي من شاشة «الملاعب والأسعار» لجذب الأكاديميات
-            وحجوزات الطلاب ومضاعفة دخلك في الفترات الميتة.
-          </span>
-        </div>
-      </div>
+            {/* Mode 1: Interactive Heatmap Grid (Clear, intuitive, no empty floating poles) */}
+            {hourlyViewMode === "grid" && (
+              <div className="space-y-4 pt-1">
+                {/* Evening Slots Group */}
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-white flex items-center gap-1.5">
+                      <Moon className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                      <span>فترة المساء والذروة (05:00 م — 01:00 ص)</span>
+                    </span>
+                    <span className="text-[11px] font-bold text-zinc-400">
+                      محجوز: <span className="text-primary font-black tabular-nums">{eveningMatches}</span> من {eveningSlots.length} فترات
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
+                    {eveningSlots.map((h) => {
+                      const isBooked = h.bookings_count > 0;
+                      return (
+                        <div
+                          key={h.hour_24}
+                          className={`p-3 rounded-2xl border text-center transition-all flex flex-col justify-between ${
+                            isBooked
+                              ? "bg-primary/15 border-primary/50 shadow-[0_4px_16px_rgba(16,185,129,0.18)]"
+                              : "bg-[#1c1c1f] border-white/[0.04] opacity-80 hover:opacity-100"
+                          }`}
+                        >
+                          <span className="text-sm font-black text-white tabular-nums block mb-1">
+                            {h.slot_label}
+                          </span>
+                          {isBooked ? (
+                            <span className="inline-flex items-center justify-center gap-1 text-[11px] font-black text-primary bg-primary/20 rounded-xl py-1 px-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                              <span>{h.bookings_count} ماتش</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-zinc-500 font-bold block py-1">
+                              شاغر
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Morning Slots Group */}
+                <div className="space-y-2.5 pt-3 border-t border-white/[0.06]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-white flex items-center gap-1.5">
+                      <SunMedium className="h-3.5 w-3.5 text-cyan-400" strokeWidth={1.5} />
+                      <span>الفترة الصباحية (09:00 ص — 04:00 م)</span>
+                    </span>
+                    <span className="text-[11px] font-bold text-zinc-400">
+                      محجوز: <span className="text-cyan-400 font-black tabular-nums">{morningMatches}</span> من {morningSlots.length} فترات
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-8 gap-2">
+                    {morningSlots.map((h) => {
+                      const isBooked = h.bookings_count > 0;
+                      return (
+                        <div
+                          key={h.hour_24}
+                          className={`p-3 rounded-2xl border text-center transition-all flex flex-col justify-between ${
+                            isBooked
+                              ? "bg-cyan-500/15 border-cyan-500/50 shadow-[0_4px_16px_rgba(6,182,212,0.18)]"
+                              : "bg-[#1c1c1f] border-white/[0.04] opacity-80 hover:opacity-100"
+                          }`}
+                        >
+                          <span className="text-sm font-black text-white tabular-nums block mb-1">
+                            {h.slot_label}
+                          </span>
+                          {isBooked ? (
+                            <span className="inline-flex items-center justify-center gap-1 text-[11px] font-black text-cyan-300 bg-cyan-500/20 rounded-xl py-1 px-2">
+                              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                              <span>{h.bookings_count} ماتش</span>
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-zinc-500 font-bold block py-1">
+                              شاغر
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Mode 2: Polished Bar Chart View */}
+            {hourlyViewMode === "chart" && (
+              <div className="space-y-3 pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between text-[11px] font-bold text-zinc-400 gap-2">
+                  <span>منحنى الساعات الزمني: من الصباح 09:00 ص (يميناً) ⬅ إلى منتصف الليل 01:00 ص (يساراً)</span>
+                  <div className="flex items-center gap-3">
+                    <span className="flex items-center gap-1.5 text-primary">
+                      <span className="h-2 w-2 rounded-full bg-primary" />
+                      <span>ذروة مسائية</span>
+                    </span>
+                    <span className="flex items-center gap-1.5 text-cyan-400">
+                      <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                      <span>صباح هادئ</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto scrollbar-none pb-2">
+                  <div className="min-w-[720px] flex items-end gap-2.5 h-48 border-b border-white/[0.08] pb-2 px-1 relative">
+                    {/* Dotted horizontal guideline */}
+                    <div className="absolute inset-x-0 top-1/2 border-b border-dashed border-white/[0.06] pointer-events-none" />
+
+                    {hourly.map((h) => {
+                      const isBooked = h.bookings_count > 0;
+                      const heightPercent = isBooked
+                        ? Math.max(Math.round((h.bookings_count / maxHourlyCount) * 100), 28)
+                        : 0;
+
+                      return (
+                        <div
+                          key={h.hour_24}
+                          className="flex-1 flex flex-col items-center justify-end h-full group relative"
+                        >
+                          {/* Tooltip on Hover */}
+                          <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 bg-[#1c1c1f] border border-white/10 px-2.5 py-1 rounded-xl text-[10px] font-bold text-white whitespace-nowrap shadow-xl">
+                            {h.slot_label}: {h.bookings_count} ماتش {h.is_peak ? "(ذروة مسائية)" : "(صباحي)"}
+                          </div>
+
+                          {isBooked ? (
+                            <span className="text-[11px] font-black tabular-nums text-white mb-1.5 group-hover:text-primary transition-colors">
+                              {h.bookings_count}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-zinc-600 mb-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              0
+                            </span>
+                          )}
+
+                          {isBooked ? (
+                            <div
+                              className={`w-full rounded-t-xl transition-all duration-300 ${
+                                h.is_peak
+                                  ? "bg-gradient-to-t from-emerald-600 to-emerald-400 group-hover:from-emerald-500 group-hover:to-emerald-300 shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+                                  : "bg-gradient-to-t from-cyan-600 to-cyan-400 group-hover:from-cyan-500 group-hover:to-cyan-300 shadow-[0_0_16px_rgba(6,182,212,0.35)]"
+                              }`}
+                              style={{ height: `${heightPercent}%` }}
+                            />
+                          ) : (
+                            <div className="w-full h-1.5 rounded-full bg-white/[0.06] group-hover:bg-white/[0.15] transition-colors" />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Clean Single-line Time Labels */}
+                  <div className="min-w-[720px] flex items-center justify-between pt-2.5 px-1 text-[10px] font-bold text-zinc-500 tabular-nums">
+                    {hourly.map((h) => (
+                      <span key={h.hour_24} className="flex-1 text-center truncate">
+                        {h.slot_label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actionable Strategy Tip */}
+            <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] text-xs text-zinc-400 flex items-start gap-3">
+              <Sparkles className="h-5 w-5 text-primary shrink-0 mt-0.5" strokeWidth={1.5} />
+              <div className="space-y-1">
+                <span className="font-bold text-zinc-200 block">
+                  نصيحة باصيلي الذكية لتعظيم الأرباح:
+                </span>
+                <p className="leading-relaxed">
+                  الفترة الصباحية تشهد عدداً محدوداً من الحجوزات ({morningMatches} ماتش)؛ يمكنك استغلال {vacantSlotsCount} ساعة شاغرة عبر تفعيل تسعير مخفض من شاشة «الملاعب والأسعار» لجذب الأكاديميات وحجوزات الطلاب ومضاعفة دخلك في الفترات الهادئة.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Two Columns: Channels Split & Payment Reconciliation */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
