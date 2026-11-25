@@ -339,21 +339,17 @@ export default function NotificationsPopover({
           </div>
 
           {/* Footer */}
-          <div className="p-3 border-t border-white/[0.08] bg-[#18181c]/50 flex items-center justify-between text-[11px] text-zinc-500">
-            <span className="flex items-center gap-1.5 font-bold">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-              <span>محدث لحظياً عبر Realtime</span>
-            </span>
-            {onClearAll && notifications.length > 0 && (
+          {onClearAll && notifications.length > 0 && (
+            <div className="p-2.5 border-t border-white/[0.08] bg-[#18181c]/50 flex items-center justify-end text-[11px] text-zinc-400">
               <button
                 type="button"
                 onClick={onClearAll}
-                className="hover:text-zinc-300 transition-colors"
+                className="hover:text-white transition-colors px-2 py-1 rounded-lg hover:bg-white/[0.04]"
               >
                 مسح السجل
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>
