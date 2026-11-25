@@ -20,6 +20,7 @@ import {
   Heart,
   ExternalLink,
   User,
+  Phone,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import CourtsSection from "@/components/courts-section";
@@ -38,9 +39,12 @@ interface NextBookingPreview {
   cash_remaining: number;
   court?: {
     name?: string;
+    sport?: "football" | "padel";
     venue?: {
       name?: string;
       district?: string;
+      address?: string;
+      phone?: string;
     };
   };
 }
@@ -240,60 +244,176 @@ export default function HomeExperience() {
                     </Link>
                   </div>
                 ) : nextBooking ? (
-                  <div className="rounded-2xl bg-[#141418]/90 backdrop-blur-xl border border-primary/30 p-6 space-y-4 shadow-2xl">
-                    <div className="flex items-center justify-between">
-                      <span className="inline-flex items-center gap-2 text-xs font-bold text-primary">
-                        <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                        ماتشك القادم
-                      </span>
-                      <span
-                        className="font-mono text-xs font-bold text-zinc-300 tabular-nums"
-                        dir="ltr"
-                      >
-                        {nextBooking.booking_reference}
-                      </span>
-                    </div>
+                  (() => {
+                    const isToday =
+                      nextBooking.booking_date ===
+                      new Date().toISOString().split("T")[0];
+                    const sportLabel =
+                      nextBooking.court?.sport === "padel"
+                        ? "بادل PAD"
+                        : "خماسي 5V5";
 
-                    <div>
-                      <h2 className="font-display text-lg font-black text-white">
-                        {nextBooking.court?.venue?.name || "ملعب معتمد"} —{" "}
-                        {nextBooking.court?.name}
-                      </h2>
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-300 mt-2">
-                        <span className="flex items-center gap-1.5 tabular-nums">
-                          <Calendar className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                          {formatDateArabic(nextBooking.booking_date)}
-                        </span>
-                        <span className="flex items-center gap-1.5 font-bold text-white tabular-nums">
-                          <Clock className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                          {formatTimeArabic(nextBooking.start_time)}
-                        </span>
+                    return (
+                      <div className="rounded-3xl bg-[#141418]/95 backdrop-blur-2xl border border-primary/30 p-5 sm:p-6 space-y-4 shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_24px_rgba(16,185,129,0.14)] relative overflow-hidden transition-all">
+                        {/* Top Ambient Glow Line */}
+                        <div
+                          className="absolute -top-12 -left-12 w-32 h-32 bg-primary/20 rounded-full blur-2xl pointer-events-none"
+                          aria-hidden="true"
+                        />
+
+                        {/* Top Header Row: Sport Pill + Match Status + Ticket Reference */}
+                        <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] pb-3">
+                          <div className="flex items-center gap-2">
+                            {isToday ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[11px] font-black animate-pulse">
+                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                                <span>ماتش النهاردة!</span>
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/25 text-primary text-[11px] font-bold">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                                <span>ماتشك القادم</span>
+                              </span>
+                            )}
+
+                            <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-white/[0.06] text-zinc-300 border border-white/[0.08]">
+                              {sportLabel}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 bg-black/40 px-2.5 py-1 rounded-lg border border-white/[0.06]">
+                            <Ticket
+                              className="h-3 w-3 text-primary shrink-0"
+                              strokeWidth={1.5}
+                            />
+                            <span
+                              className="font-mono text-xs font-bold text-zinc-300 tabular-nums"
+                              dir="ltr"
+                            >
+                              {nextBooking.booking_reference}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Venue Title & District Location */}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="font-display text-lg sm:text-xl font-black text-white leading-tight">
+                              {nextBooking.court?.venue?.name || "ملعب معتمد"}
+                            </h2>
+                            <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary border border-primary/20">
+                              {nextBooking.court?.name || "ملعب رئيسي"}
+                            </span>
+                          </div>
+                          {(nextBooking.court?.venue?.district ||
+                            nextBooking.court?.venue?.address) && (
+                            <p className="text-xs text-zinc-400 flex items-center gap-1.5 pt-0.5">
+                              <MapPin
+                                className="h-3.5 w-3.5 text-primary shrink-0"
+                                strokeWidth={1.5}
+                              />
+                              <span className="truncate">
+                                {nextBooking.court?.venue?.district || "دمنهور"}
+                                {nextBooking.court?.venue?.address
+                                  ? ` • ${nextBooking.court.venue.address}`
+                                  : ""}
+                              </span>
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Date & Time Grid */}
+                        <div className="grid grid-cols-2 gap-2 rounded-2xl bg-white/[0.03] border border-white/[0.06] p-3 text-xs">
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-xl bg-white/[0.05] flex items-center justify-center text-primary shrink-0">
+                              <Calendar className="h-4 w-4" strokeWidth={1.5} />
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-zinc-500 block">
+                                موعد الماتش
+                              </span>
+                              <span className="font-bold text-white tabular-nums">
+                                {formatDateArabic(nextBooking.booking_date)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                              <Clock className="h-4 w-4" strokeWidth={1.5} />
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-zinc-500 block">
+                                ساعة الصفر
+                              </span>
+                              <span className="font-black text-primary tabular-nums">
+                                {formatTimeArabic(nextBooking.start_time)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Financial Capsule */}
+                        <div className="flex items-center justify-between rounded-xl bg-[#0e0e11] border border-white/[0.06] px-3.5 py-2.5 text-xs">
+                          <div>
+                            <span className="text-[10px] text-zinc-500 block">
+                              حساب الماتش
+                            </span>
+                            <span className="font-bold text-zinc-300">
+                              {nextBooking.cash_remaining === 0
+                                ? "مدفوع بالكامل أونلاين"
+                                : "متبقي كاش على الدكة"}
+                            </span>
+                          </div>
+                          <div className="text-left">
+                            <span className="text-[10px] text-zinc-500 block">
+                              المتبقي للدكة
+                            </span>
+                            <span
+                              className={`font-black tabular-nums text-sm ${
+                                nextBooking.cash_remaining === 0
+                                  ? "text-emerald-400"
+                                  : "text-amber-400"
+                              }`}
+                            >
+                              {nextBooking.cash_remaining === 0
+                                ? "0 ج.م (خالص)"
+                                : `${nextBooking.cash_remaining} ج.م`}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Actions Strip */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <Link
+                            href={`/ticket/${nextBooking.booking_reference}`}
+                            className="flex-1 min-h-[46px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-[0_2px_14px_rgba(16,185,129,0.28)]"
+                          >
+                            <Ticket className="h-4 w-4" strokeWidth={2} />
+                            <span>فتح التذكرة وفاتورة الدخول</span>
+                          </Link>
+
+                          {nextBooking.court?.venue?.phone && (
+                            <a
+                              href={`tel:${nextBooking.court.venue.phone}`}
+                              className="min-h-[46px] min-w-[46px] rounded-xl bg-white/[0.06] hover:bg-white/10 text-white flex items-center justify-center transition-all border border-white/[0.08]"
+                              title="الاتصال بالملعب"
+                              aria-label="الاتصال بالملعب"
+                            >
+                              <Phone className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                            </a>
+                          )}
+
+                          <Link
+                            href="/my-bookings"
+                            className="min-h-[46px] px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/10 text-white font-bold text-xs flex items-center justify-center transition-all border border-white/[0.08]"
+                          >
+                            كل تذاكري
+                          </Link>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-xl bg-[#0e0e11] border border-white/[0.06] px-3.5 py-2.5 text-xs">
-                      <span className="text-zinc-400">المتبقي كاش بالملعب</span>
-                      <span className="font-black text-white tabular-nums">
-                        {nextBooking.cash_remaining} ج.م
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Link
-                        href={`/ticket/${nextBooking.booking_reference}`}
-                        className="flex-1 min-h-[44px] rounded-xl bg-primary hover:bg-primary-hover text-black font-black text-xs flex items-center justify-center gap-1.5 transition-all"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" strokeWidth={2} />
-                        <span>فتح التذكرة والفاتورة</span>
-                      </Link>
-                      <Link
-                        href="/my-bookings"
-                        className="min-h-[44px] px-4 rounded-xl bg-white/[0.06] hover:bg-white/10 text-white font-bold text-xs flex items-center justify-center transition-all"
-                      >
-                        كل التذاكر
-                      </Link>
-                    </div>
-                  </div>
+                    );
+                  })()
                 ) : (
                   <div className="rounded-2xl bg-[#141418]/90 backdrop-blur-xl border border-white/10 p-6 space-y-4 shadow-2xl">
                     <div className="flex items-center justify-between">
