@@ -23,6 +23,7 @@ import {
   LogOut,
   ExternalLink,
   Coins,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -45,6 +46,10 @@ const ROUTE_TITLES: Record<string, { title: string; subtitle: string }> = {
   "/dashboard/receipts": {
     title: "مراجعة الإيصالات",
     subtitle: "التحقق من إيصالات إنستا باي وفودافون كاش",
+  },
+  "/dashboard/analytics": {
+    title: "التقارير والإحصائيات",
+    subtitle: "تحليل الأداء المالي وإشغال الملاعب وساعات الذروة",
   },
   "/dashboard/courts": {
     title: "الملاعب والأسعار",
@@ -104,6 +109,13 @@ export default function DashboardShell({
       icon: FileCheck2,
       group: "ops",
       badgeCount: pendingCount,
+    },
+    {
+      label: "التقارير والإحصائيات",
+      shortLabel: "الإحصائيات",
+      href: "/dashboard/analytics",
+      icon: BarChart3,
+      group: "manage",
     },
     {
       label: "الملاعب والأسعار",

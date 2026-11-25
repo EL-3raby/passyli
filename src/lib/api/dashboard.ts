@@ -819,3 +819,150 @@ export async function getMyLatestPartnerApplication(
   if (error || !data) return null;
   return data as unknown as MyPartnerApplication;
 }
+
+export interface VenueAnalyticsSummary {
+  total_bookings: number;
+  completed_bookings: number;
+  confirmed_bookings: number;
+  cancelled_bookings: number;
+  pending_payment_bookings: number;
+  gross_revenue: number;
+  collected_revenue: number;
+  pending_cash: number;
+  total_booked_hours: number;
+  occupancy_rate: number;
+  avg_booking_price: number;
+}
+
+export interface VenueCourtAnalyticsItem {
+  court_id: string;
+  court_name: string;
+  sport: "football" | "padel";
+  surface: string;
+  price_morning: number;
+  price_evening: number;
+  is_active: boolean;
+  total_bookings: number;
+  gross_revenue: number;
+  collected_revenue: number;
+  total_hours: number;
+  occupancy_rate: number;
+  is_star: boolean;
+}
+
+export interface VenueDailyTimelineItem {
+  date: string;
+  bookings_count: number;
+  gross_revenue: number;
+  collected_revenue: number;
+  pending_cash: number;
+}
+
+export interface VenueHourlyDistributionItem {
+  hour_24: number;
+  slot_label: string;
+  is_peak: boolean;
+  bookings_count: number;
+}
+
+export interface VenueChannelSplit {
+  online_count: number;
+  online_revenue: number;
+  walkin_count: number;
+  walkin_revenue: number;
+}
+
+export interface VenuePaymentMethodSplit {
+  instapay_count: number;
+  instapay_amount: number;
+  vodafone_count: number;
+  vodafone_amount: number;
+  cash_on_pitch_amount: number;
+}
+
+export interface VenueRatingsAnalytics {
+  reviews_count: number;
+  avg_overall: number;
+  avg_turf: number;
+  avg_lighting: number;
+  avg_service: number;
+}
+
+export interface VenueAnalyticsData {
+  success: boolean;
+  error?: string;
+  venue_id: string;
+  start_date: string;
+  end_date: string;
+  summary: VenueAnalyticsSummary;
+  courts_breakdown: VenueCourtAnalyticsItem[];
+  daily_timeline: VenueDailyTimelineItem[];
+  hourly_distribution: VenueHourlyDistributionItem[];
+  channel_split: VenueChannelSplit;
+  payment_methods: VenuePaymentMethodSplit;
+  ratings_summary: VenueRatingsAnalytics;
+}
+
+/**
+ * Fetch venue analytics for a given date range (Owner & Admin only)
+ */
+export async function getVenueAnalytics(
+  venueId: string,
+  startDate: string,
+  endDate: string
+): Promise<VenueAnalyticsData> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("get_venue_analytics", {
+    p_venue_id: venueId,
+    p_start_date: startDate,
+    p_end_date: endDate,
+  });
+
+  if (error) {
+    return {
+      success: false,
+      error: error.message || "تعذر تحميل إحصائيات المنشأة",
+      venue_id: venueId,
+      start_date: startDate,
+      end_date: endDate,
+      summary: {
+        total_bookings: 0,
+        completed_bookings: 0,
+        confirmed_bookings: 0,
+        cancelled_bookings: 0,
+        pending_payment_bookings: 0,
+        gross_revenue: 0,
+        collected_revenue: 0,
+        pending_cash: 0,
+        total_booked_hours: 0,
+        occupancy_rate: 0,
+        avg_booking_price: 0,
+      },
+      courts_breakdown: [],
+      daily_timeline: [],
+      hourly_distribution: [],
+      channel_split: {
+        online_count: 0,
+        online_revenue: 0,
+        walkin_count: 0,
+        walkin_revenue: 0,
+      },
+      payment_methods: {
+        instapay_count: 0,
+        instapay_amount: 0,
+        vodafone_count: 0,
+        vodafone_amount: 0,
+        cash_on_pitch_amount: 0,
+      },
+      ratings_summary: {
+        reviews_count: 0,
+        avg_overall: 0,
+        avg_turf: 0,
+        avg_lighting: 0,
+        avg_service: 0,
+      },
+    };
+  }
+
+  return data as unknown as VenueAnalyticsData;
+}

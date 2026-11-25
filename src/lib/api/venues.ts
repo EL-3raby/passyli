@@ -86,6 +86,26 @@ export function calculateDistanceKm(
   return Math.round(R * c * 10) / 10;
 }
 
+/**
+ * Generates full daily operating time slots (09:00 AM to 01:00 AM next day)
+ * formatted in Arabic 12-hour notation matching slotLabelToDbTime / isSlotMatchingTime.
+ */
+export function generateDailySlots(slotDurationMinutes = 60): string[] {
+  const duration = slotDurationMinutes > 0 ? slotDurationMinutes : 60;
+  const slots: string[] = [];
+
+  for (let mins = 9 * 60; mins < 26 * 60; mins += duration) {
+    const h24 = Math.floor(mins / 60) % 24;
+    const m = mins % 60;
+    const period = h24 >= 12 ? "م" : "ص";
+    let h12 = h24 % 12;
+    if (h12 === 0) h12 = 12;
+    slots.push(`${String(h12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${period}`);
+  }
+
+  return slots;
+}
+
 // Fetch live active venues from Supabase (never returns mock/seed fallback data)
 export async function getVenues(
   userLat?: number,
@@ -105,15 +125,6 @@ export async function getVenues(
   if (!venues || venues.length === 0) {
     return [];
   }
-
-  const defaultPadelSlots = ["06:00 م", "07:30 م", "09:00 م", "10:30 م"];
-  const defaultFootballSlots = [
-    "07:00 م",
-    "08:00 م",
-    "09:00 م",
-    "10:00 م",
-    "11:00 م",
-  ];
 
   const rows = venues as unknown as DbVenueRow[];
   const enriched: VenueWithCourts[] = rows.map((v) => ({
@@ -148,11 +159,11 @@ export async function getVenues(
         peak_hour_start: c.peak_hour_start,
         is_active: c.is_active,
         available_slots:
-          Array.isArray(c.available_slots) && c.available_slots.length > 0
+          Array.isArray(c.available_slots) && c.available_slots.length > 5
             ? c.available_slots
-            : c.sport === "padel"
-            ? defaultPadelSlots
-            : defaultFootballSlots,
+            : generateDailySlots(
+                c.slot_duration_minutes || (c.sport === "padel" ? 90 : 60)
+              ),
       })),
     distance_km:
       userLat && userLon

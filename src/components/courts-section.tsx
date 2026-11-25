@@ -90,6 +90,8 @@ export default function CourtsSection({
   const [isLocating, setIsLocating] = useState(false);
   const [locationStatus, setLocationStatus] = useState<"idle" | "located" | "denied">("idle");
   const [selectedSlots, setSelectedSlots] = useState<{ [courtId: string]: string }>({});
+  const [selectedCourts, setSelectedCourts] = useState<{ [venueId: string]: string }>({});
+  const [expandedSlotsVenues, setExpandedSlotsVenues] = useState<{ [venueId: string]: boolean }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [, startTransition] = useTransition();
@@ -535,8 +537,29 @@ export default function CourtsSection({
           <div>
             <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 overflow-x-auto md:overflow-visible pb-4 md:pb-0 snap-x snap-mandatory md:snap-none scrollbar-none gap-4 md:gap-6 -mx-4 px-4 sm:mx-0 sm:px-0">
               {filteredVenues.map((venue) => {
-                const primaryCourt = venue.courts[0];
-                const selectedSlot = primaryCourt ? selectedSlots[primaryCourt.id] : "";
+                const filteredCourts =
+                  selectedSport === "all"
+                    ? venue.courts
+                    : venue.courts.filter((c) => c.sport === selectedSport);
+                const selectableCourts =
+                  filteredCourts.length > 0 ? filteredCourts : venue.courts;
+                const activeCourt =
+                  selectableCourts.find((c) => c.id === selectedCourts[venue.id]) ||
+                  selectableCourts[0];
+                const selectedSlot = activeCourt ? selectedSlots[activeCourt.id] : "";
+                const isSlotsExpanded = Boolean(expandedSlotsVenues[venue.id]);
+
+                const displayedPrice = (() => {
+                  if (!activeCourt) return 200;
+                  if (!selectedSlot) return activeCourt.price_evening || 200;
+                  const hourNum = parseInt(slotLabelToDbTime(selectedSlot).split(":")[0], 10);
+                  const peakHour = parseInt(
+                    (activeCourt.peak_hour_start || "17:00").split(":")[0],
+                    10
+                  );
+                  const isEvening = hourNum >= peakHour || hourNum < 6;
+                  return isEvening ? activeCourt.price_evening : activeCourt.price_morning;
+                })();
 
                 return (
                   <div
@@ -572,9 +595,9 @@ export default function CourtsSection({
                       </div>
 
                       <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-black text-black">
-                        {primaryCourt?.sport === "football"
+                        {activeCourt?.sport === "football"
                           ? "خماسي ترتان"
-                          : primaryCourt?.surface === "covered_padel"
+                          : activeCourt?.surface === "covered_padel"
                           ? "بادل مغطى"
                           : "بادل بانوراما"}
                       </div>
@@ -599,32 +622,85 @@ export default function CourtsSection({
                         </div>
                       )}
 
-                      <p className="text-xs text-muted-foreground mb-4">
+                      <p className="text-xs text-muted-foreground mb-3">
                         {venue.address}
                       </p>
 
+                      {/* Multi-Court Switcher */}
+                      {selectableCourts.length > 1 && (
+                        <div className="mb-3">
+                          <span className="text-[11px] font-bold text-zinc-400 block mb-1.5">
+                            اختر الملعب ({selectableCourts.length} ملاعب):
+                          </span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {selectableCourts.map((court) => {
+                              const isCourtActive = court.id === activeCourt?.id;
+                              return (
+                                <button
+                                  key={court.id}
+                                  type="button"
+                                  onClick={() =>
+                                    setSelectedCourts((prev) => ({
+                                      ...prev,
+                                      [venue.id]: court.id,
+                                    }))
+                                  }
+                                  className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                                    isCourtActive
+                                      ? "bg-primary text-black border-primary shadow-[0_2px_10px_rgba(16,185,129,0.25)]"
+                                      : "bg-[#1c1c1f] text-zinc-300 border-white/[0.06] hover:border-white/15 hover:text-white"
+                                  }`}
+                                >
+                                  {court.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Interactive Available Slots Box */}
-                      {primaryCourt && (
+                      {activeCourt && (
                         <div className="rounded-xl bg-[#1c1c1f] border border-white/[0.04] p-3 mb-2">
-                          <div className="flex items-center justify-between text-xs mb-2">
+                          <div className="flex items-center justify-between text-xs mb-2 gap-2">
                             <span className="text-muted-foreground flex items-center gap-1">
                               <Clock className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                              <span>مواعيدك {selectedDay.label}:</span>
+                              <span>مواعيد {selectedDay.label}:</span>
                             </span>
-                            <span className="font-bold text-primary flex items-center gap-1">
-                              <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                              {(primaryCourt.available_slots || []).filter((s) => !isSlotLocked(primaryCourt.id, s)).length} فترات متاحة
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-primary flex items-center gap-1 tabular-nums">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                {(activeCourt.available_slots || []).filter((s) => !isSlotLocked(activeCourt.id, s)).length} فترة متاحة
+                              </span>
+                              {(activeCourt.available_slots || []).length > 6 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setExpandedSlotsVenues((prev) => ({
+                                      ...prev,
+                                      [venue.id]: !prev[venue.id],
+                                    }))
+                                  }
+                                  className="text-[11px] font-bold text-zinc-300 hover:text-primary underline underline-offset-2"
+                                >
+                                  {isSlotsExpanded ? "طي" : "كل الفترات"}
+                                </button>
+                              )}
+                            </div>
                           </div>
 
                           {/* Time Slots Button Grid */}
-                          <div className="flex flex-wrap gap-2">
-                            {(primaryCourt.available_slots || []).map((slot, index) => {
+                          <div
+                            className={`grid grid-cols-3 gap-1.5 ${
+                              isSlotsExpanded ? "" : "max-h-[168px] overflow-y-auto pr-0.5"
+                            }`}
+                          >
+                            {(activeCourt.available_slots || []).map((slot, index) => {
                               const isSelected = selectedSlot === slot;
-                              const locked = isSlotLocked(primaryCourt.id, slot);
+                              const locked = isSlotLocked(activeCourt.id, slot);
 
                               if (locked) {
-                                const watchKey = `${primaryCourt.id}|${selectedDay.dateStr}|${slot}`;
+                                const watchKey = `${activeCourt.id}|${selectedDay.dateStr}|${slot}`;
                                 const isWatched = Boolean(watchedSlots[watchKey]);
                                 return (
                                   <button
@@ -633,11 +709,11 @@ export default function CourtsSection({
                                     onClick={() =>
                                       void handleWatchSlot(
                                         venue.id,
-                                        primaryCourt.id,
+                                        activeCourt.id,
                                         slot
                                       )
                                     }
-                                    className={`min-h-[38px] rounded-lg px-2.5 py-1 text-xs font-bold tabular-nums transition-all border flex items-center gap-1.5 ${
+                                    className={`min-h-[38px] rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums transition-all border flex items-center justify-center gap-1 ${
                                       isWatched
                                         ? "bg-amber-500/15 border-amber-500/35 text-amber-300"
                                         : "bg-white/[0.03] hover:bg-white/[0.08] text-zinc-400 hover:text-amber-300 border-white/[0.06]"
@@ -649,14 +725,11 @@ export default function CourtsSection({
                                     }
                                   >
                                     {isWatched ? (
-                                      <BellRing className="h-3 w-3 text-amber-400" strokeWidth={1.5} />
+                                      <BellRing className="h-3 w-3 text-amber-400 shrink-0" strokeWidth={1.5} />
                                     ) : (
-                                      <Lock className="h-3 w-3 text-zinc-500" strokeWidth={1.5} />
+                                      <Lock className="h-3 w-3 text-zinc-500 shrink-0" strokeWidth={1.5} />
                                     )}
                                     <span className="line-through opacity-75">{slot}</span>
-                                    <span className="text-[10px]">
-                                      {isWatched ? "مراقب" : "نبّهني"}
-                                    </span>
                                   </button>
                                 );
                               }
@@ -665,10 +738,10 @@ export default function CourtsSection({
                                 <button
                                   key={index}
                                   type="button"
-                                  onClick={() => handleSlotSelect(primaryCourt.id, slot)}
-                                  className={`min-h-[38px] rounded-lg px-2.5 py-1 text-xs font-bold tabular-nums transition-all ${
+                                  onClick={() => handleSlotSelect(activeCourt.id, slot)}
+                                  className={`min-h-[38px] rounded-lg px-2 py-1 text-xs font-bold tabular-nums transition-all ${
                                     isSelected
-                                      ? "bg-primary text-black font-extrabold shadow-[0_2px_10px_rgba(16,185,129,0.35)] scale-105"
+                                      ? "bg-primary text-black font-extrabold shadow-[0_2px_10px_rgba(16,185,129,0.35)]"
                                       : "bg-[#2e2e33] text-primary hover:bg-[#383840]"
                                   }`}
                                 >
@@ -681,7 +754,7 @@ export default function CourtsSection({
                           {selectedSlot && (
                             <div className="mt-2.5 pt-2 border-t border-white/[0.06] flex flex-col gap-1 text-[11px]">
                               <div className="flex items-center justify-between text-primary font-bold">
-                                <span>الميعاد: {selectedSlot} ({selectedDay.label})</span>
+                                <span>{activeCourt.name} — {selectedSlot} ({selectedDay.label})</span>
                                 <span className="text-white/70 font-normal">عربون {venue.deposit_amount || 100} ج.م</span>
                               </div>
                               <span className="text-zinc-400 text-[10px]">
@@ -698,10 +771,10 @@ export default function CourtsSection({
                   <div className="px-5 py-4 flex items-center justify-between border-t border-white/[0.06] mt-auto bg-[#1e1e21]">
                     <div>
                       <span className="text-xs text-muted-foreground block mb-0.5">
-                        سعر الساعة
+                        {selectedSlot ? "سعر الساعة المختارة" : "سعر الساعة"}
                       </span>
                       <span className="font-extrabold text-white text-lg tabular-nums">
-                        {primaryCourt?.price_evening || 200}{" "}
+                        {displayedPrice}{" "}
                         <span className="text-xs font-medium text-muted-foreground">ج.م</span>
                       </span>
                     </div>
@@ -709,12 +782,12 @@ export default function CourtsSection({
                     <button
                       type="button"
                       onClick={() => {
-                        const available = (primaryCourt?.available_slots || []).filter((s) => !isSlotLocked(primaryCourt.id, s));
-                        const slotToBook = selectedSlot && !isSlotLocked(primaryCourt.id, selectedSlot) ? selectedSlot : (available[0] || "08:00 م");
-                        if (primaryCourt) {
+                        const available = (activeCourt?.available_slots || []).filter((s) => !isSlotLocked(activeCourt.id, s));
+                        const slotToBook = selectedSlot && !isSlotLocked(activeCourt.id, selectedSlot) ? selectedSlot : (available[0] || "08:00 م");
+                        if (activeCourt) {
                           setBookingModalData({
                             venue,
-                            court: primaryCourt,
+                            court: activeCourt,
                             bookingDate: selectedDay.dateStr,
                             displayDate: selectedDay.displayDate,
                             dayLabel: selectedDay.label,

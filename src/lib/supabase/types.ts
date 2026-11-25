@@ -934,6 +934,14 @@ export type Database = {
         }
         Returns: Json
       }
+      get_venue_analytics: {
+        Args: {
+          p_venue_id: string
+          p_start_date: string
+          p_end_date: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       booking_status:
