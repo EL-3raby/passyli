@@ -267,6 +267,81 @@ export async function getVenueDateBookings(
 }
 
 /**
+ * Fetch all upcoming active bookings for a venue across the next N days
+ */
+export async function getVenueUpcomingBookings(
+  venueId: string,
+  startDate?: string,
+  daysAhead: number = 14
+): Promise<DashboardBooking[]> {
+  const supabase = createClient();
+
+  const { data: courts, error: courtErr } = await supabase
+    .from("courts")
+    .select("id")
+    .eq("venue_id", venueId);
+
+  if (courtErr || !courts || courts.length === 0) {
+    return [];
+  }
+
+  const courtIds = courts.map((c) => c.id);
+
+  const start = startDate || new Date().toISOString().split("T")[0];
+  const endDateObj = new Date(start + "T00:00:00");
+  endDateObj.setDate(endDateObj.getDate() + daysAhead);
+  const end = endDateObj.toISOString().split("T")[0];
+
+  const { data: bookings, error: bookingErr } = await supabase
+    .from("bookings")
+    .select(`
+      id,
+      booking_reference,
+      court_id,
+      booker_name,
+      booker_phone,
+      booking_date,
+      start_time,
+      end_time,
+      total_price,
+      deposit_required,
+      deposit_paid,
+      cash_remaining,
+      status,
+      locked_until,
+      is_walkin,
+      cancellation_reason,
+      created_at,
+      court:courts (
+        id,
+        venue_id,
+        name,
+        sport,
+        surface,
+        slot_duration_minutes,
+        price_morning,
+        price_evening,
+        peak_hour_start,
+        buffer_minutes,
+        is_active
+      )
+    `)
+    .in("court_id", courtIds)
+    .gte("booking_date", start)
+    .lte("booking_date", end)
+    .neq("status", "cancelled")
+    .order("booking_date", { ascending: true })
+    .order("start_time", { ascending: true });
+
+  if (bookingErr) {
+    console.error("Error fetching venue upcoming bookings:", bookingErr);
+    return [];
+  }
+
+  return (bookings as unknown as DashboardBooking[]) || [];
+}
+
+/**
  * Fetch all pending receipts for audit (status = 'submitted')
  */
 export async function getPendingReceipts(venueId?: string): Promise<DashboardReceipt[]> {

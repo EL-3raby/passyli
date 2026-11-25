@@ -30,12 +30,14 @@ import {
 } from "lucide-react";
 import {
   getVenueDateBookings,
+  getVenueUpcomingBookings,
   completeBookingAttendance,
   type DashboardCourt,
   type DashboardBooking,
 } from "@/lib/api/dashboard";
 import { useDashboard } from "@/components/dashboard/dashboard-provider";
 import CancelBookingModal from "@/components/dashboard/cancel-booking-modal";
+import UpcomingBookingsModal from "@/components/dashboard/upcoming-bookings-modal";
 
 export default function DashboardPage() {
   const {
@@ -59,6 +61,8 @@ export default function DashboardPage() {
 
   const [selectedCourtId, setSelectedCourtId] = useState<string>("all");
   const [bookings, setBookings] = useState<DashboardBooking[]>([]);
+  const [upcomingBookings, setUpcomingBookings] = useState<DashboardBooking[]>([]);
+  const [isUpcomingModalOpen, setIsUpcomingModalOpen] = useState<boolean>(false);
   const [isLoadingBookings, setIsLoadingBookings] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [bookingsError, setBookingsError] = useState<string | null>(null);
@@ -100,6 +104,94 @@ export default function DashboardPage() {
   useEffect(() => {
     void loadBookings();
   }, [loadBookings, realtimeTick]);
+
+  // Deep-linking: support ?date=YYYY-MM-DD from notifications or external links
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const checkDateParam = () => {
+      const params = new URLSearchParams(window.location.search);
+      const dateParam = params.get("date");
+      if (dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+        setSelectedDate(dateParam);
+      }
+    };
+    checkDateParam();
+    window.addEventListener("popstate", checkDateParam);
+    return () => window.removeEventListener("popstate", checkDateParam);
+  }, [setSelectedDate]);
+
+  const loadUpcomingBookings = useCallback(async () => {
+    if (!selectedVenue?.id) {
+      setUpcomingBookings([]);
+      return;
+    }
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const data = await getVenueUpcomingBookings(selectedVenue.id, today, 14);
+      setUpcomingBookings(data);
+    } catch {
+      // Non-fatal
+    }
+  }, [selectedVenue?.id]);
+
+  useEffect(() => {
+    void loadUpcomingBookings();
+  }, [loadUpcomingBookings, realtimeTick]);
+
+  const bookingCountsByDate = useMemo(() => {
+    const counts: { [dateStr: string]: number } = {};
+    upcomingBookings.forEach((b) => {
+      if (b.status === "confirmed" || b.status === "completed" || b.status === "pending_payment") {
+        counts[b.booking_date] = (counts[b.booking_date] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [upcomingBookings]);
+
+  const futureBookingsCount = useMemo(() => {
+    const today = new Date().toISOString().split("T")[0];
+    return upcomingBookings.filter(
+      (b) =>
+        b.booking_date > today &&
+        (b.status === "confirmed" || b.status === "completed" || b.status === "pending_payment")
+    ).length;
+  }, [upcomingBookings]);
+
+  const horizonDays = useMemo(() => {
+    const days: {
+      dateStr: string;
+      label: string;
+      dayName: string;
+      dayNum: number;
+      monthName: string;
+      isToday: boolean;
+    }[] = [];
+    const now = new Date();
+    const arabicDays = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+    const arabicMonths = [
+      "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+      "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+    ];
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(now);
+      d.setDate(d.getDate() + i);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      const dateStr = `${year}-${month}-${day}`;
+      const isDayToday = i === 0;
+      const label = isDayToday ? "النهاردة" : i === 1 ? "بكرة" : arabicDays[d.getDay()];
+      days.push({
+        dateStr,
+        label,
+        dayName: arabicDays[d.getDay()],
+        dayNum: d.getDate(),
+        monthName: arabicMonths[d.getMonth()],
+        isToday: isDayToday,
+      });
+    }
+    return days;
+  }, []);
 
   const visibleCourts =
     selectedCourtId === "all"
@@ -401,6 +493,81 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Smart Calendar Strip: 14 Days Horizon with Live Booking Dots */}
+      <div className="p-3 sm:p-4 rounded-2xl bg-[#141418] border border-white/[0.08] space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-primary" />
+            <span className="text-xs font-bold text-white">
+              جدول الأيام القادمة بالمنشأة (محدث لحظياً)
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsUpcomingModalOpen(true)}
+            className="text-xs font-bold text-zinc-400 hover:text-primary transition-all flex items-center gap-1.5"
+          >
+            <span>استعراض كل الحجوزات القادمة</span>
+            {futureBookingsCount > 0 && (
+              <span className="px-1.5 py-0.2 rounded-full bg-primary text-black font-black text-[10px] tabular-nums">
+                {futureBookingsCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* 14 Days Scrollable Track */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-thin">
+          {horizonDays.map((day) => {
+            const isSelected = selectedDate === day.dateStr;
+            const count = bookingCountsByDate[day.dateStr] || 0;
+
+            return (
+              <button
+                key={day.dateStr}
+                type="button"
+                onClick={() => setSelectedDate(day.dateStr)}
+                className={`min-w-[86px] p-2 sm:p-2.5 rounded-xl border text-center transition-all shrink-0 flex flex-col items-center justify-between min-h-[68px] ${
+                  isSelected
+                    ? "bg-primary text-black border-primary shadow-sm font-black ring-2 ring-primary/40"
+                    : "bg-[#0e0e11] hover:bg-white/[0.05] border-white/[0.08] text-zinc-300 hover:text-white font-bold"
+                }`}
+              >
+                <div className="w-full flex items-center justify-between text-[10px] opacity-80 leading-tight">
+                  <span>{day.label}</span>
+                  {day.isToday && (
+                    <span className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-black" : "bg-primary"}`} />
+                  )}
+                </div>
+
+                <span className="text-sm font-black tabular-nums my-0.5">
+                  {day.dayNum}
+                </span>
+
+                <div className="w-full">
+                  {count > 0 ? (
+                    <span
+                      className={`block w-full py-0.5 rounded text-[10px] font-black tabular-nums ${
+                        isSelected
+                          ? "bg-black text-primary"
+                          : "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                      }`}
+                    >
+                      {count} {count === 1 ? "ماتش" : count === 2 ? "ماتشين" : "ماتشات"}
+                    </span>
+                  ) : (
+                    <span className="block text-[10px] text-zinc-600 font-bold">
+                      فاضي
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Operations Toolbar: Date Picker + Quick Ops Actions */}
       <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-4 rounded-2xl bg-[#141418] border border-white/[0.08]">
         {/* Interactive Date Bar */}
@@ -466,6 +633,21 @@ export default function DashboardPage() {
 
         {/* Clear Labelled Operations Actions */}
         <div className="flex flex-wrap items-center gap-2">
+          {/* Upcoming Future Bookings Button */}
+          <button
+            type="button"
+            onClick={() => setIsUpcomingModalOpen(true)}
+            className="min-h-[44px] px-4 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/25 text-xs font-bold text-primary inline-flex items-center gap-2 transition-all relative"
+          >
+            <CalendarIcon className="h-4 w-4" strokeWidth={1.5} />
+            <span>الحجوزات القادمة</span>
+            {futureBookingsCount > 0 && (
+              <span className="h-5 px-1.5 rounded-full bg-primary text-black font-black text-[10px] tabular-nums inline-flex items-center justify-center">
+                {futureBookingsCount}
+              </span>
+            )}
+          </button>
+
           <button
             type="button"
             onClick={() =>
@@ -1360,6 +1542,14 @@ export default function DashboardPage() {
         booking={cancellingBooking}
         onClose={() => setCancellingBooking(null)}
         onCancelSuccess={triggerRealtimeRefresh}
+      />
+
+      <UpcomingBookingsModal
+        isOpen={isUpcomingModalOpen}
+        onClose={() => setIsUpcomingModalOpen(false)}
+        venueName={selectedVenue?.name}
+        bookings={upcomingBookings}
+        onSelectBookingDate={(d) => setSelectedDate(d)}
       />
     </div>
   );

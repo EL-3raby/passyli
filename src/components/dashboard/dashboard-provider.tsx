@@ -199,8 +199,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
                 } ج.م يوم ${b.booking_date || ""}`,
                 timestamp: new Date().toISOString(),
                 isRead: false,
-                actionLabel: "عرض الجدول ⬅",
-                actionHref: "/dashboard",
+                actionLabel: "عرض يوم الماتش ⬅",
+                actionHref: b.booking_date ? `/dashboard?date=${b.booking_date}` : "/dashboard",
                 priority: "normal",
               },
               ...prev.slice(0, 15),
@@ -210,7 +210,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             payload.eventType === "UPDATE" &&
             (payload.new as { status?: string })?.status === "cancelled"
           ) {
-            const b = payload.new as { id?: string; booker_name?: string };
+            const b = payload.new as { id?: string; booker_name?: string; booking_date?: string };
             const id = `cancel-${b.id || Date.now()}`;
             setRealtimeAlerts((prev) => [
               {
@@ -222,8 +222,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
                 } لغى حجزه، والساعة بقت فاضية ومتاحة للحجز تاني.`,
                 timestamp: new Date().toISOString(),
                 isRead: false,
-                actionLabel: "عرض الجدول ⬅",
-                actionHref: "/dashboard",
+                actionLabel: "عرض يوم الماتش ⬅",
+                actionHref: b.booking_date ? `/dashboard?date=${b.booking_date}` : "/dashboard",
                 priority: "urgent",
               },
               ...prev.slice(0, 15),
