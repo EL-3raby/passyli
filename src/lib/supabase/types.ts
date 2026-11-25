@@ -939,6 +939,7 @@ export type Database = {
           p_venue_id: string
           p_start_date: string
           p_end_date: string
+          p_court_id?: string | null
         }
         Returns: Json
       }

@@ -848,6 +848,7 @@ export interface VenueCourtAnalyticsItem {
   total_hours: number;
   occupancy_rate: number;
   is_star: boolean;
+  is_selected?: boolean;
 }
 
 export interface VenueDailyTimelineItem {
@@ -892,6 +893,7 @@ export interface VenueAnalyticsData {
   success: boolean;
   error?: string;
   venue_id: string;
+  court_id?: string | null;
   start_date: string;
   end_date: string;
   summary: VenueAnalyticsSummary;
@@ -909,13 +911,15 @@ export interface VenueAnalyticsData {
 export async function getVenueAnalytics(
   venueId: string,
   startDate: string,
-  endDate: string
+  endDate: string,
+  courtId?: string | null
 ): Promise<VenueAnalyticsData> {
   const supabase = createClient();
   const { data, error } = await supabase.rpc("get_venue_analytics", {
     p_venue_id: venueId,
     p_start_date: startDate,
     p_end_date: endDate,
+    p_court_id: courtId || null,
   });
 
   if (error) {
@@ -923,6 +927,7 @@ export async function getVenueAnalytics(
       success: false,
       error: error.message || "تعذر تحميل إحصائيات المنشأة",
       venue_id: venueId,
+      court_id: courtId || null,
       start_date: startDate,
       end_date: endDate,
       summary: {

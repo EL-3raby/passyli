@@ -28,6 +28,8 @@ import {
   Sparkles,
   SunMedium,
   Moon,
+  Filter,
+  X,
 } from "lucide-react";
 import { useDashboard } from "@/components/dashboard/dashboard-provider";
 import {
@@ -41,6 +43,7 @@ type DatePreset = "today" | "week" | "month" | "custom";
 export default function DashboardAnalyticsPage() {
   const {
     selectedVenue,
+    allCourts,
     isLoadingVenues,
     venuesError,
     isStaffMode,
@@ -53,6 +56,7 @@ export default function DashboardAnalyticsPage() {
   const [preset, setPreset] = useState<DatePreset>("today");
   const [startDate, setStartDate] = useState<string>(todayStr);
   const [endDate, setEndDate] = useState<string>(todayStr);
+  const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
   const [dailyViewMode, setDailyViewMode] = useState<"chart" | "table">("chart");
   const [hourlyViewMode, setHourlyViewMode] = useState<"grid" | "chart">("grid");
 
@@ -82,8 +86,13 @@ export default function DashboardAnalyticsPage() {
     }
   };
 
+  // Reset court filter when venue changes
+  useEffect(() => {
+    setSelectedCourtId(null);
+  }, [selectedVenue?.id]);
+
   const loadData = useCallback(
-    async (showIndicator = false) => {
+    async (showIndicator = false, courtIdOverride?: string | null) => {
       if (!selectedVenue?.id) {
         setAnalytics(null);
         setIsLoading(false);
@@ -92,10 +101,13 @@ export default function DashboardAnalyticsPage() {
       try {
         setError(null);
         if (showIndicator) setIsRefreshing(true);
+        const targetCourtId =
+          courtIdOverride !== undefined ? courtIdOverride : selectedCourtId;
         const data = await getVenueAnalytics(
           selectedVenue.id,
           startDate,
-          endDate
+          endDate,
+          targetCourtId
         );
         if (!data.success) {
           setError(data.error || "تعذر تحميل إحصائيات المنشأة");
@@ -111,7 +123,7 @@ export default function DashboardAnalyticsPage() {
         if (showIndicator) setIsRefreshing(false);
       }
     },
-    [selectedVenue?.id, startDate, endDate]
+    [selectedVenue?.id, startDate, endDate, selectedCourtId]
   );
 
   useEffect(() => {
@@ -213,6 +225,25 @@ export default function DashboardAnalyticsPage() {
   const payments = analytics?.payment_methods;
   const ratings = analytics?.ratings_summary;
 
+  const availableCourts = useMemo(() => {
+    if (allCourts && allCourts.length > 0) return allCourts;
+    return courts.map((c) => ({
+      id: c.court_id,
+      venue_id: selectedVenue?.id || "",
+      name: c.court_name,
+      sport: c.sport,
+      surface: c.surface,
+      price_morning: c.price_morning,
+      price_evening: c.price_evening,
+      is_active: c.is_active,
+    }));
+  }, [allCourts, courts, selectedVenue?.id]);
+
+  const activeCourt = useMemo(() => {
+    if (!selectedCourtId) return null;
+    return availableCourts.find((c) => c.id === selectedCourtId) || null;
+  }, [availableCourts, selectedCourtId]);
+
   const maxHourlyCount = Math.max(
     ...hourly.map((h) => h.bookings_count),
     1
@@ -221,106 +252,198 @@ export default function DashboardAnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Top Filter & Operations Toolbar */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 p-4 rounded-3xl bg-[#141418] border border-white/[0.08]">
-        {/* Preset Selector */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-bold text-zinc-400 ml-1">
-            نطاق التقرير:
-          </span>
-          <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-[#1c1c1f] border border-white/[0.06]">
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-4">
+        {/* Row 1: Court Filter Ribbon */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-white/[0.06]">
+          <div className="flex items-center gap-2.5">
+            <span className="h-8 w-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <Layers className="h-4 w-4" strokeWidth={1.5} />
+            </span>
+            <div>
+              <span className="text-xs font-black text-white block">
+                تحديد الملعب
+              </span>
+              <span className="text-[11px] text-zinc-400">
+                {selectedCourtId && activeCourt
+                  ? `أنت تشاهد إحصائيات: «${activeCourt.name}» فقط`
+                  : `عرض إجمالي لكافة ملاعب المنشأة (${availableCourts.length} ملاعب)`}
+              </span>
+            </div>
+          </div>
+
+          {/* Court Filter Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-[#1c1c1f] border border-white/[0.06] overflow-x-auto scrollbar-none">
             <button
               type="button"
-              onClick={() => handlePresetChange("today")}
-              className={`min-h-[38px] px-3.5 rounded-xl text-xs font-black transition-all ${
-                preset === "today"
+              onClick={() => setSelectedCourtId(null)}
+              className={`min-h-[38px] px-3.5 rounded-xl text-xs font-black transition-all whitespace-nowrap ${
+                selectedCourtId === null
                   ? "bg-primary text-black shadow-md shadow-primary/20"
                   : "text-zinc-400 hover:text-white"
               }`}
             >
-              اليوم
+              جميع الملاعب ({availableCourts.length})
             </button>
-            <button
-              type="button"
-              onClick={() => handlePresetChange("week")}
-              className={`min-h-[38px] px-3.5 rounded-xl text-xs font-black transition-all ${
-                preset === "week"
-                  ? "bg-primary text-black shadow-md shadow-primary/20"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              آخر 7 أيام
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePresetChange("month")}
-              className={`min-h-[38px] px-3.5 rounded-xl text-xs font-black transition-all ${
-                preset === "month"
-                  ? "bg-primary text-black shadow-md shadow-primary/20"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              هذا الشهر
-            </button>
-            <button
-              type="button"
-              onClick={() => setPreset("custom")}
-              className={`min-h-[38px] px-3.5 rounded-xl text-xs font-black transition-all ${
-                preset === "custom"
-                  ? "bg-primary text-black shadow-md shadow-primary/20"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              مخصص
-            </button>
+            {availableCourts.map((c) => {
+              const isSelected = selectedCourtId === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCourtId(c.id)}
+                  className={`min-h-[38px] px-3.5 rounded-xl text-xs font-black transition-all inline-flex items-center gap-1.5 whitespace-nowrap ${
+                    isSelected
+                      ? "bg-primary text-black shadow-md shadow-primary/20"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  <span>{c.name}</span>
+                  <span
+                    className={`text-[9px] px-1.5 py-0.5 rounded-md ${
+                      isSelected
+                        ? "bg-black/20 text-black font-black"
+                        : "bg-white/[0.06] text-zinc-500 font-bold"
+                    }`}
+                  >
+                    {c.sport === "football" ? "خماسي" : "بادل"}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* Date Inputs & Actions */}
-        <div className="flex flex-wrap items-center gap-3">
-          {preset === "custom" && (
-            <div className="flex items-center gap-2">
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="min-h-[44px] px-3 rounded-xl bg-[#1c1c1f] border border-white/10 text-xs text-white font-bold tabular-nums focus:outline-none focus:border-primary"
-              />
-              <span className="text-zinc-500 text-xs">إلى</span>
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="min-h-[44px] px-3 rounded-xl bg-[#1c1c1f] border border-white/10 text-xs text-white font-bold tabular-nums focus:outline-none focus:border-primary"
-              />
+        {/* Row 2: Date Presets & Date Inputs */}
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+          {/* Preset Selector */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold text-zinc-400 ml-1">
+              الفترة الزمنية:
+            </span>
+            <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-2xl bg-[#1c1c1f] border border-white/[0.06]">
+              <button
+                type="button"
+                onClick={() => handlePresetChange("today")}
+                className={`min-h-[36px] px-3.5 rounded-xl text-xs font-black transition-all ${
+                  preset === "today"
+                    ? "bg-primary text-black shadow-md shadow-primary/20"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                اليوم
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePresetChange("week")}
+                className={`min-h-[36px] px-3.5 rounded-xl text-xs font-black transition-all ${
+                  preset === "week"
+                    ? "bg-primary text-black shadow-md shadow-primary/20"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                آخر 7 أيام
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePresetChange("month")}
+                className={`min-h-[36px] px-3.5 rounded-xl text-xs font-black transition-all ${
+                  preset === "month"
+                    ? "bg-primary text-black shadow-md shadow-primary/20"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                هذا الشهر
+              </button>
+              <button
+                type="button"
+                onClick={() => setPreset("custom")}
+                className={`min-h-[36px] px-3.5 rounded-xl text-xs font-black transition-all ${
+                  preset === "custom"
+                    ? "bg-primary text-black shadow-md shadow-primary/20"
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                مخصص
+              </button>
             </div>
-          )}
+          </div>
 
-          <button
-            type="button"
-            onClick={() => void loadData(true)}
-            disabled={isRefreshing}
-            className="min-h-[44px] min-w-[44px] rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.08] text-zinc-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-50"
-            title="تحديث الأرقام"
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${
-                isRefreshing ? "animate-spin text-primary" : ""
-              }`}
-              strokeWidth={1.5}
-            />
-          </button>
+          {/* Date Inputs & Actions */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {preset === "custom" && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="min-h-[40px] px-3 rounded-xl bg-[#1c1c1f] border border-white/10 text-xs text-white font-bold tabular-nums focus:outline-none focus:border-primary"
+                />
+                <span className="text-zinc-500 text-xs">إلى</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="min-h-[40px] px-3 rounded-xl bg-[#1c1c1f] border border-white/10 text-xs text-white font-bold tabular-nums focus:outline-none focus:border-primary"
+                />
+              </div>
+            )}
 
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            disabled={!analytics || courts.length === 0}
-            className="min-h-[44px] px-4 rounded-xl bg-white/[0.06] hover:bg-white/10 border border-white/[0.08] text-xs font-bold text-zinc-200 inline-flex items-center gap-2 transition-all disabled:opacity-40"
-          >
-            <Download className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
-            <span>تصدير CSV</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => void loadData(true)}
+              disabled={isRefreshing}
+              className="min-h-[40px] min-w-[40px] rounded-xl bg-white/[0.05] hover:bg-white/10 border border-white/[0.08] text-zinc-300 hover:text-white flex items-center justify-center transition-all disabled:opacity-50"
+              title="تحديث الأرقام"
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${
+                  isRefreshing ? "animate-spin text-primary" : ""
+                }`}
+                strokeWidth={1.5}
+              />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportCSV}
+              disabled={!analytics || courts.length === 0}
+              className="min-h-[40px] px-3.5 rounded-xl bg-white/[0.06] hover:bg-white/10 border border-white/[0.08] text-xs font-bold text-zinc-200 inline-flex items-center gap-2 transition-all disabled:opacity-40"
+            >
+              <Download className="h-4 w-4 text-zinc-400" strokeWidth={1.5} />
+              <span>تصدير CSV</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Active Court Focus Banner (Shown when a specific court is selected) */}
+      {selectedCourtId && activeCourt && (
+        <div className="p-4 rounded-2xl bg-primary/10 border border-primary/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[0_4px_20px_rgba(16,185,129,0.12)]">
+          <div className="flex items-center gap-3">
+            <span className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse shrink-0" />
+            <div>
+              <span className="text-xs text-zinc-200 block">
+                تصفية التقرير لملعب محدد:{" "}
+                <strong className="text-white font-black text-sm">{activeCourt.name}</strong>{" "}
+                <span className="text-zinc-400 text-xs">
+                  ({activeCourt.sport === "football" ? "خماسي" : "بادل"})
+                </span>
+              </span>
+              <span className="text-[11px] text-zinc-400">
+                جميع المؤشرات المالية والمواعيد أدناه تخص هذا الملعب فقط
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedCourtId(null)}
+            className="text-xs font-black text-primary hover:text-white flex items-center gap-1.5 transition-colors px-3 py-1.5 rounded-xl bg-primary/15 hover:bg-primary/25 border border-primary/30 shrink-0 self-start sm:self-auto"
+          >
+            <X className="h-3.5 w-3.5" strokeWidth={2} />
+            <span>عرض كافة الملاعب (إلغاء التحديد)</span>
+          </button>
+        </div>
+      )}
 
       {/* Financial KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -485,19 +608,19 @@ export default function DashboardAnalyticsPage() {
 
       {/* Courts Breakdown Section (Which Court Performed Best) */}
       <div className="space-y-4">
-        <div className="flex items-center justify-between px-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
           <div>
             <h3 className="font-display text-base font-black text-white flex items-center gap-2">
               <Layers className="h-5 w-5 text-primary" strokeWidth={1.5} />
-              <span>أداء الملاعب الفردية والمقارنة</span>
+              <span>أداء ومقارنة الملاعب الفردية</span>
             </h3>
             <p className="text-xs text-zinc-400">
-              مقارنة الإيرادات ونسب الإشغال لكل ملعب لتحديد الأكثر طلباً
+              انقر على أي ملعب لتخصيص كامل الإحصائيات والمواعيد له وحده
             </p>
           </div>
           <Link
             href="/dashboard/courts"
-            className="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1 transition-all"
+            className="text-xs font-bold text-primary hover:text-primary-hover flex items-center gap-1 transition-all self-start sm:self-auto"
           >
             <span>إعدادات الأسعار</span>
             <ChevronLeft className="h-4 w-4" strokeWidth={1.5} />
@@ -510,96 +633,126 @@ export default function DashboardAnalyticsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {courts.map((court: VenueCourtAnalyticsItem) => (
-              <div
-                key={court.court_id}
-                className={`p-5 rounded-3xl bg-[#141418] border transition-all flex flex-col justify-between ${
-                  court.is_star
-                    ? "border-primary/40 shadow-[0_4px_24px_rgba(16,185,129,0.08)] bg-gradient-to-b from-primary/[0.03] to-[#141418]"
-                    : "border-white/[0.08]"
-                }`}
-              >
-                <div>
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-display text-base font-black text-white">
-                          {court.court_name}
-                        </h4>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-400 font-bold border border-white/5">
-                          {court.sport === "football"
-                            ? "خماسي"
-                            : court.surface === "covered_padel"
-                            ? "بادل مغطى"
-                            : "بادل بانوراما"}
+            {courts.map((court: VenueCourtAnalyticsItem) => {
+              const isCurrentSelected = selectedCourtId === court.court_id;
+              return (
+                <div
+                  key={court.court_id}
+                  className={`p-5 rounded-3xl bg-[#141418] border transition-all flex flex-col justify-between ${
+                    isCurrentSelected
+                      ? "border-primary shadow-[0_4px_24px_rgba(16,185,129,0.18)] bg-gradient-to-b from-primary/[0.08] to-[#141418]"
+                      : court.is_star
+                      ? "border-primary/40 shadow-[0_4px_24px_rgba(16,185,129,0.08)] bg-gradient-to-b from-primary/[0.03] to-[#141418]"
+                      : "border-white/[0.08]"
+                  }`}
+                >
+                  <div>
+                    <div className="flex items-start justify-between gap-2 mb-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-display text-base font-black text-white">
+                            {court.court_name}
+                          </h4>
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/[0.06] text-zinc-400 font-bold border border-white/5">
+                            {court.sport === "football"
+                              ? "خماسي"
+                              : court.surface === "covered_padel"
+                              ? "بادل مغطى"
+                              : "بادل بانوراما"}
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-zinc-500 block mt-0.5">
+                          صباحي: {court.price_morning} ج.م | مسائي:{" "}
+                          {court.price_evening} ج.م
                         </span>
                       </div>
-                      <span className="text-[11px] text-zinc-500 block mt-0.5">
-                        صباحي: {court.price_morning} ج.م | مسائي:{" "}
-                        {court.price_evening} ج.م
-                      </span>
+
+                      {court.is_star && (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-[10px] font-black shrink-0">
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                          <span>الأعلى طلباً</span>
+                        </span>
+                      )}
                     </div>
 
-                    {court.is_star && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-[10px] font-black shrink-0">
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                        <span>الأعلى طلباً</span>
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Revenue & Bookings stats */}
-                  <div className="grid grid-cols-2 gap-3 py-3 border-y border-white/[0.06] my-3">
-                    <div>
-                      <span className="text-[10px] text-zinc-400 block mb-0.5 font-bold">
-                        الإيراد المحقق
-                      </span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-lg font-black text-white tabular-nums">
-                          {court.gross_revenue.toLocaleString("en-US")}
+                    {/* Revenue & Bookings stats */}
+                    <div className="grid grid-cols-2 gap-3 py-3 border-y border-white/[0.06] my-3">
+                      <div>
+                        <span className="text-[10px] text-zinc-400 block mb-0.5 font-bold">
+                          الإيراد المحقق
                         </span>
-                        <span className="text-[10px] text-zinc-500">ج.م</span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-lg font-black text-white tabular-nums">
+                            {court.gross_revenue.toLocaleString("en-US")}
+                          </span>
+                          <span className="text-[10px] text-zinc-500">ج.م</span>
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-zinc-400 block mb-0.5 font-bold">
-                        عدد الماتشات
-                      </span>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-lg font-black text-primary tabular-nums">
-                          {court.total_bookings}
+                      <div>
+                        <span className="text-[10px] text-zinc-400 block mb-0.5 font-bold">
+                          عدد الماتشات
                         </span>
-                        <span className="text-[10px] text-zinc-500">
-                          ({court.total_hours} س)
-                        </span>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-lg font-black text-primary tabular-nums">
+                            {court.total_bookings}
+                          </span>
+                          <span className="text-[10px] text-zinc-500">
+                            ({court.total_hours} س)
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Occupancy bar */}
-                <div className="space-y-1.5 pt-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-zinc-400 text-[11px]">
-                      نسبة إشغال الملعب:
-                    </span>
-                    <span className="font-black text-white tabular-nums">
-                      {court.occupancy_rate}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        court.is_star ? "bg-primary" : "bg-zinc-400"
+                  <div className="space-y-3 pt-1">
+                    {/* Occupancy bar */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-zinc-400 text-[11px]">
+                          نسبة إشغال الملعب:
+                        </span>
+                        <span className="font-black text-white tabular-nums">
+                          {Math.max(0, court.occupancy_rate)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-white/[0.06] rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            isCurrentSelected || court.is_star ? "bg-primary" : "bg-zinc-400"
+                          }`}
+                          style={{
+                            width: `${Math.min(Math.max(0, court.occupancy_rate), 100)}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Selection Button */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCourtId(isCurrentSelected ? null : court.court_id)}
+                      className={`w-full min-h-[38px] rounded-xl text-xs font-black inline-flex items-center justify-center gap-1.5 transition-all ${
+                        isCurrentSelected
+                          ? "bg-primary text-black shadow-md shadow-primary/20"
+                          : "bg-white/[0.05] hover:bg-white/10 text-zinc-300 hover:text-white border border-white/[0.08]"
                       }`}
-                      style={{
-                        width: `${Math.min(court.occupancy_rate, 100)}%`,
-                      }}
-                    />
+                    >
+                      {isCurrentSelected ? (
+                        <>
+                          <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2} />
+                          <span>الملعب محدد حالياً (إلغاء التحديد)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Layers className="h-3.5 w-3.5" strokeWidth={1.5} />
+                          <span>عرض إحصائيات هذا الملعب فقط ⬅</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -624,9 +777,14 @@ export default function DashboardAnalyticsPage() {
             {/* Header & Controls */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 className="font-display text-base font-black text-white flex items-center gap-2">
+                <h3 className="font-display text-base font-black text-white flex flex-wrap items-center gap-2">
                   <Clock className="h-5 w-5 text-primary" strokeWidth={1.5} />
                   <span>توزيع الإقبال وساعات الذروة والركود</span>
+                  {selectedCourtId && activeCourt && (
+                    <span className="text-[11px] font-black text-primary bg-primary/15 border border-primary/30 px-2.5 py-0.5 rounded-full">
+                      خاص بـ: {activeCourt.name}
+                    </span>
+                  )}
                 </h3>
                 <p className="text-xs text-zinc-400">
                   متابعة أوقات الإقبال العالي مقارنة بالساعات الهادئة لتعديل أسعار التشغيل وزيادة الأرباح
@@ -1198,9 +1356,14 @@ export default function DashboardAnalyticsPage() {
         <div className="p-6 rounded-3xl bg-[#141418] border border-white/[0.08] space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 className="font-display text-base font-black text-white flex items-center gap-2">
+              <h3 className="font-display text-base font-black text-white flex flex-wrap items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-primary" strokeWidth={1.5} />
                 <span>الرسم البياني لتطور الإيرادات والماتشات اليومية</span>
+                {selectedCourtId && activeCourt && (
+                  <span className="text-[11px] font-black text-primary bg-primary/15 border border-primary/30 px-2.5 py-0.5 rounded-full">
+                    خاص بـ: {activeCourt.name}
+                  </span>
+                )}
               </h3>
               <p className="text-xs text-zinc-400">
                 متابعة حركة الإيراد اليومي والمحصل فعلياً خلال الفترة المختارة ({analytics.daily_timeline.length} يوم)
