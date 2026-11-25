@@ -94,8 +94,10 @@ export default function DashboardAnalyticsPage() {
   const loadData = useCallback(
     async (showIndicator = false, courtIdOverride?: string | null) => {
       if (!selectedVenue?.id) {
-        setAnalytics(null);
-        setIsLoading(false);
+        if (!isLoadingVenues) {
+          setIsLoading(false);
+          setAnalytics(null);
+        }
         return;
       }
       try {
@@ -123,7 +125,7 @@ export default function DashboardAnalyticsPage() {
         if (showIndicator) setIsRefreshing(false);
       }
     },
-    [selectedVenue?.id, startDate, endDate, selectedCourtId]
+    [selectedVenue?.id, isLoadingVenues, startDate, endDate, selectedCourtId]
   );
 
   useEffect(() => {
@@ -262,7 +264,7 @@ export default function DashboardAnalyticsPage() {
   }
 
   // Mandatory Shimmer Skeletons during initial fetch (Zero CLS layout protection)
-  if (isLoading && !analytics) {
+  if (isLoadingVenues || (isLoading && !analytics)) {
     return (
       <div className="space-y-6 animate-pulse">
         {/* Skeleton Toolbar */}
