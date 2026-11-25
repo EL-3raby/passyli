@@ -23,8 +23,6 @@ import {
   QrCode,
   Info,
   Footprints,
-  Smartphone,
-  Layers,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -52,9 +50,6 @@ export default function TicketView({
   const [isCopiedCode, setIsCopiedCode] = useState(false);
   const [isCopiedLink, setIsCopiedLink] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [passOrientation, setPassOrientation] = useState<"horizontal" | "vertical">(
-    "horizontal"
-  );
   const [ticketUrl, setTicketUrl] = useState<string>(
     initialBooking
       ? `https://passyli.com/ticket/${initialBooking.booking_reference}`
@@ -447,350 +442,279 @@ export default function TicketView({
           </div>
         )}
 
-        {/* ---------------------------------------------------- */}
-        {/* ORIENTATION TOGGLE & PRESENTATION MODE BAR           */}
-        {/* ---------------------------------------------------- */}
-        <div className="flex items-center justify-between gap-3 bg-[#141417] border border-white/[0.08] p-2 sm:p-2.5 rounded-2xl">
-          <div className="flex items-center gap-2 pr-1">
-            <span className="text-[11px] font-bold text-zinc-300 hidden sm:inline">
-              نمط عرض التذكرة:
-            </span>
-            <span className="text-[11px] font-bold text-zinc-400 sm:hidden">
-              النمط:
-            </span>
-          </div>
+        {/* ========================================================================= */}
+        {/* THE AUTOMATIC ADAPTIVE STADIUM MATCH PASS (DESKTOP: HORIZONTAL | MOBILE: PORTRAIT) */}
+        {/* ========================================================================= */}
+        <div className="relative rounded-[28px] bg-[#121316] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col md:flex-row items-stretch">
+          
+          {/* Ambient Lighting Background */}
+          <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent pointer-events-none" />
 
-          <div className="flex items-center gap-1.5 bg-[#09090b] p-1 rounded-xl border border-white/[0.06]">
-            <button
-              type="button"
-              onClick={() => setPassOrientation("horizontal")}
-              className={`min-h-[36px] px-3 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all ${
-                passOrientation === "horizontal"
-                  ? "bg-primary text-black shadow-sm font-black"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              <Layers className="h-3.5 w-3.5" strokeWidth={1.5} />
-              <span>تذكرتي بالعرض (الأصلي)</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setPassOrientation("vertical")}
-              className={`min-h-[36px] px-3 rounded-lg text-xs font-bold inline-flex items-center gap-1.5 transition-all ${
-                passOrientation === "vertical"
-                  ? "bg-primary text-black shadow-sm font-black"
-                  : "text-zinc-400 hover:text-white"
-              }`}
-            >
-              <Smartphone className="h-3.5 w-3.5" strokeWidth={1.5} />
-              <span>رأسي للموبايل</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Horizontal Scroll Helper Notice */}
-        {passOrientation === "horizontal" && (
-          <div className="md:hidden flex items-center justify-between text-[11px] text-zinc-400 bg-white/[0.03] border border-white/[0.06] px-3 py-1.5 rounded-xl">
-            <span>تذكرة أفقية رسمية كاملة (اسحب يميناً ويساراً لمشاهدة كعب التذكرة)</span>
-            <span className="text-primary font-mono text-[10px]">SCROLL ↔</span>
-          </div>
-        )}
-
-        {/* ======================================================== */}
-        {/* THE TAZKARTI HORIZONTAL STADIUM MATCH PASS CONTAINER     */}
-        {/* ======================================================== */}
-        <div
-          className={`${
-            passOrientation === "horizontal"
-              ? "overflow-x-auto pb-2 scrollbar-none"
-              : ""
-          }`}
-        >
-          <div
-            className={`relative rounded-[28px] bg-[#121316] border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.85)] overflow-hidden transition-all ${
-              passOrientation === "horizontal"
-                ? "min-w-[720px] md:min-w-0 flex flex-row items-stretch"
-                : "flex flex-col"
-            }`}
-          >
-            {/* Ambient Top Glow */}
-            <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-primary/10 via-primary/5 to-transparent pointer-events-none" />
-
-            {/* ---------------------------------------------------- */}
-            {/* RIGHT WING: MAIN MATCH EVENT SLIP (قسيمة المباراة)   */}
-            {/* ---------------------------------------------------- */}
-            <div
-              className={`flex-1 p-5 sm:p-7 flex flex-col justify-between space-y-5 relative z-10 ${
-                passOrientation === "horizontal" ? "w-full md:w-[62%]" : ""
-              }`}
-            >
-              {/* Slip Header: Brand Mark + Status Badge */}
-              <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center font-display font-black text-black text-lg shadow-[0_2px_12px_rgba(16,185,129,0.35)]">
-                    P
-                  </div>
-                  <div>
-                    <span className="font-display font-black text-lg text-white block leading-tight">
-                      باصي<span className="text-primary">لي</span>
-                    </span>
-                    <span className="text-[10px] text-zinc-400 font-latin tracking-wide block">
-                      OFFICIAL STADIUM PASS
-                    </span>
-                  </div>
+          {/* ---------------------------------------------------- */}
+          {/* RIGHT WING / TOP: MAIN MATCH PASS (قسيمة المباراة)   */}
+          {/* ---------------------------------------------------- */}
+          <div className="flex-1 p-5 sm:p-7 flex flex-col justify-between space-y-5 relative z-10 md:w-[63%]">
+            
+            {/* Header: Brand Mark + Official Status Pill */}
+            <div className="flex items-center justify-between gap-3 border-b border-white/[0.08] pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-primary flex items-center justify-center font-display font-black text-black text-lg shadow-[0_2px_12px_rgba(16,185,129,0.35)]">
+                  P
                 </div>
-
                 <div>
-                  {isVerified ? (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 border border-emerald-500/40 px-3 py-1 text-xs font-bold text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse" />
-                      <span>تذكرة معتمدة ورسمية</span>
-                    </div>
-                  ) : isRejected ? (
-                    <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3 py-1 text-xs font-bold text-rose-400">
-                      <span className="h-2 w-2 rounded-full bg-rose-400" />
-                      <span>تعذر اعتماد الإيصال</span>
-                    </div>
-                  ) : (
-                    <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-xs font-bold text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
-                      <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
-                      <span>قيد التأكيد والمراجعة</span>
-                    </div>
-                  )}
+                  <span className="font-display font-black text-lg text-white block leading-tight">
+                    باصي<span className="text-primary">لي</span>
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-latin tracking-wide block">
+                    OFFICIAL STADIUM PASS
+                  </span>
                 </div>
               </div>
 
-              {/* Match Venue & Title */}
-              <div className="space-y-1">
-                <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 mb-1">
-                  <Footprints className="h-3 w-3" strokeWidth={1.5} />
-                  <span>
-                    {booking.court.sport === "padel"
-                      ? "ملعب بادل بانوراما معتمد"
-                      : "ملعب كرة قدم خماسي معتمد"}
+              <div>
+                {isVerified ? (
+                  <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/15 border border-emerald-500/40 px-3 py-1 text-xs font-bold text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)] animate-pulse" />
+                    <span>تذكرة معتمدة ورسمية</span>
+                  </div>
+                ) : isRejected ? (
+                  <div className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3 py-1 text-xs font-bold text-rose-400">
+                    <span className="h-2 w-2 rounded-full bg-rose-400" />
+                    <span>تعذر اعتماد الإيصال</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-xs font-bold text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.15)]">
+                    <span className="h-2 w-2 rounded-full bg-amber-400 animate-ping" />
+                    <span>قيد التأكيد والمراجعة</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Match Venue Details */}
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20 mb-1">
+                <Footprints className="h-3 w-3" strokeWidth={1.5} />
+                <span>
+                  {booking.court.sport === "padel"
+                    ? "ملعب بادل بانوراما معتمد"
+                    : "ملعب كرة قدم خماسي معتمد"}
+                </span>
+              </div>
+
+              <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
+                {booking.venue.name}
+              </h1>
+              <p className="text-xs sm:text-sm text-zinc-400 font-medium">
+                {booking.court.name}
+              </p>
+            </div>
+
+            {/* Stadium Billboard (Kickoff Time & Date) */}
+            <div className="rounded-2xl bg-[#18191d] border border-white/[0.08] p-4 space-y-3 shadow-inner">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center border-b border-white/[0.06] pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
+                    <Clock className="h-5 w-5" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-400 block font-medium">
+                      موعد ضربة البداية
+                    </span>
+                    <span className="font-display font-black text-base sm:text-lg text-primary tabular-nums block">
+                      {formatTimeArabic(booking.start_time)} — {formatTimeArabic(booking.end_time)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  <div className="h-9 w-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-zinc-300 flex items-center justify-center shrink-0">
+                    <Calendar className="h-5 w-5" strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-zinc-400 block font-medium">
+                      يوم وتاريخ الماتش
+                    </span>
+                    <span className="text-xs sm:text-sm font-bold text-white block">
+                      {formatDateArabic(booking.booking_date)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Match Captain & Address */}
+              <div className="grid grid-cols-2 gap-3 text-xs pt-1">
+                <div>
+                  <span className="text-[10px] text-zinc-400 block">كابتن الفرقة</span>
+                  <span className="font-bold text-white block text-xs truncate">
+                    {booking.booker_name || "كابتن الفرقة"}
+                  </span>
+                  <span className="font-mono text-zinc-400 text-[11px] block tabular-nums" dir="ltr">
+                    {booking.booker_phone}
                   </span>
                 </div>
 
-                <h1 className="font-display font-black text-2xl sm:text-3xl text-white tracking-tight">
-                  {booking.venue.name}
-                </h1>
-                <p className="text-xs sm:text-sm text-zinc-400 font-medium">
-                  {booking.court.name}
-                </p>
-              </div>
-
-              {/* Stadium Billboard (Kickoff Time & Date) */}
-              <div className="rounded-2xl bg-[#18191d] border border-white/[0.08] p-4 space-y-3 shadow-inner">
-                <div className="grid grid-cols-2 gap-3 items-center border-b border-white/[0.06] pb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-9 w-9 rounded-xl bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0">
-                      <Clock className="h-5 w-5" strokeWidth={1.5} />
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-zinc-400 block font-medium">
-                        موعد ضربة البداية
-                      </span>
-                      <span className="font-display font-black text-base sm:text-lg text-primary tabular-nums block">
-                        {formatTimeArabic(booking.start_time)} — {formatTimeArabic(booking.end_time)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-9 w-9 rounded-xl bg-white/[0.05] border border-white/[0.08] text-zinc-300 flex items-center justify-center shrink-0">
-                      <Calendar className="h-5 w-5" strokeWidth={1.5} />
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-zinc-400 block font-medium">
-                        يوم وتاريخ الماتش
-                      </span>
-                      <span className="text-xs sm:text-sm font-bold text-white block">
-                        {formatDateArabic(booking.booking_date)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Match Captain & Address Strip */}
-                <div className="grid grid-cols-2 gap-3 text-xs pt-1">
-                  <div>
-                    <span className="text-[10px] text-zinc-400 block">كابتن الفرقة</span>
-                    <span className="font-bold text-white block text-xs truncate">
-                      {booking.booker_name || "كابتن الفرقة"}
-                    </span>
-                    <span className="font-mono text-zinc-400 text-[11px] block tabular-nums" dir="ltr">
-                      {booking.booker_phone}
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] text-zinc-400 block">عنوان الاستاد</span>
-                    <span className="font-bold text-zinc-200 block text-xs truncate">
-                      {booking.venue.address}
-                    </span>
-                    <span className="text-[10px] text-zinc-400 block">
-                      المدة {booking.court.slot_duration_minutes || 60} دقيقة
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Financial Capsule & Squad Split */}
-              <div className="rounded-2xl bg-[#151619] border border-white/[0.06] p-3.5 space-y-2.5">
-                <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-[10px] text-zinc-400 block">إجمالي الإيجار</span>
-                    <span className="font-bold text-xs sm:text-sm text-white tabular-nums">
-                      {booking.total_price} ج.م
-                    </span>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-                    <span className="text-[10px] text-zinc-400 block">
-                      {isFullPayment ? "مسدد بالكامل" : "العربون المسدد"}
-                    </span>
-                    <span className="font-bold text-xs sm:text-sm text-emerald-400 tabular-nums">
-                      {booking.deposit_paid || booking.deposit_required} ج.م
-                    </span>
-                  </div>
-
-                  <div className="p-2 rounded-xl bg-primary/10 border border-primary/25">
-                    <span className="text-[10px] text-primary block font-bold">المتبقي بالملعب</span>
-                    <span className="font-black text-xs sm:text-sm text-primary tabular-nums">
-                      {booking.cash_remaining} ج.م
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-xs pt-1 border-t border-white/[0.05]">
-                  <div className="flex items-center gap-1.5 text-zinc-300">
-                    <Users className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                    <span className="font-bold text-[11px]">
-                      المطلوب كاش من كل لاعب بالملعب:
-                    </span>
-                    <span className="text-[10px] text-zinc-400">
-                      (تقسيم {playersCount} لاعبين)
-                    </span>
-                  </div>
-                  <span className="font-display font-black text-lg text-primary tabular-nums">
-                    {cashPerPlayer} <span className="text-xs font-normal">ج.م</span>
+                <div>
+                  <span className="text-[10px] text-zinc-400 block">عنوان الملعب</span>
+                  <span className="font-bold text-zinc-200 block text-xs truncate">
+                    {booking.venue.address}
+                  </span>
+                  <span className="text-[10px] text-zinc-400 block">
+                    المدة {booking.court.slot_duration_minutes || 60} دقيقة
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* ---------------------------------------------------- */}
-            {/* PHYSICAL PERFORATION DIVIDER (VERTICAL ON DESKTOP)   */}
-            {/* ---------------------------------------------------- */}
-            {passOrientation === "horizontal" ? (
-              <div className="relative flex flex-col justify-between items-center shrink-0 w-0 md:w-auto my-0">
-                {/* Top Cutout Notch */}
-                <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#09090b] border-b border-white/10 z-20 shadow-inner" />
-                {/* Vertical Dashed Perforation Stitch */}
-                <div className="h-full border-r-2 border-dashed border-white/15 mx-0" />
-                {/* Bottom Cutout Notch */}
-                <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#09090b] border-t border-white/10 z-20 shadow-inner" />
-              </div>
-            ) : (
-              <div className="relative py-1 flex items-center justify-center">
-                <div className="absolute -left-4 w-8 h-8 rounded-full bg-[#09090b] border-r border-white/10 shadow-inner z-10" />
-                <div className="absolute -right-4 w-8 h-8 rounded-full bg-[#09090b] border-l border-white/10 shadow-inner z-10" />
-                <div className="w-full border-t-2 border-dashed border-white/15 mx-5" />
-              </div>
-            )}
-
-            {/* ---------------------------------------------------- */}
-            {/* LEFT WING: GATE VERIFICATION STUB (كعب التذكرة والبوابة) */}
-            {/* ---------------------------------------------------- */}
-            <div
-              className={`bg-gradient-to-b md:bg-gradient-to-l from-[#16171b] to-[#101114] p-5 sm:p-6 flex flex-col items-center justify-between text-center space-y-4 relative z-10 ${
-                passOrientation === "horizontal"
-                  ? "w-full md:w-[320px] shrink-0"
-                  : ""
-              }`}
-            >
-              {/* Gate Pass Header */}
-              <div className="w-full flex items-center justify-between border-b border-white/[0.08] pb-3">
-                <span className="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
-                  <QrCode className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                  <span>كعب تذكرة الدخول</span>
-                </span>
-                <span className="text-[9px] text-zinc-500 font-mono tracking-wider">
-                  GATE PASS STUB
-                </span>
-              </div>
-
-              {/* Scannable SVG QR Code */}
-              <div className="p-3 rounded-2xl bg-white border border-white/20 shadow-[0_0_30px_rgba(16,185,129,0.22)]">
-                <QRCodeSVG
-                  value={ticketUrl || `https://passyli.com/ticket/${booking.booking_reference}`}
-                  size={140}
-                  bgColor="#ffffff"
-                  fgColor="#09090b"
-                  level="Q"
-                  includeMargin={false}
-                />
-              </div>
-
-              {/* Booking Reference Code & Copy Button */}
-              <div className="w-full space-y-1.5">
-                <span className="text-[10px] text-zinc-400 block">
-                  كود الحجز المعتمد للمباراة
-                </span>
-                <div className="flex items-center justify-center gap-2">
-                  <span
-                    className="font-mono font-black text-base text-primary tracking-wider select-all"
-                    dir="ltr"
-                  >
-                    {booking.booking_reference}
+            {/* Financial Capsule & Squad Split */}
+            <div className="rounded-2xl bg-[#151619] border border-white/[0.06] p-3.5 space-y-2.5">
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                  <span className="text-[10px] text-zinc-400 block">إجمالي الإيجار</span>
+                  <span className="font-bold text-xs sm:text-sm text-white tabular-nums">
+                    {booking.total_price} ج.م
                   </span>
-                  <button
-                    type="button"
-                    onClick={handleCopyCode}
-                    aria-label="نسخ كود الحجز"
-                    className="inline-flex min-h-[32px] items-center gap-1 px-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
-                  >
-                    {isCopiedCode ? (
-                      <>
-                        <Check className="h-3.5 w-3.5" strokeWidth={2} />
-                        <span>تم</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-3.5 w-3.5" strokeWidth={1.5} />
-                        <span>نسخ</span>
-                      </>
-                    )}
-                  </button>
+                </div>
+
+                <div className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.05]">
+                  <span className="text-[10px] text-zinc-400 block">
+                    {isFullPayment ? "مسدد بالكامل" : "العربون المسدد"}
+                  </span>
+                  <span className="font-bold text-xs sm:text-sm text-emerald-400 tabular-nums">
+                    {booking.deposit_paid || booking.deposit_required} ج.م
+                  </span>
+                </div>
+
+                <div className="p-2 rounded-xl bg-primary/10 border border-primary/25">
+                  <span className="text-[10px] text-primary block font-bold">المتبقي بالملعب</span>
+                  <span className="font-black text-xs sm:text-sm text-primary tabular-nums">
+                    {booking.cash_remaining} ج.م
+                  </span>
                 </div>
               </div>
 
-              {/* Gatekeeper Scan Instructions */}
-              <p className="text-[10px] sm:text-[11px] text-zinc-400 max-w-[240px] leading-relaxed">
-                امسح الرمز ضوئياً عند بوابة الدخول أو مع مسؤول الكنترول لتسجيل الحضور فوراً واستلام الكرة.
-              </p>
-
-              {/* Security Hash Barcode */}
-              <div className="w-full pt-2 border-t border-white/[0.06]">
-                <div className="h-3 w-full bg-white/10 rounded flex items-center justify-around px-2 opacity-40">
-                  {Array.from({ length: 24 }).map((_, i) => (
-                    <span
-                      key={i}
-                      className={`h-2 ${
-                        i % 3 === 0
-                          ? "w-1 bg-white"
-                          : i % 2 === 0
-                          ? "w-0.5 bg-white"
-                          : "w-1.5 bg-white"
-                      }`}
-                    />
-                  ))}
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-white/[0.05]">
+                <div className="flex items-center gap-1.5 text-zinc-300">
+                  <Users className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                  <span className="font-bold text-[11px]">
+                    المطلوب كاش من كل لاعب بالملعب:
+                  </span>
+                  <span className="text-[10px] text-zinc-400">
+                    (تقسيم {playersCount} لاعبين)
+                  </span>
                 </div>
-                <span className="text-[8px] text-zinc-500 font-mono block mt-1">
-                  TAZKARTI PROTOCOL • SECURE GATE VERIFICATION
+                <span className="font-display font-black text-lg text-primary tabular-nums">
+                  {cashPerPlayer} <span className="text-xs font-normal">ج.م</span>
                 </span>
               </div>
+            </div>
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* RESPONSIVE PERFORATION DIVIDER                       */}
+          {/* On Desktop: Vertical divider with top/bottom notches */}
+          {/* On Mobile: Horizontal divider with left/right notches */}
+          {/* ---------------------------------------------------- */}
+          
+          {/* Desktop Vertical Perforation Divider (>= 768px) */}
+          <div className="hidden md:flex relative flex-col justify-between items-center shrink-0 w-0 my-0">
+            <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#09090b] border-b border-white/10 z-20 shadow-inner" />
+            <div className="h-full border-r-2 border-dashed border-white/15 mx-0" />
+            <div className="absolute -bottom-3.5 left-1/2 -translate-x-1/2 w-7 h-7 rounded-full bg-[#09090b] border-t border-white/10 z-20 shadow-inner" />
+          </div>
+
+          {/* Mobile Horizontal Perforation Divider (< 768px) */}
+          <div className="flex md:hidden relative py-1 items-center justify-center">
+            <div className="absolute -left-4 w-8 h-8 rounded-full bg-[#09090b] border-r border-white/10 shadow-inner z-10" />
+            <div className="w-full border-t-2 border-dashed border-white/15 mx-5" />
+            <div className="absolute -right-4 w-8 h-8 rounded-full bg-[#09090b] border-l border-white/10 shadow-inner z-10" />
+          </div>
+
+          {/* ---------------------------------------------------- */}
+          {/* LEFT WING / BOTTOM: GATE STUB (كعب التذكرة والبوابة) */}
+          {/* ---------------------------------------------------- */}
+          <div className="w-full md:w-[310px] lg:w-[330px] bg-gradient-to-b md:bg-gradient-to-l from-[#16171b] to-[#101114] p-5 sm:p-6 flex flex-col items-center justify-between text-center space-y-4 relative z-10 shrink-0">
+            
+            {/* Gate Pass Header */}
+            <div className="w-full flex items-center justify-between border-b border-white/[0.08] pb-3">
+              <span className="text-[11px] font-bold text-zinc-300 flex items-center gap-1.5">
+                <QrCode className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                <span>كعب تذكرة الدخول</span>
+              </span>
+              <span className="text-[9px] text-zinc-500 font-mono tracking-wider">
+                GATE PASS STUB
+              </span>
+            </div>
+
+            {/* Scannable SVG QR Code */}
+            <div className="p-3 rounded-2xl bg-white border border-white/20 shadow-[0_0_30px_rgba(16,185,129,0.22)]">
+              <QRCodeSVG
+                value={ticketUrl || `https://passyli.com/ticket/${booking.booking_reference}`}
+                size={140}
+                bgColor="#ffffff"
+                fgColor="#09090b"
+                level="Q"
+                includeMargin={false}
+              />
+            </div>
+
+            {/* Booking Reference Code & Copy Button */}
+            <div className="w-full space-y-1.5">
+              <span className="text-[10px] text-zinc-400 block">
+                كود الحجز المعتمد للمباراة
+              </span>
+              <div className="flex items-center justify-center gap-2">
+                <span
+                  className="font-mono font-black text-base text-primary tracking-wider select-all"
+                  dir="ltr"
+                >
+                  {booking.booking_reference}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyCode}
+                  aria-label="نسخ كود الحجز"
+                  className="inline-flex min-h-[32px] items-center gap-1 px-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors"
+                >
+                  {isCopiedCode ? (
+                    <>
+                      <Check className="h-3.5 w-3.5" strokeWidth={2} />
+                      <span>تم</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3.5 w-3.5" strokeWidth={1.5} />
+                      <span>نسخ</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Gatekeeper Scan Instructions */}
+            <p className="text-[10px] sm:text-[11px] text-zinc-400 max-w-[240px] leading-relaxed">
+              امسح الرمز ضوئياً عند بوابة الدخول أو مع مسؤول الكنترول لتسجيل الحضور فوراً واستلام الكرة.
+            </p>
+
+            {/* Security Hash Barcode */}
+            <div className="w-full pt-2 border-t border-white/[0.06]">
+              <div className="h-3 w-full bg-white/10 rounded flex items-center justify-around px-2 opacity-40">
+                {Array.from({ length: 24 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className={`h-2 ${
+                      i % 3 === 0
+                        ? "w-1 bg-white"
+                        : i % 2 === 0
+                        ? "w-0.5 bg-white"
+                        : "w-1.5 bg-white"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-[8px] text-zinc-500 font-mono block mt-1">
+                TAZKARTI PROTOCOL • SECURE GATE VERIFICATION
+              </span>
             </div>
           </div>
         </div>
