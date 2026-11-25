@@ -62,8 +62,8 @@ BEGIN
       b.*,
       EXTRACT(EPOCH FROM (
         CASE 
-          WHEN b.end_time < b.start_time THEN (b.end_time + INTERVAL '24 hours') - b.start_time
-          ELSE b.end_time - b.start_time
+          WHEN b.end_time <= b.start_time THEN (b.booking_date + INTERVAL '1 day' + b.end_time) - (b.booking_date + b.start_time)
+          ELSE (b.booking_date + b.end_time) - (b.booking_date + b.start_time)
         END
       )) / 3600.0 AS duration_hours
     FROM public.bookings b
@@ -88,12 +88,14 @@ BEGIN
       ), 0
     ),
     'pending_cash', COALESCE(SUM(cash_remaining) FILTER (WHERE status = 'confirmed'), 0),
-    'total_booked_hours', ROUND(COALESCE(SUM(duration_hours) FILTER (WHERE status IN ('confirmed', 'completed')), 0)::NUMERIC, 1),
-    'occupancy_rate', ROUND(
-      LEAST(
-        (COALESCE(SUM(duration_hours) FILTER (WHERE status IN ('confirmed', 'completed')), 0)::NUMERIC / v_total_avail_hours) * 100,
-        100.0
-      ), 1
+    'total_booked_hours', GREATEST(ROUND(COALESCE(SUM(duration_hours) FILTER (WHERE status IN ('confirmed', 'completed')), 0)::NUMERIC, 1), 0.0),
+    'occupancy_rate', GREATEST(
+      ROUND(
+        LEAST(
+          (COALESCE(SUM(duration_hours) FILTER (WHERE status IN ('confirmed', 'completed')), 0)::NUMERIC / v_total_avail_hours) * 100,
+          100.0
+        ), 1
+      ), 0.0
     ),
     'avg_booking_price', ROUND(
       COALESCE(AVG(total_price) FILTER (WHERE status IN ('confirmed', 'completed')), 0)::NUMERIC, 0
@@ -127,17 +129,19 @@ BEGIN
           END
         ), 0
       ) AS collected_revenue,
-      ROUND(
-        COALESCE(
-          SUM(
-            EXTRACT(EPOCH FROM (
-              CASE 
-                WHEN b.end_time < b.start_time THEN (b.end_time + INTERVAL '24 hours') - b.start_time
-                ELSE b.end_time - b.start_time
-              END
-            )) / 3600.0
-          ) FILTER (WHERE b.status IN ('confirmed', 'completed')), 0
-        )::NUMERIC, 1
+      GREATEST(
+        ROUND(
+          COALESCE(
+            SUM(
+              EXTRACT(EPOCH FROM (
+                CASE 
+                  WHEN b.end_time <= b.start_time THEN (b.booking_date + INTERVAL '1 day' + b.end_time) - (b.booking_date + b.start_time)
+                  ELSE (b.booking_date + b.end_time) - (b.booking_date + b.start_time)
+                END
+              )) / 3600.0
+            ) FILTER (WHERE b.status IN ('confirmed', 'completed')), 0
+          )::NUMERIC, 1
+        ), 0.0
       ) AS total_hours
     FROM venue_courts vc
     LEFT JOIN public.bookings b ON b.court_id = vc.id
@@ -148,11 +152,13 @@ BEGIN
   ranked_courts AS (
     SELECT 
       cs.*,
-      ROUND(
-        LEAST(
-          (cs.total_hours / GREATEST(v_days_count * 16, 1)) * 100,
-          100.0
-        ), 1
+      GREATEST(
+        ROUND(
+          LEAST(
+            (cs.total_hours / GREATEST(v_days_count * 16, 1)) * 100,
+            100.0
+          ), 1
+        ), 0.0
       ) AS occupancy_rate,
       ROW_NUMBER() OVER (ORDER BY cs.gross_revenue DESC, cs.total_bookings DESC) AS rank_num
     FROM court_stats cs

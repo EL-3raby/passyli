@@ -393,72 +393,91 @@ export default function DashboardAnalyticsPage() {
           </p>
         </div>
 
-        {/* Occupancy / Utilization Rate */}
-        <div className="p-5 rounded-3xl bg-[#141418] border border-white/[0.08] relative overflow-hidden group">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-zinc-400">
-              نسبة تشغيل الملاعب
-            </span>
-            <div
-              className={`px-2 py-0.5 rounded-full text-[10px] font-black inline-flex items-center gap-1 border ${
-                (summary?.occupancy_rate ?? 0) >= 75
-                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                  : (summary?.occupancy_rate ?? 0) >= 45
-                  ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30"
-                  : "bg-amber-500/15 text-amber-300 border-amber-500/30"
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  (summary?.occupancy_rate ?? 0) >= 75
-                    ? "bg-emerald-400 animate-pulse"
-                    : (summary?.occupancy_rate ?? 0) >= 45
-                    ? "bg-cyan-400"
-                    : "bg-amber-400"
-                }`}
-              />
-              <span>
-                {(summary?.occupancy_rate ?? 0) >= 75
-                  ? "إقبال مرتفع"
-                  : (summary?.occupancy_rate ?? 0) >= 45
-                  ? "تشغيل مستقر"
-                  : "ساعات هادئة"}
-              </span>
+        {/* Occupancy / Utilization Rate (Hours + Positive Gauge) */}
+        {(() => {
+          const safeOccupancy = Math.max(0, Math.min(100, summary?.occupancy_rate ?? 0));
+          const bookedHours = Math.max(0, summary?.total_booked_hours ?? 0);
+          const activeCourtsCount = courts.length || 1;
+          const daysCount = (() => {
+            try {
+              const s = new Date(startDate).getTime();
+              const e = new Date(endDate).getTime();
+              return Math.max(1, Math.round((e - s) / (1000 * 60 * 60 * 24)) + 1);
+            } catch {
+              return 1;
+            }
+          })();
+          const totalOperatingHours = Math.max(activeCourtsCount * daysCount * 16, Math.ceil(bookedHours));
+          const remainingHours = Math.max(0, totalOperatingHours - Math.round(bookedHours));
+
+          return (
+            <div className="p-5 rounded-3xl bg-[#141418] border border-white/[0.08] relative overflow-hidden group">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-zinc-400">
+                  ساعات تشغيل الملاعب
+                </span>
+                <div
+                  className={`px-2 py-0.5 rounded-full text-[10px] font-black inline-flex items-center gap-1 border ${
+                    safeOccupancy >= 75
+                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                      : safeOccupancy >= 40
+                      ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/30"
+                      : "bg-amber-500/15 text-amber-300 border-amber-500/30"
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      safeOccupancy >= 75
+                        ? "bg-emerald-400 animate-pulse"
+                        : safeOccupancy >= 40
+                        ? "bg-cyan-400"
+                        : "bg-amber-400"
+                    }`}
+                  />
+                  <span>
+                    {safeOccupancy >= 75
+                      ? "إقبال ممتاز"
+                      : safeOccupancy >= 40
+                      ? "تشغيل مستقر"
+                      : "ساعات هادئة"}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-baseline gap-2 mb-1">
+                <span className="text-2xl sm:text-3xl font-black text-cyan-400 tabular-nums">
+                  {bookedHours}
+                </span>
+                <span className="text-xs text-zinc-400 font-bold">
+                  من {totalOperatingHours} ساعة ({safeOccupancy}%)
+                </span>
+              </div>
+              <div className="w-full bg-white/[0.06] rounded-full h-1.5 mt-2 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    safeOccupancy >= 75
+                      ? "bg-emerald-400"
+                      : safeOccupancy >= 40
+                      ? "bg-cyan-400"
+                      : "bg-amber-400"
+                  }`}
+                  style={{
+                    width: `${safeOccupancy}%`,
+                  }}
+                />
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-2 flex items-center justify-between">
+                <span>
+                  {remainingHours > 0
+                    ? `متبقي ${remainingHours} ساعة شاغرة`
+                    : "تم استغلال كامل الساعات المتاحة"}
+                </span>
+                <span className="text-zinc-400 font-bold tabular-nums">
+                  {summary?.total_bookings || 0} ماتش
+                </span>
+              </p>
             </div>
-          </div>
-          <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-2xl sm:text-3xl font-black text-cyan-400 tabular-nums">
-              {summary?.occupancy_rate ?? 0}%
-            </span>
-            <span className="text-xs text-zinc-400 font-bold">
-              ({summary?.total_booked_hours ?? 0} س محجوزة)
-            </span>
-          </div>
-          <div className="w-full bg-white/[0.06] rounded-full h-1.5 mt-2 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ${
-                (summary?.occupancy_rate ?? 0) >= 75
-                  ? "bg-emerald-400"
-                  : (summary?.occupancy_rate ?? 0) >= 45
-                  ? "bg-cyan-400"
-                  : "bg-amber-400"
-              }`}
-              style={{
-                width: `${Math.min(summary?.occupancy_rate ?? 0, 100)}%`,
-              }}
-            />
-          </div>
-          <p className="text-[11px] text-zinc-500 mt-2 flex items-center justify-between">
-            <span>
-              {summary && summary.occupancy_rate < 100
-                ? "متبقي ساعات شاغرة يمكن استغلالها"
-                : "تم حجز كامل الساعات المتاحة"}
-            </span>
-            <span className="text-zinc-400 font-bold tabular-nums">
-              {summary ? `${summary.total_booked_hours} س نشطة` : "0 س"}
-            </span>
-          </p>
-        </div>
+          );
+        })()}
       </div>
 
       {/* Courts Breakdown Section (Which Court Performed Best) */}
