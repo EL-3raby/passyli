@@ -130,6 +130,37 @@ export default function DashboardAnalyticsPage() {
     void loadData();
   }, [loadData, realtimeTick]);
 
+  const summary = analytics?.summary;
+  const courts = analytics?.courts_breakdown || [];
+  const hourly = analytics?.hourly_distribution || [];
+  const channels = analytics?.channel_split;
+  const payments = analytics?.payment_methods;
+  const ratings = analytics?.ratings_summary;
+
+  const availableCourts = useMemo(() => {
+    if (allCourts && allCourts.length > 0) return allCourts;
+    return courts.map((c) => ({
+      id: c.court_id,
+      venue_id: selectedVenue?.id || "",
+      name: c.court_name,
+      sport: c.sport,
+      surface: c.surface,
+      price_morning: c.price_morning,
+      price_evening: c.price_evening,
+      is_active: c.is_active,
+    }));
+  }, [allCourts, courts, selectedVenue?.id]);
+
+  const activeCourt = useMemo(() => {
+    if (!selectedCourtId) return null;
+    return availableCourts.find((c) => c.id === selectedCourtId) || null;
+  }, [availableCourts, selectedCourtId]);
+
+  const maxHourlyCount = Math.max(
+    ...hourly.map((h) => h.bookings_count),
+    1
+  );
+
   // Export Analytics to CSV
   const handleExportCSV = () => {
     if (!analytics || !selectedVenue) return;
@@ -217,37 +248,6 @@ export default function DashboardAnalyticsPage() {
       </div>
     );
   }
-
-  const summary = analytics?.summary;
-  const courts = analytics?.courts_breakdown || [];
-  const hourly = analytics?.hourly_distribution || [];
-  const channels = analytics?.channel_split;
-  const payments = analytics?.payment_methods;
-  const ratings = analytics?.ratings_summary;
-
-  const availableCourts = useMemo(() => {
-    if (allCourts && allCourts.length > 0) return allCourts;
-    return courts.map((c) => ({
-      id: c.court_id,
-      venue_id: selectedVenue?.id || "",
-      name: c.court_name,
-      sport: c.sport,
-      surface: c.surface,
-      price_morning: c.price_morning,
-      price_evening: c.price_evening,
-      is_active: c.is_active,
-    }));
-  }, [allCourts, courts, selectedVenue?.id]);
-
-  const activeCourt = useMemo(() => {
-    if (!selectedCourtId) return null;
-    return availableCourts.find((c) => c.id === selectedCourtId) || null;
-  }, [availableCourts, selectedCourtId]);
-
-  const maxHourlyCount = Math.max(
-    ...hourly.map((h) => h.bookings_count),
-    1
-  );
 
   return (
     <div className="space-y-6">
