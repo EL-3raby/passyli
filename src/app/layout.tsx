@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Alexandria, IBM_Plex_Sans_Arabic, Inter } from "next/font/google";
 import "./globals.css";
 import Footer from "@/components/footer";
@@ -27,12 +27,33 @@ const inter = Inter({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#10b981",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
-  title: "باصيلي | Passyli — احجز ملعبك، كمّل ماتشك",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://passyli.com"),
+  title: {
+    default: "باصيلي | Passyli — احجز ملعبك، كمّل ماتشك",
+    template: "%s | باصيلي",
+  },
   description: "المنصة الأولى لحجز ملاعب كرة القدم الخماسي وملاعب البادل في دمنهور والبحيرة.",
+  applicationName: "باصيلي (Passyli)",
+  manifest: "/manifest.json",
   icons: {
     icon: "/brand/icon.svg",
     apple: "/brand/icon.svg",
+  },
+  openGraph: {
+    title: "باصيلي | Passyli — احجز ملعبك، كمّل ماتشك",
+    description: "المنصة الأولى لحجز ملاعب كرة القدم الخماسي وملاعب البادل في دمنهور والبحيرة.",
+    url: "https://passyli.com",
+    siteName: "باصيلي (Passyli)",
+    locale: "ar_EG",
+    type: "website",
   },
 };
 

@@ -70,13 +70,13 @@ export default function Footer() {
             <Link href="/courts" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               كافة ملاعب دمنهور
             </Link>
-            <Link href="#padel" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/courts" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               ملاعب البادل
             </Link>
-            <Link href="#football" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/courts" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               ملاعب كرة القدم الخماسي
             </Link>
-            <Link href="#matchmaking" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/matchmaking" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               التقسيمات المفتوحة (كمّل ماتشك)
             </Link>
           </div>
@@ -98,13 +98,13 @@ export default function Footer() {
               <span>انضم كشريك ملعب</span>
               <ArrowUpRight className="h-3 w-3 text-primary" strokeWidth={1.5} />
             </Link>
-            <Link href="#terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               شروط وأحكام الحجز
             </Link>
-            <Link href="#cancellation" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/cancellation" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               سياسة الإلغاء واسترداد العربون
             </Link>
-            <Link href="#privacy" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+            <Link href="/privacy" className="text-xs text-muted-foreground hover:text-primary transition-colors">
               الخصوصية وسرية البيانات
             </Link>
           </div>

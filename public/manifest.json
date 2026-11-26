@@ -1,0 +1,20 @@
+{
+  "name": "باصيلي | Passyli — احجز ملعبك، كمّل ماتشك",
+  "short_name": "باصيلي",
+  "description": "المنصة الأولى لحجز ملاعب كرة القدم الخماسي وملاعب البادل في دمنهور والبحيرة.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#09090b",
+  "theme_color": "#10b981",
+  "lang": "ar",
+  "dir": "rtl",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/brand/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

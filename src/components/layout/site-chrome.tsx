@@ -12,7 +12,9 @@ interface SiteChromeProps {
 export default function SiteChrome({ children, footer }: SiteChromeProps) {
   const pathname = usePathname();
   const isDashboardOrAdminPortal =
-    (pathname?.startsWith("/dashboard") || pathname?.startsWith("/admin")) ??
+    (pathname?.startsWith("/dashboard") ||
+      pathname?.startsWith("/admin") ||
+      pathname?.startsWith("/staff")) ??
     false;
 
   if (isDashboardOrAdminPortal) {
