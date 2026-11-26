@@ -1,0 +1,55 @@
+name: Passyli Security & Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-audit-and-build:
+    name: Security Scan, Typecheck & Production Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Secret Leak Prevention Scan
+        run: |
+          echo "Scanning for accidental private keys or service role tokens in tracked files..."
+          # Fail if SUPABASE_SERVICE_ROLE_KEY or real private keys are found tracked in src/
+          if git grep -E -i "SUPABASE_SERVICE_ROLE_KEY\s*[:=]\s*['\"][A-Za-z0-9_\-\.]{20,}['\"]" src/; then
+            echo "::error::Found hardcoded SUPABASE_SERVICE_ROLE_KEY in tracked repository files!"
+            exit 1
+          fi
+          if git grep -E -i "re_[a-zA-Z0-9]{24,}" src/; then
+            echo "::error::Found hardcoded Resend API key in tracked repository files!"
+            exit 1
+          fi
+          echo "No secret leaks detected in codebase."
+
+      - name: TypeScript Strict Typecheck
+        run: npx tsc --noEmit
+
+      - name: Next.js Production Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://mock.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'mock-anon-key' }}
+          NEXT_PUBLIC_SITE_URL: "https://passyli.com"
