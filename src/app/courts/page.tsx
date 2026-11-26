@@ -162,6 +162,7 @@ export default function CourtsCatalogPage() {
   const [selectedSlots, setSelectedSlots] = useState<{ [courtId: string]: string }>({});
   const [selectedCourts, setSelectedCourts] = useState<{ [venueId: string]: string }>({});
   const [expandedSlotsVenues, setExpandedSlotsVenues] = useState<{ [venueId: string]: boolean }>({});
+  const [slotsPeriodFilter, setSlotsPeriodFilter] = useState<{ [venueId: string]: "all" | "evening" | "morning" }>({});
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [, startTransition] = useTransition();
@@ -773,18 +774,18 @@ export default function CourtsCatalogPage() {
               return (
                 <div
                   key={venue.id}
-                  className="group rounded-[18px] border border-white/[0.06] bg-[#242427] hover:bg-[#28282c] overflow-hidden transition-all flex flex-col justify-between shadow-sm"
+                  className="group rounded-[24px] sm:rounded-[26px] border border-white/[0.08] hover:border-primary/40 bg-[#121316] hover:bg-[#151619] overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_12px_40px_rgba(16,185,129,0.12)] relative"
                 >
                   <div>
                     {/* Visual Media Header */}
-                    <div className="relative h-48 w-full bg-[#1c1c1f] flex items-center justify-center overflow-hidden">
+                    <div className="relative h-44 sm:h-48 w-full bg-[#18191d] flex items-center justify-center overflow-hidden">
                       {venue.images && venue.images[0] ? (
                         <Image
                           src={venue.images[0]}
                           alt={venue.name}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                          className="object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out"
                         />
                       ) : (
                         <div className="text-muted-foreground text-xs font-medium flex flex-col items-center gap-1">
@@ -793,69 +794,61 @@ export default function CourtsCatalogPage() {
                         </div>
                       )}
 
-                      {/* Top Badges */}
-                      <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-[#1c1c1f]/90 backdrop-blur-md border border-white/10 px-3 py-1 text-xs font-bold text-white">
+                      {/* Subtle bottom shadow vignette */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#121316] via-transparent to-black/40 pointer-events-none" />
+
+                      {/* Floating Top Badges */}
+                      <div className="absolute top-3 right-3 z-10 inline-flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
                         <MapPin className="h-3 w-3 text-primary" strokeWidth={1.5} />
                         <span>
                           {venue.distance_km
-                            ? `يبعد ${venue.distance_km} كم عنك`
+                            ? `يبعد ${venue.distance_km} كم`
                             : venue.district}
                         </span>
                       </div>
 
-                      <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-black text-black">
-                        {activeCourt?.sport === "football"
-                          ? "خماسي ترتان"
-                          : activeCourt?.surface === "covered_padel"
-                          ? "بادل مغطى"
-                          : "بادل بانوراما"}
+                      <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-primary/20 backdrop-blur-md border border-primary/40 px-3 py-1 text-[11px] font-black text-primary shadow-sm">
+                        <span>
+                          {activeCourt?.sport === "football"
+                            ? "خماسي ترتان"
+                            : activeCourt?.surface === "covered_padel"
+                            ? "بادل مغطى"
+                            : "بادل بانوراما"}
+                        </span>
+                      </div>
+
+                      {/* Floating Favorite Button at Bottom Left */}
+                      <div className="absolute bottom-3 left-3 z-10">
+                        <FavoriteVenueButton venueId={venue.id} />
                       </div>
                     </div>
 
                     {/* Card Content Details */}
-                    <div className="p-5">
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <h3 className="font-display text-lg font-bold text-white group-hover:text-primary transition-colors">
+                    <div className="p-3.5 sm:p-5">
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <h3 className="font-display text-lg sm:text-xl font-black text-white group-hover:text-primary transition-colors leading-tight">
                           {venue.name}
                         </h3>
-                        <FavoriteVenueButton venueId={venue.id} />
+
+                        {ratingsMap[venue.id] && (
+                          <div className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0 tabular-nums">
+                            <Star className="h-3 w-3 fill-amber-400 text-amber-400" strokeWidth={1.5} />
+                            <span>{ratingsMap[venue.id].avg_rating}</span>
+                            <span className="text-zinc-500 font-normal">
+                              ({ratingsMap[venue.id].reviews_count})
+                            </span>
+                          </div>
+                        )}
                       </div>
 
-                      {ratingsMap[venue.id] && (
-                        <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-amber-300 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full mb-2 tabular-nums">
-                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" strokeWidth={1.5} />
-                          <span>{ratingsMap[venue.id].avg_rating}</span>
-                          <span className="text-zinc-400 font-normal">
-                            ({ratingsMap[venue.id].reviews_count} تقييم موثق)
-                          </span>
-                        </div>
-                      )}
-
-                      <p className="text-xs text-muted-foreground mb-3 line-clamp-1">
-                        {venue.address}
+                      <p className="text-xs text-zinc-400 mb-3 flex items-center gap-1">
+                        <span className="truncate">{venue.address}</span>
                       </p>
-
-                      {/* Amenities Chips */}
-                      {venue.amenities && venue.amenities.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-3">
-                          {venue.amenities.slice(0, 3).map((amenity, idx) => (
-                            <span
-                              key={idx}
-                              className="rounded-md bg-white/[0.04] border border-white/[0.04] px-2 py-0.5 text-[10px] text-zinc-300"
-                            >
-                              {amenity}
-                            </span>
-                          ))}
-                        </div>
-                      )}
 
                       {/* Multi-Court Switcher */}
                       {selectableCourts.length > 1 && (
                         <div className="mb-3">
-                          <span className="text-[11px] font-bold text-zinc-400 block mb-1.5">
-                            اختر الملعب ({selectableCourts.length} ملاعب):
-                          </span>
-                          <div className="flex flex-wrap gap-1.5">
+                          <div className="bg-[#0b0c0e] p-1 rounded-xl border border-white/[0.06] flex flex-wrap gap-1">
                             {selectableCourts.map((court) => {
                               const isCourtActive = court.id === activeCourt?.id;
                               return (
@@ -868,10 +861,10 @@ export default function CourtsCatalogPage() {
                                       [venue.id]: court.id,
                                     }))
                                   }
-                                  className={`min-h-[38px] px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+                                  className={`flex-1 min-h-[32px] px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
                                     isCourtActive
-                                      ? "bg-primary text-black border-primary shadow-[0_2px_10px_rgba(16,185,129,0.25)]"
-                                      : "bg-[#1c1c1f] text-zinc-300 border-white/[0.06] hover:border-white/15 hover:text-white"
+                                      ? "bg-primary text-black font-black shadow-sm"
+                                      : "text-zinc-400 hover:text-white"
                                   }`}
                                 >
                                   {court.name}
@@ -882,144 +875,195 @@ export default function CourtsCatalogPage() {
                         </div>
                       )}
 
-                      {/* Interactive Available Slots Box */}
-                      {activeCourt && (
-                        <div className="rounded-xl bg-[#1c1c1f] border border-white/[0.04] p-3 mb-2">
-                          <div className="flex items-center justify-between text-xs mb-2 gap-2">
-                            <span className="text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-                              <span>مواعيد {selectedDay.label}:</span>
-                            </span>
-                            <div className="flex items-center gap-2">
-                              {(() => {
-                                const availCount = (activeCourt.available_slots || []).filter((s) => !isSlotLocked(activeCourt.id, s)).length;
-                                if (availCount === 0) {
-                                  return (
-                                    <span className="font-bold text-zinc-400 flex items-center gap-1 tabular-nums text-[11px] bg-white/[0.04] border border-white/[0.06] px-2 py-0.5 rounded-full">
-                                      مكتمل الحجز
-                                    </span>
-                                  );
-                                }
-                                if (availCount <= 3) {
-                                  return (
-                                    <span className="font-bold text-amber-300 flex items-center gap-1 tabular-nums text-[11px] bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full">
-                                      <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
-                                      باقي {availCount} فترات فقط
-                                    </span>
-                                  );
-                                }
-                                return (
-                                  <span className="font-bold text-primary flex items-center gap-1 tabular-nums">
-                                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                                    {availCount} فترة متاحة
-                                  </span>
-                                );
-                              })()}
-                              {(activeCourt.available_slots || []).length > 6 && (
+                      {/* Interactive Available Slots Box (Modern Sports Layout) */}
+                      {activeCourt && (() => {
+                        const allSlots = activeCourt.available_slots || [];
+                        const venuePeriod = slotsPeriodFilter[venue.id] || "all";
+
+                        const filteredSlots = allSlots.filter((slot) => {
+                          if (venuePeriod === "evening") return slot.includes("م");
+                          if (venuePeriod === "morning") return slot.includes("ص");
+                          return true;
+                        });
+
+                        const availTotal = allSlots.filter((s) => !isSlotLocked(activeCourt.id, s)).length;
+                        const eveningCount = allSlots.filter((s) => s.includes("م")).length;
+                        const morningCount = allSlots.filter((s) => s.includes("ص")).length;
+
+                        return (
+                          <div className="rounded-2xl bg-[#0b0c0e] border border-white/[0.06] p-3 space-y-2.5 mb-2">
+                            {/* Slots Header: Day + Quick Filter Pills */}
+                            <div className="flex items-center justify-between gap-1 text-xs">
+                              <div className="flex items-center gap-1.5">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                <span className="font-bold text-white text-[11px]">
+                                  مواعيد {selectedDay.label}:
+                                </span>
+                                <span className="text-primary font-bold tabular-nums text-[11px]">
+                                  {availTotal} فترة
+                                </span>
+                              </div>
+
+                              {/* Quick Time-of-Day Filter Pills */}
+                              <div className="flex items-center gap-1 bg-[#16171b] p-0.5 rounded-lg border border-white/[0.05]">
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setExpandedSlotsVenues((prev) => ({
-                                      ...prev,
-                                      [venue.id]: !prev[venue.id],
-                                    }))
+                                    setSlotsPeriodFilter((prev) => ({ ...prev, [venue.id]: "all" }))
                                   }
-                                  className="text-[11px] font-bold text-zinc-300 hover:text-primary underline underline-offset-2"
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                                    venuePeriod === "all"
+                                      ? "bg-primary text-black font-black shadow-xs"
+                                      : "text-zinc-400 hover:text-white"
+                                  }`}
                                 >
-                                  {isSlotsExpanded ? "طي" : "كل الفترات"}
+                                  الكل
                                 </button>
-                              )}
+                                {eveningCount > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSlotsPeriodFilter((prev) => ({ ...prev, [venue.id]: "evening" }))
+                                    }
+                                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                                      venuePeriod === "evening"
+                                        ? "bg-primary text-black font-black shadow-xs"
+                                        : "text-zinc-400 hover:text-white"
+                                    }`}
+                                  >
+                                    مسائي ({eveningCount})
+                                  </button>
+                                )}
+                                {morningCount > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setSlotsPeriodFilter((prev) => ({ ...prev, [venue.id]: "morning" }))
+                                    }
+                                    className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all ${
+                                      venuePeriod === "morning"
+                                        ? "bg-primary text-black font-black shadow-xs"
+                                        : "text-zinc-400 hover:text-white"
+                                    }`}
+                                  >
+                                    صباحي ({morningCount})
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                          </div>
 
-                          {/* Time Slots Button Grid */}
-                          <div
-                            className={`grid grid-cols-3 gap-1.5 ${
-                              isSlotsExpanded ? "" : "max-h-[168px] overflow-y-auto pr-0.5"
-                            }`}
-                          >
-                            {(activeCourt.available_slots || []).map((slot, index) => {
-                              const isSelected = selectedSlot === slot;
-                              const locked = isSlotLocked(activeCourt.id, slot);
+                            {/* Time Slots Button Grid */}
+                            <div
+                              className={`grid grid-cols-3 gap-1.5 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.15)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent ${
+                                isSlotsExpanded ? "" : "max-h-[175px] overflow-y-auto pr-0.5"
+                              }`}
+                            >
+                              {filteredSlots.map((slot, index) => {
+                                const isSelected = selectedSlot === slot;
+                                const locked = isSlotLocked(activeCourt.id, slot);
+                                const hourNum = parseInt(slotLabelToDbTime(slot).split(":")[0], 10);
+                                const peakHour = parseInt(
+                                  (activeCourt.peak_hour_start || "17:00").split(":")[0],
+                                  10
+                                );
+                                const isEvening = hourNum >= peakHour || hourNum < 6;
+                                const slotPrice = isEvening
+                                  ? activeCourt.price_evening
+                                  : activeCourt.price_morning;
 
-                              if (locked) {
-                                const watchKey = `${activeCourt.id}|${selectedDay.dateStr}|${slot}`;
-                                const isWatched = Boolean(watchedSlots[watchKey]);
+                                if (locked) {
+                                  const watchKey = `${activeCourt.id}|${selectedDay.dateStr}|${slot}`;
+                                  const isWatched = Boolean(watchedSlots[watchKey]);
+                                  return (
+                                    <button
+                                      key={index}
+                                      type="button"
+                                      onClick={() =>
+                                        void handleWatchSlot(venue.id, activeCourt.id, slot)
+                                      }
+                                      className={`min-h-[46px] rounded-xl px-1.5 py-1 text-center transition-all border border-dashed flex flex-col items-center justify-center active:scale-[0.97] ${
+                                        isWatched
+                                          ? "bg-amber-500/15 border-amber-500/35 text-amber-300"
+                                          : "bg-white/[0.01] hover:bg-white/[0.05] text-zinc-500 hover:text-amber-300 border-white/[0.05]"
+                                      }`}
+                                      title={
+                                        isWatched
+                                          ? "تتم مراقبة هذه الساعة — سننبهك فور توفرها"
+                                          : "الميعاد محجوز أو قيد الدفع — اضغط للتنبيه عند تحرره"
+                                      }
+                                    >
+                                      <div className="flex items-center gap-1">
+                                        {isWatched ? (
+                                          <BellRing className="h-3 w-3 text-amber-400 shrink-0" strokeWidth={1.5} />
+                                        ) : (
+                                          <Lock className="h-2.5 w-2.5 text-zinc-600 shrink-0" strokeWidth={1.5} />
+                                        )}
+                                        <span className="line-through text-xs font-bold tabular-nums opacity-60">
+                                          {slot}
+                                        </span>
+                                      </div>
+                                      <span className="text-[9px] text-zinc-600 font-medium">محجوز</span>
+                                    </button>
+                                  );
+                                }
+
                                 return (
                                   <button
                                     key={index}
                                     type="button"
-                                    onClick={() =>
-                                      void handleWatchSlot(
-                                        venue.id,
-                                        activeCourt.id,
-                                        slot
-                                      )
-                                    }
-                                    className={`min-h-[38px] rounded-lg px-2 py-1 text-[11px] font-bold tabular-nums transition-all border flex items-center justify-center gap-1 ${
-                                      isWatched
-                                        ? "bg-amber-500/15 border-amber-500/35 text-amber-300"
-                                        : "bg-white/[0.03] hover:bg-white/[0.08] text-zinc-400 hover:text-amber-300 border-white/[0.06]"
+                                    onClick={() => handleSlotSelect(activeCourt.id, slot)}
+                                    className={`min-h-[46px] rounded-xl px-1.5 py-1 text-center transition-all border flex flex-col items-center justify-center active:scale-[0.97] ${
+                                      isSelected
+                                        ? "bg-primary text-black border-primary font-black shadow-[0_4px_16px_rgba(16,185,129,0.35)] scale-[1.02]"
+                                        : "bg-white/[0.03] hover:bg-white/[0.08] text-white border-white/[0.06] hover:border-primary/40"
                                     }`}
-                                    title={
-                                      isWatched
-                                        ? "تتم مراقبة هذه الساعة — سننبهك فور توفرها"
-                                        : "الميعاد محجوز أو قيد الدفع — اضغط للتنبيه عند تحرره"
-                                    }
                                   >
-                                    {isWatched ? (
-                                      <BellRing className="h-3 w-3 text-amber-400 shrink-0" strokeWidth={1.5} />
-                                    ) : (
-                                      <Lock className="h-3 w-3 text-zinc-500 shrink-0" strokeWidth={1.5} />
-                                    )}
-                                    <span className="line-through opacity-75">{slot}</span>
+                                    <span
+                                      className={`text-xs font-bold tabular-nums block leading-tight ${
+                                        isSelected ? "text-black font-black" : "text-zinc-100"
+                                      }`}
+                                    >
+                                      {slot}
+                                    </span>
+                                    <span
+                                      className={`text-[10px] tabular-nums block mt-0.5 ${
+                                        isSelected ? "text-black/80 font-bold" : "text-zinc-400 font-medium"
+                                      }`}
+                                    >
+                                      {slotPrice} ج.م
+                                    </span>
                                   </button>
                                 );
-                              }
-
-                              return (
-                                <button
-                                  key={index}
-                                  type="button"
-                                  onClick={() => handleSlotSelect(activeCourt.id, slot)}
-                                  className={`min-h-[38px] rounded-lg px-2 py-1 text-xs font-bold tabular-nums transition-all ${
-                                    isSelected
-                                      ? "bg-primary text-black font-extrabold shadow-[0_2px_10px_rgba(16,185,129,0.35)]"
-                                      : "bg-[#2e2e33] text-primary hover:bg-[#383840]"
-                                  }`}
-                                >
-                                  {slot}
-                                </button>
-                              );
-                            })}
-                          </div>
-
-                          {selectedSlot && (
-                            <div className="mt-2.5 pt-2 border-t border-white/[0.06] flex flex-col gap-1 text-[11px]">
-                              <div className="flex items-center justify-between text-primary font-bold">
-                                <span>{activeCourt.name} — {selectedSlot} ({selectedDay.label})</span>
-                                <span className="text-white/70 font-normal">عربون {venue.deposit_amount || 100} ج.م</span>
-                              </div>
-                              <span className="text-zinc-400 text-[10px]">
-                                قفل 8 دقايق عشان تلحق تحول العربون ومحدش يسبقك
-                              </span>
+                              })}
                             </div>
-                          )}
-                        </div>
-                      )}
+
+                            {/* Selected Slot Confirmation Bar */}
+                            {selectedSlot && (
+                              <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-[11px] text-primary font-bold">
+                                <span>تم تحديد: {selectedSlot}</span>
+                                <span className="text-zinc-400 font-normal">
+                                  عربون الحجز: <strong className="text-white">{venue.deposit_amount || 100} ج.م</strong>
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
 
                   {/* Card Footer: Pricing & Action Button */}
-                  <div className="px-5 py-4 flex items-center justify-between border-t border-white/[0.06] mt-auto bg-[#1e1e21]">
+                  <div className="px-4 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between border-t border-white/[0.06] mt-auto bg-[#0b0c0e]">
                     <div>
-                      <span className="text-xs text-muted-foreground block mb-0.5">
-                        {selectedSlot ? "سعر الساعة المختارة" : "سعر الساعة"}
+                      <span className="text-[11px] text-zinc-400 block">
+                        {selectedSlot ? "سعر الساعة المحددة" : "سعر الساعة"}
                       </span>
-                      <span className="font-extrabold text-white text-lg tabular-nums">
-                        {displayedPrice}{" "}
-                        <span className="text-xs font-medium text-muted-foreground">ج.م</span>
-                      </span>
+                      <div className="flex items-baseline gap-1">
+                        <span className="font-display font-black text-2xl text-white tabular-nums">
+                          {displayedPrice}
+                        </span>
+                        <span className="text-xs font-medium text-zinc-400">ج.م</span>
+                      </div>
                     </div>
 
                     <button
@@ -1039,9 +1083,9 @@ export default function CourtsCatalogPage() {
                           setIsBookingModalOpen(true);
                         }
                       }}
-                      className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_2px_10px_rgba(16,185,129,0.2)]"
+                      className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-primary px-5 py-2.5 text-xs sm:text-sm font-black text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_2px_15px_rgba(16,185,129,0.3)]"
                     >
-                      <span>{selectedSlot ? `أكّد ${selectedSlot}` : "احجز ميعادك"}</span>
+                      <span>{selectedSlot ? `احجز ${selectedSlot}` : "احجز ميعادك"}</span>
                       <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
                     </button>
                   </div>

@@ -565,11 +565,11 @@ export default function CourtsSection({
                 return (
                   <div
                     key={venue.id}
-                    className="w-[85vw] max-w-[340px] md:w-auto md:max-w-none shrink-0 md:shrink snap-center group rounded-[26px] border border-white/[0.08] hover:border-primary/40 bg-[#121316] hover:bg-[#151619] overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_12px_40px_rgba(16,185,129,0.12)] relative"
+                    className="w-[88vw] max-w-[350px] sm:max-w-[360px] md:w-auto md:max-w-none shrink-0 md:shrink snap-center group rounded-[24px] sm:rounded-[26px] border border-white/[0.08] hover:border-primary/40 bg-[#121316] hover:bg-[#151619] overflow-hidden transition-all duration-300 flex flex-col justify-between shadow-[0_8px_30px_rgba(0,0,0,0.5)] hover:shadow-[0_12px_40px_rgba(16,185,129,0.12)] relative"
                   >
                     <div>
                       {/* Visual Media Header */}
-                      <div className="relative h-48 w-full bg-[#18191d] flex items-center justify-center overflow-hidden">
+                      <div className="relative h-44 sm:h-48 w-full bg-[#18191d] flex items-center justify-center overflow-hidden">
                         {venue.images && venue.images[0] ? (
                           <Image
                             src={venue.images[0]}
@@ -610,14 +610,12 @@ export default function CourtsSection({
 
                         {/* Floating Favorite Button at Bottom Left */}
                         <div className="absolute bottom-3 left-3 z-10">
-                          <div className="p-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-md">
-                            <FavoriteVenueButton venueId={venue.id} />
-                          </div>
+                          <FavoriteVenueButton venueId={venue.id} />
                         </div>
                       </div>
 
                       {/* Card Content Details */}
-                      <div className="p-4 sm:p-5">
+                      <div className="p-3.5 sm:p-5">
                         <div className="flex items-start justify-between gap-2 mb-1.5">
                           <h3 className="font-display text-xl font-black text-white group-hover:text-primary transition-colors leading-tight">
                             {venue.name}
@@ -747,8 +745,8 @@ export default function CourtsSection({
 
                             {/* Time Slots Button Grid */}
                             <div
-                              className={`grid grid-cols-3 gap-1.5 ${
-                                isSlotsExpanded ? "" : "max-h-[175px] overflow-y-auto pr-0.5 scrollbar-thin"
+                              className={`grid grid-cols-3 gap-1.5 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.15)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent ${
+                                isSlotsExpanded ? "" : "max-h-[175px] overflow-y-auto pr-0.5"
                               }`}
                             >
                               {filteredSlots.map((slot, index) => {
@@ -846,7 +844,7 @@ export default function CourtsSection({
                   </div>
 
                   {/* Card Footer: Pricing & Action Button */}
-                  <div className="px-5 py-3.5 flex items-center justify-between border-t border-white/[0.06] mt-auto bg-[#0b0c0e]">
+                  <div className="px-4 sm:px-5 py-3 sm:py-3.5 flex items-center justify-between border-t border-white/[0.06] mt-auto bg-[#0b0c0e]">
                     <div>
                       <span className="text-[11px] text-zinc-400 block">
                         {selectedSlot ? "سعر الساعة المحددة" : "سعر الساعة"}
