@@ -5,6 +5,8 @@ import Image from "next/image";
 import {
   MapPin,
   ChevronLeft,
+  ChevronDown,
+  ChevronUp,
   Lock,
   Star,
   BellRing,
@@ -62,6 +64,7 @@ export default function VenueCard({
   );
   const [selectedSlot, setSelectedSlot] = useState<string>("");
   const [slotsPeriodFilter, setSlotsPeriodFilter] = useState<"all" | "evening" | "morning">("all");
+  const [isSlotsExpanded, setIsSlotsExpanded] = useState<boolean>(false);
 
   const activeCourt =
     selectableCourts.find((c) => c.id === activeCourtId) || selectableCourts[0];
@@ -147,7 +150,14 @@ export default function VenueCard({
             </span>
           </div>
 
-          <div className="absolute top-3 left-3 z-10 inline-flex items-center gap-1 rounded-full bg-primary/20 backdrop-blur-md border border-primary/40 px-3 py-1 text-[11px] font-black text-primary shadow-sm">
+          {/* Floating Favorite Button at Top Left (Universal Placement) */}
+          <div className="absolute top-3 left-3 z-10">
+            <FavoriteVenueButton venueId={venue.id} size="md" />
+          </div>
+
+          {/* Sport Surface Badge at Bottom Right */}
+          <div className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/70 backdrop-blur-md border border-primary/30 px-3 py-1 text-[11px] font-black text-primary shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" />
             <span>
               {activeCourt?.sport === "football"
                 ? "خماسي ترتان"
@@ -155,11 +165,6 @@ export default function VenueCard({
                 ? "بادل مغطى"
                 : "بادل بانوراما"}
             </span>
-          </div>
-
-          {/* Floating Favorite Button at Bottom Left */}
-          <div className="absolute bottom-3 left-3 z-10">
-            <FavoriteVenueButton venueId={venue.id} />
           </div>
         </div>
 
@@ -285,95 +290,124 @@ export default function VenueCard({
               </div>
 
               {/* Time Slots Button Grid */}
-              <div className="grid grid-cols-3 gap-1.5 [scrollbar-width:thin] [scrollbar-color:rgba(255,255,255,0.15)_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-white/15 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent max-h-[175px] overflow-y-auto pr-0.5">
-                {filteredSlots.map((slot, index) => {
-                  const isSelected = selectedSlot === slot;
-                  const locked = isSlotLocked(activeCourt.id, slot);
-                  const hourNum = parseInt(slotLabelToDbTime(slot).split(":")[0], 10);
-                  const peakHour = parseInt(
-                    (activeCourt.peak_hour_start || "17:00").split(":")[0],
-                    10
-                  );
-                  const isEvening = hourNum >= peakHour || hourNum < 6;
-                  const slotPrice = isEvening
-                    ? activeCourt.price_evening
-                    : activeCourt.price_morning;
+              {(() => {
+                const displayedSlots = isSlotsExpanded
+                  ? filteredSlots
+                  : filteredSlots.slice(0, 6);
+                return (
+                  <>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {displayedSlots.map((slot, index) => {
+                        const isSelected = selectedSlot === slot;
+                        const locked = isSlotLocked(activeCourt.id, slot);
+                        const hourNum = parseInt(slotLabelToDbTime(slot).split(":")[0], 10);
+                        const peakHour = parseInt(
+                          (activeCourt.peak_hour_start || "17:00").split(":")[0],
+                          10
+                        );
+                        const isEvening = hourNum >= peakHour || hourNum < 6;
+                        const slotPrice = isEvening
+                          ? activeCourt.price_evening
+                          : activeCourt.price_morning;
 
-                  if (locked) {
-                    const watchKey = `${activeCourt.id}|${selectedDay.dateStr}|${slot}`;
-                    const isWatched = Boolean(watchedSlots[watchKey]);
-                    return (
+                        if (locked) {
+                          const watchKey = `${activeCourt.id}|${selectedDay.dateStr}|${slot}`;
+                          const isWatched = Boolean(watchedSlots[watchKey]);
+                          return (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() =>
+                                void onWatchSlot(venue.id, activeCourt.id, slot)
+                              }
+                              className={`min-h-[46px] rounded-xl px-1.5 py-1 text-center transition-all border border-dashed flex flex-col items-center justify-center active:scale-[0.97] ${
+                                isWatched
+                                  ? "bg-amber-500/15 border-amber-500/35 text-amber-300"
+                                  : "bg-white/[0.01] hover:bg-white/[0.05] text-zinc-500 hover:text-amber-300 border-white/[0.05]"
+                              }`}
+                              title={
+                                isWatched
+                                  ? "تتم مراقبة هذه الساعة — سننبهك فور توفرها"
+                                  : "الميعاد محجوز أو قيد الدفع — اضغط للتنبيه عند تحرره"
+                              }
+                            >
+                              <div className="flex items-center gap-1">
+                                {isWatched ? (
+                                  <BellRing
+                                    className="h-3 w-3 text-amber-400 shrink-0"
+                                    strokeWidth={1.5}
+                                  />
+                                ) : (
+                                  <Lock
+                                    className="h-2.5 w-2.5 text-zinc-600 shrink-0"
+                                    strokeWidth={1.5}
+                                  />
+                                )}
+                                <span className="line-through text-xs font-bold tabular-nums opacity-60">
+                                  {slot}
+                                </span>
+                              </div>
+                              <span className="text-[9px] text-zinc-600 font-medium">محجوز</span>
+                            </button>
+                          );
+                        }
+
+                        return (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() =>
+                              setSelectedSlot((prev) => (prev === slot ? "" : slot))
+                            }
+                            className={`min-h-[46px] rounded-xl px-1.5 py-1 text-center transition-all border flex flex-col items-center justify-center active:scale-[0.97] ${
+                              isSelected
+                                ? "bg-primary text-black border-primary font-black shadow-[0_4px_16px_rgba(16,185,129,0.35)] scale-[1.02]"
+                                : "bg-white/[0.03] hover:bg-white/[0.08] text-white border-white/[0.06] hover:border-primary/40"
+                            }`}
+                          >
+                            <span
+                              className={`text-xs font-bold tabular-nums block leading-tight ${
+                                isSelected ? "text-black font-black" : "text-zinc-100"
+                              }`}
+                            >
+                              {slot}
+                            </span>
+                            <span
+                              className={`text-[10px] tabular-nums block mt-0.5 ${
+                                isSelected
+                                  ? "text-black/80 font-bold"
+                                  : "text-zinc-400 font-medium"
+                              }`}
+                            >
+                              {slotPrice} ج.م
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Expand/Collapse Toggle Button */}
+                    {filteredSlots.length > 6 && (
                       <button
-                        key={index}
                         type="button"
-                        onClick={() =>
-                          void onWatchSlot(venue.id, activeCourt.id, slot)
-                        }
-                        className={`min-h-[46px] rounded-xl px-1.5 py-1 text-center transition-all border border-dashed flex flex-col items-center justify-center active:scale-[0.97] ${
-                          isWatched
-                            ? "bg-amber-500/15 border-amber-500/35 text-amber-300"
-                            : "bg-white/[0.01] hover:bg-white/[0.05] text-zinc-500 hover:text-amber-300 border-white/[0.05]"
-                        }`}
-                        title={
-                          isWatched
-                            ? "تتم مراقبة هذه الساعة — سننبهك فور توفرها"
-                            : "الميعاد محجوز أو قيد الدفع — اضغط للتنبيه عند تحرره"
-                        }
+                        onClick={() => setIsSlotsExpanded((prev) => !prev)}
+                        className="w-full py-2 px-3 rounded-xl bg-white/[0.02] hover:bg-white/[0.06] border border-white/[0.06] hover:border-primary/30 text-[11px] font-bold text-zinc-300 hover:text-white flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] mt-1"
                       >
-                        <div className="flex items-center gap-1">
-                          {isWatched ? (
-                            <BellRing
-                              className="h-3 w-3 text-amber-400 shrink-0"
-                              strokeWidth={1.5}
-                            />
-                          ) : (
-                            <Lock
-                              className="h-2.5 w-2.5 text-zinc-600 shrink-0"
-                              strokeWidth={1.5}
-                            />
-                          )}
-                          <span className="line-through text-xs font-bold tabular-nums opacity-60">
-                            {slot}
-                          </span>
-                        </div>
-                        <span className="text-[9px] text-zinc-600 font-medium">محجوز</span>
+                        <span>
+                          {isSlotsExpanded
+                            ? "عرض مواعيد أقل"
+                            : `عرض باقي المواعيد (${filteredSlots.length - 6} فترة إضافية)`}
+                        </span>
+                        {isSlotsExpanded ? (
+                          <ChevronUp className="h-3.5 w-3.5 text-zinc-400" strokeWidth={2} />
+                        ) : (
+                          <ChevronDown className="h-3.5 w-3.5 text-primary" strokeWidth={2} />
+                        )}
                       </button>
-                    );
-                  }
-
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      onClick={() =>
-                        setSelectedSlot((prev) => (prev === slot ? "" : slot))
-                      }
-                      className={`min-h-[46px] rounded-xl px-1.5 py-1 text-center transition-all border flex flex-col items-center justify-center active:scale-[0.97] ${
-                        isSelected
-                          ? "bg-primary text-black border-primary font-black shadow-[0_4px_16px_rgba(16,185,129,0.35)] scale-[1.02]"
-                          : "bg-white/[0.03] hover:bg-white/[0.08] text-white border-white/[0.06] hover:border-primary/40"
-                      }`}
-                    >
-                      <span
-                        className={`text-xs font-bold tabular-nums block leading-tight ${
-                          isSelected ? "text-black font-black" : "text-zinc-100"
-                        }`}
-                      >
-                        {slot}
-                      </span>
-                      <span
-                        className={`text-[10px] tabular-nums block mt-0.5 ${
-                          isSelected
-                            ? "text-black/80 font-bold"
-                            : "text-zinc-400 font-medium"
-                        }`}
-                      >
-                        {slotPrice} ج.م
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                    )}
+                  </>
+                );
+              })()}
 
               {/* Selected Slot Confirmation Bar */}
               {selectedSlot && (
