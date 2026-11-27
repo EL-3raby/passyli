@@ -10,40 +10,42 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#09090b",
-        foreground: "#f4f4f5",
-        surface: "#121215",
+        background: "var(--background)",
+        foreground: "var(--foreground)",
+        surface: "var(--surface)",
+        "surface-elevated": "var(--surface-elevated)",
         card: {
-          DEFAULT: "#18181b",
-          foreground: "#f4f4f5",
+          DEFAULT: "var(--card)",
+          foreground: "var(--card-foreground)",
         },
         popover: {
-          DEFAULT: "#18181b",
-          foreground: "#f4f4f5",
+          DEFAULT: "var(--popover)",
+          foreground: "var(--popover-foreground)",
         },
         primary: {
-          DEFAULT: "#10b981",
-          foreground: "#000000",
-          hover: "#059669",
+          DEFAULT: "var(--primary)",
+          foreground: "var(--primary-foreground)",
+          hover: "var(--primary-hover)",
         },
         secondary: {
-          DEFAULT: "#27272a",
-          foreground: "#f4f4f5",
+          DEFAULT: "var(--secondary)",
+          foreground: "var(--secondary-foreground)",
         },
         muted: {
-          DEFAULT: "#27272a",
-          foreground: "#a1a1aa",
+          DEFAULT: "var(--muted)",
+          foreground: "var(--muted-foreground)",
         },
         accent: {
-          DEFAULT: "#27272a",
-          foreground: "#f4f4f5",
+          DEFAULT: "var(--accent)",
+          foreground: "var(--accent-foreground)",
         },
         destructive: {
-          DEFAULT: "#ef4444",
-          foreground: "#ffffff",
+          DEFAULT: "var(--destructive)",
+          foreground: "var(--destructive-foreground)",
         },
-        border: "rgba(255, 255, 255, 0.08)",
-        ring: "#10b981",
+        border: "var(--border)",
+        input: "var(--input)",
+        ring: "var(--ring)",
         // Status indicator tokens for court slots
         status: {
           available: "#10b981",

@@ -5,6 +5,7 @@ import Footer from "@/components/footer";
 import SiteChrome from "@/components/layout/site-chrome";
 import { AuthProvider } from "@/components/auth/auth-provider";
 import AuthModal from "@/components/auth/auth-modal";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const alexandria = Alexandria({
   subsets: ["arabic", "latin"],
@@ -63,14 +64,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar" dir="rtl" className="dark">
+    <html lang="ar" dir="rtl" suppressHydrationWarning>
       <body
         className={`${alexandria.variable} ${ibmPlexArabic.variable} ${inter.variable} font-sans bg-background text-foreground antialiased selection:bg-primary selection:text-black min-h-screen flex flex-col`}
       >
-        <AuthProvider>
-          <SiteChrome footer={<Footer />}>{children}</SiteChrome>
-          <AuthModal />
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <SiteChrome footer={<Footer />}>{children}</SiteChrome>
+            <AuthModal />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

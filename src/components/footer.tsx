@@ -1,22 +1,23 @@
 import Link from "next/link";
 import { ShieldCheck, MessageCircle, ArrowUpRight, Facebook, Instagram, Mail } from "lucide-react";
+import ThemeToggle from "@/components/theme-toggle";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-[#141418] pt-16 pb-12 text-sm">
+    <footer className="w-full bg-card border-t border-border pt-16 pb-12 text-sm text-foreground transition-colors">
       <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        
+
         {/* Main Footer Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-border/30">
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 pb-12 border-b border-border">
+
           {/* Brand & Mission Column */}
           <div className="lg:col-span-2 flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-3 w-fit group">
-              <span className="font-latin text-2xl font-black tracking-tight text-white leading-none" dir="ltr">
+              <span className="font-latin text-2xl font-black tracking-tight text-foreground leading-none" dir="ltr">
                 Passy<span className="text-primary">li</span>
               </span>
-              <span className="h-5 w-[2px] bg-white/35 rounded-full shrink-0" aria-hidden="true" />
-              <span className="font-display text-xl font-extrabold text-white leading-none">
+              <span className="h-5 w-[2px] bg-border rounded-full shrink-0" aria-hidden="true" />
+              <span className="font-display text-xl font-extrabold text-foreground leading-none">
                 باصي&zwj;<span className="text-primary">&zwj;لي</span>
               </span>
             </Link>
@@ -30,14 +31,14 @@ export default function Footer() {
               تغطية حية لكافة ملاعب دمنهور والمراكز المجاورة
             </div>
 
-            {/* Social Media & Email Links (Yalla Hagz Squircle Style) */}
+            {/* Social Media & Email Links */}
             <div className="flex items-center gap-2.5 pt-1">
               <a
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="صفحتنا على فيسبوك"
-                className="h-10 w-10 rounded-xl bg-[#242427] border border-white/[0.06] hover:bg-[#2e2e33] hover:border-primary/40 flex items-center justify-center text-zinc-300 hover:text-primary transition-all"
+                className="h-10 w-10 rounded-xl bg-surface border border-border hover:bg-muted hover:border-primary/40 flex items-center justify-center text-muted-foreground hover:text-primary transition-all"
               >
                 <Facebook className="h-4 w-4" strokeWidth={1.5} />
               </a>
@@ -47,7 +48,7 @@ export default function Footer() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="حسابنا على إنستجرام"
-                className="h-10 w-10 rounded-xl bg-[#242427] border border-white/[0.06] hover:bg-[#2e2e33] hover:border-primary/40 flex items-center justify-center text-zinc-300 hover:text-primary transition-all"
+                className="h-10 w-10 rounded-xl bg-surface border border-border hover:bg-muted hover:border-primary/40 flex items-center justify-center text-muted-foreground hover:text-primary transition-all"
               >
                 <Instagram className="h-4 w-4" strokeWidth={1.5} />
               </a>
@@ -55,7 +56,7 @@ export default function Footer() {
               <a
                 href="mailto:contact@passyli.com"
                 aria-label="راسلنا عبر البريد الإلكتروني"
-                className="h-10 w-10 rounded-xl bg-[#242427] border border-white/[0.06] hover:bg-[#2e2e33] hover:border-primary/40 flex items-center justify-center text-zinc-300 hover:text-primary transition-all"
+                className="h-10 w-10 rounded-xl bg-surface border border-border hover:bg-muted hover:border-primary/40 flex items-center justify-center text-muted-foreground hover:text-primary transition-all"
               >
                 <Mail className="h-4 w-4" strokeWidth={1.5} />
               </a>
@@ -64,7 +65,7 @@ export default function Footer() {
 
           {/* Quick Links Column */}
           <div className="flex flex-col gap-3">
-            <span className="font-display text-sm font-bold text-white mb-1">
+            <span className="font-display text-sm font-bold text-foreground mb-1">
               تصفح المنصة
             </span>
             <Link href="/courts" className="text-xs text-muted-foreground hover:text-primary transition-colors">
@@ -83,7 +84,7 @@ export default function Footer() {
 
           {/* Partners & Legal Column */}
           <div className="flex flex-col gap-3">
-            <span className="font-display text-sm font-bold text-white mb-1">
+            <span className="font-display text-sm font-bold text-foreground mb-1">
               أصحاب الملاعب والسياسات
             </span>
             <Link href="/dashboard" className="text-xs text-primary font-bold hover:underline flex items-center gap-1">
@@ -111,21 +112,21 @@ export default function Footer() {
 
           {/* Direct Support & Payment Column */}
           <div className="flex flex-col gap-3">
-            <span className="font-display text-sm font-bold text-white mb-1">
+            <span className="font-display text-sm font-bold text-foreground mb-1">
               الدعم ووسائل الدفع
             </span>
             <a
               href="https://wa.me/201000000000"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-white/[0.08] bg-[#242427] hover:bg-[#28282c] px-4 text-xs font-bold text-white transition-all"
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-border bg-surface hover:bg-muted px-4 text-xs font-bold text-foreground transition-all"
             >
               <MessageCircle className="h-4 w-4 text-primary" strokeWidth={1.5} />
               <span>دعم واتساب الفوري</span>
             </a>
 
-            <div className="rounded-[14px] border border-white/[0.06] bg-[#242427] p-3.5 text-[11px] text-muted-foreground space-y-1.5 mt-1">
-              <div className="font-bold text-white flex items-center gap-1.5">
+            <div className="rounded-[14px] border border-border bg-surface p-3.5 text-[11px] text-muted-foreground space-y-1.5 mt-1">
+              <div className="font-bold text-foreground flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-primary" strokeWidth={1.5} />
                 <span>دفع مؤمن وموثق</span>
               </div>
@@ -135,19 +136,23 @@ export default function Footer() {
 
         </div>
 
-        {/* Bottom Bar: Copyright & Security Status */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-          <p className="text-center sm:text-right">
+        {/* Bottom Bar: Copyright, Theme Switcher & Security Status */}
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
+          <p className="text-center md:text-right">
             جميع الحقوق محفوظة © {new Date().getFullYear()} منصة باصيلي (Passyli). صُنعت لرياضيي دمنهور.
           </p>
 
-          <div className="flex items-center gap-4 text-[11px]">
-            <span className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-              الخوادم تعمل بكفاءة 100%
-            </span>
-            <span className="h-3 w-px bg-border" />
-            <span>نظام تشفير وحماية المواعيد</span>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <ThemeToggle variant="segmented" />
+
+            <div className="flex items-center gap-3 text-[11px]">
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                الخوادم تعمل بكفاءة 100%
+              </span>
+              <span className="h-3 w-px bg-border" />
+              <span>نظام تشفير وحماية المواعيد</span>
+            </div>
           </div>
         </div>
 
