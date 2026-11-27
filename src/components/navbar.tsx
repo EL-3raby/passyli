@@ -20,7 +20,6 @@ import NotificationsPopover, {
 } from "@/components/shared/notifications-popover";
 import { createClient } from "@/lib/supabase/client";
 import { playReceiptChime } from "@/lib/sound";
-import ThemeToggle from "@/components/theme-toggle";
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "المشرف العام",
@@ -199,7 +198,7 @@ export default function Navbar() {
       playerNotifications.forEach((n) => next.add(n.id));
       try {
         localStorage.setItem(`passyli_read_notifs_${user.id}`, JSON.stringify(Array.from(next)));
-      } catch { }
+      } catch {}
       return next;
     });
     setPlayerNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
@@ -212,7 +211,7 @@ export default function Navbar() {
       next.add(id);
       try {
         localStorage.setItem(`passyli_read_notifs_${user.id}`, JSON.stringify(Array.from(next)));
-      } catch { }
+      } catch {}
       return next;
     });
     setPlayerNotifications((prev) =>
@@ -227,7 +226,7 @@ export default function Navbar() {
       playerNotifications.forEach((n) => next.add(n.id));
       try {
         localStorage.setItem(`passyli_cleared_notifs_${user.id}`, JSON.stringify(Array.from(next)));
-      } catch { }
+      } catch {}
       return next;
     });
     setPlayerNotifications([]);
@@ -244,11 +243,11 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border transition-colors">
+    <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-white/[0.06] transition-all">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 gap-2">
         {/* Pure Arabic Brand Wordmark */}
         <Link href="/" className="flex items-center group py-1 shrink-0">
-          <span className="font-display text-2xl sm:text-[26px] font-black tracking-normal text-foreground leading-none">
+          <span className="font-display text-2xl sm:text-[26px] font-black tracking-normal text-white leading-none">
             باصي&zwj;<span className="text-primary">&zwj;لي</span>
           </span>
         </Link>
@@ -259,8 +258,8 @@ export default function Navbar() {
             href="/courts"
             className={`px-3.5 py-1.5 rounded-full transition-all ${
               isCourtsActive
-                ? "text-foreground font-bold bg-muted"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                ? "text-white font-bold bg-white/[0.08]"
+                : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
             }`}
           >
             الملاعب
@@ -269,8 +268,8 @@ export default function Navbar() {
             href="/matchmaking"
             className={`px-3.5 py-1.5 rounded-full transition-all ${
               isMatchmakingActive
-                ? "text-foreground font-bold bg-muted"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                ? "text-white font-bold bg-white/[0.08]"
+                : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
             }`}
           >
             التقسيمات المفتوحة
@@ -279,8 +278,8 @@ export default function Navbar() {
             href="/my-bookings"
             className={`px-3.5 py-1.5 rounded-full transition-all ${
               isBookingsActive
-                ? "text-foreground font-bold bg-muted"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                ? "text-white font-bold bg-white/[0.08]"
+                : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
             }`}
           >
             تذاكري
@@ -290,13 +289,13 @@ export default function Navbar() {
               href="/favorites"
               className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
                 isFavoritesActive
-                  ? "text-foreground font-bold bg-muted"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  ? "text-white font-bold bg-white/[0.08]"
+                  : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
               }`}
             >
               <span>المفضلة</span>
               {favoriteVenueIds.length > 0 && (
-                <span className="px-1.5 py-0.5 rounded-full bg-rose-500/15 text-rose-500 text-[10px] font-black tabular-nums leading-none">
+                <span className="px-1.5 py-0.5 rounded-full bg-rose-500/15 text-rose-400 text-[10px] font-black tabular-nums leading-none">
                   {favoriteVenueIds.length}
                 </span>
               )}
@@ -305,7 +304,7 @@ export default function Navbar() {
           {showPartnerLink && (
             <Link
               href="/partner"
-              className="px-3.5 py-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
+              className="px-3.5 py-1.5 rounded-full text-zinc-300 hover:text-white hover:bg-white/[0.04] transition-all"
             >
               أضف ملعبك
             </Link>
@@ -315,8 +314,8 @@ export default function Navbar() {
               href="/dashboard"
               className={`px-3.5 py-1.5 rounded-full transition-all ${
                 isDashboardActive
-                  ? "text-foreground font-bold bg-muted"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  ? "text-white font-bold bg-white/[0.08]"
+                  : "text-zinc-300 hover:text-white hover:bg-white/[0.04]"
               }`}
             >
               إدارة الملاعب
@@ -327,8 +326,8 @@ export default function Navbar() {
               href="/staff"
               className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
                 pathname?.startsWith("/staff")
-                  ? "text-amber-500 dark:text-amber-300 font-bold bg-amber-500/15"
-                  : "text-amber-600 dark:text-amber-300 hover:bg-amber-500/10"
+                  ? "text-amber-300 font-bold bg-amber-500/15"
+                  : "text-amber-300 hover:bg-amber-500/10"
               }`}
             >
               <KeyRound className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -340,8 +339,8 @@ export default function Navbar() {
               href="/admin"
               className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all ${
                 isAdminActive
-                  ? "text-emerald-600 dark:text-emerald-300 font-bold bg-emerald-500/15 border border-emerald-500/30"
-                  : "text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 hover:bg-emerald-500/10"
+                  ? "text-emerald-300 font-bold bg-emerald-500/15 border border-emerald-500/30"
+                  : "text-emerald-400 hover:text-emerald-300 hover:bg-emerald-500/10"
               }`}
             >
               <ShieldCheck className="h-3.5 w-3.5" strokeWidth={1.5} />
@@ -351,10 +350,7 @@ export default function Navbar() {
         </nav>
 
         {/* Auth & Primary CTA */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-          {/* Enterprise Theme Switcher */}
-          <ThemeToggle variant="button" />
-
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {user && (
             <NotificationsPopover
               notifications={playerNotifications}
@@ -368,13 +364,13 @@ export default function Navbar() {
           )}
 
           {isLoading ? (
-            <div className="h-[44px] w-24 rounded-full bg-muted animate-pulse" />
+            <div className="h-[44px] w-24 rounded-full bg-white/[0.06] animate-pulse" />
           ) : user ? (
             <div className="relative" ref={menuRef}>
               <button
                 type="button"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
-                className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-surface hover:bg-muted border border-border px-2.5 sm:px-3.5 text-xs font-bold text-foreground transition-all"
+                className="inline-flex min-h-[44px] items-center gap-2 rounded-full bg-[#18181c] hover:bg-[#222227] border border-white/10 px-2.5 sm:px-3.5 text-xs font-bold text-white transition-all"
               >
                 <div className="h-7 w-7 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center text-primary font-black overflow-hidden shrink-0">
                   {profile?.avatar_url ? (
@@ -391,19 +387,19 @@ export default function Navbar() {
                 <span className="max-w-[90px] truncate hidden sm:inline-block">
                   {profile?.full_name || "حسابي"}
                 </span>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
+                <ChevronDown className="h-3.5 w-3.5 text-zinc-400" strokeWidth={1.5} />
               </button>
 
               {isMenuOpen && (
                 <div
-                  className="absolute left-0 mt-2 w-60 rounded-2xl bg-popover border border-border p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150 text-popover-foreground"
+                  className="absolute left-0 mt-2 w-60 rounded-2xl bg-[#141418] border border-white/10 p-2 shadow-2xl backdrop-blur-xl z-50 animate-in fade-in zoom-in-95 duration-150"
                   dir="rtl"
                 >
-                  <div className="px-3 py-2.5 border-b border-border mb-1">
-                    <span className="text-xs font-black text-foreground block truncate">
+                  <div className="px-3 py-2.5 border-b border-white/[0.06] mb-1">
+                    <span className="text-xs font-black text-white block truncate">
                       {profile?.full_name || "كابتن"}
                     </span>
-                    <span className="text-[11px] text-muted-foreground block truncate" dir="ltr">
+                    <span className="text-[11px] text-zinc-400 block truncate" dir="ltr">
                       {user.email || profile?.phone || "حساب موثق"}
                     </span>
                     <span className="inline-block mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
@@ -416,8 +412,8 @@ export default function Navbar() {
                     onClick={() => setIsMenuOpen(false)}
                     className={`flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold transition-colors ${
                       isProfileActive
-                        ? "bg-muted text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                        ? "bg-white/[0.08] text-white"
+                        : "text-zinc-300 hover:text-white hover:bg-white/[0.06]"
                     }`}
                   >
                     <User className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -429,8 +425,8 @@ export default function Navbar() {
                     onClick={() => setIsMenuOpen(false)}
                     className={`flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold transition-colors ${
                       isBookingsActive
-                        ? "bg-muted text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                        ? "bg-white/[0.08] text-white"
+                        : "text-zinc-300 hover:text-white hover:bg-white/[0.06]"
                     }`}
                   >
                     <Ticket className="h-4 w-4 text-primary" strokeWidth={1.5} />
@@ -442,16 +438,16 @@ export default function Navbar() {
                     onClick={() => setIsMenuOpen(false)}
                     className={`flex items-center justify-between px-3 min-h-[44px] rounded-xl text-xs font-bold transition-colors ${
                       isFavoritesActive
-                        ? "bg-muted text-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                        ? "bg-white/[0.08] text-white"
+                        : "text-zinc-300 hover:text-white hover:bg-white/[0.06]"
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
-                      <Heart className="h-4 w-4 text-rose-500" strokeWidth={1.5} />
+                      <Heart className="h-4 w-4 text-rose-400" strokeWidth={1.5} />
                       <span>ملاعبي المفضلة</span>
                     </span>
                     {favoriteVenueIds.length > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 text-[10px] font-black tabular-nums">
+                      <span className="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-400 text-[10px] font-black tabular-nums">
                         {favoriteVenueIds.length}
                       </span>
                     )}
@@ -463,11 +459,11 @@ export default function Navbar() {
                       onClick={() => setIsMenuOpen(false)}
                       className={`flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold transition-colors ${
                         isDashboardActive
-                          ? "bg-muted text-foreground"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                          ? "bg-white/[0.08] text-white"
+                          : "text-zinc-300 hover:text-white hover:bg-white/[0.06]"
                       }`}
                     >
-                      <Building2 className="h-4 w-4 text-emerald-500" strokeWidth={1.5} />
+                      <Building2 className="h-4 w-4 text-emerald-400" strokeWidth={1.5} />
                       <span>إدارة الملاعب</span>
                     </Link>
                   )}
@@ -476,9 +472,9 @@ export default function Navbar() {
                     <Link
                       href="/staff"
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-amber-500 dark:text-amber-300 hover:bg-amber-500/10 transition-colors"
+                      className="flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-amber-300 hover:bg-amber-500/10 transition-colors"
                     >
-                      <KeyRound className="h-4 w-4 text-amber-500" strokeWidth={1.5} />
+                      <KeyRound className="h-4 w-4 text-amber-400" strokeWidth={1.5} />
                       <span>بوابة موظف الدكة</span>
                     </Link>
                   )}
@@ -489,8 +485,8 @@ export default function Navbar() {
                       onClick={() => setIsMenuOpen(false)}
                       className={`flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold transition-colors ${
                         isAdminActive
-                          ? "bg-emerald-500/15 text-emerald-500 dark:text-emerald-300"
-                          : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+                          ? "bg-emerald-500/15 text-emerald-300"
+                          : "text-emerald-400 hover:bg-emerald-500/10"
                       }`}
                     >
                       <ShieldCheck className="h-4 w-4" strokeWidth={1.5} />
@@ -498,7 +494,7 @@ export default function Navbar() {
                     </Link>
                   )}
 
-                  <div className="border-t border-border my-1" />
+                  <div className="border-t border-white/[0.06] my-1" />
 
                   <button
                     type="button"
@@ -506,7 +502,7 @@ export default function Navbar() {
                       setIsMenuOpen(false);
                       signOut();
                     }}
-                    className="w-full flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold text-rose-400 hover:bg-rose-500/10 transition-colors"
                   >
                     <LogOut className="h-4 w-4" strokeWidth={1.5} />
                     <span>تسجيل الخروج</span>
@@ -518,7 +514,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => openAuthModal("signin")}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-surface hover:bg-muted px-3.5 sm:px-4 text-xs font-bold text-foreground transition-all border border-border"
+              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full bg-white/[0.06] hover:bg-white/10 px-3.5 sm:px-4 text-xs font-bold text-zinc-200 hover:text-white transition-all border border-white/10"
             >
               <LogIn className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
               <span>دخول</span>
@@ -527,7 +523,7 @@ export default function Navbar() {
 
           <Link
             href="/courts"
-            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-primary px-4 sm:px-6 text-xs sm:text-sm font-black text-white dark:text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_2px_14px_rgba(16,185,129,0.3)]"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-primary px-4 sm:px-6 text-xs sm:text-sm font-black text-black hover:bg-primary-hover active:scale-[0.98] transition-all shadow-[0_2px_14px_rgba(16,185,129,0.3)]"
           >
             احجز الآن
           </Link>
