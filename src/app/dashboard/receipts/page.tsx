@@ -134,6 +134,14 @@ export default function ReceiptsReviewPage() {
       if (res.success) {
         triggerRealtimeRefresh();
         await loadData();
+        const ref = receipt.booking?.booking_reference;
+        if (ref) {
+          fetch("/api/send-booking-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bookingReference: ref }),
+          }).catch(() => null);
+        }
       } else {
         setActionError(res.error || "تعذر اعتماد الإيصال");
       }
@@ -155,9 +163,17 @@ export default function ReceiptsReviewPage() {
         adjustedAmount
       );
       if (res.success) {
+        const ref = adjustReceipt.booking?.booking_reference;
         setAdjustReceipt(null);
         triggerRealtimeRefresh();
         await loadData();
+        if (ref) {
+          fetch("/api/send-booking-email", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ bookingReference: ref }),
+          }).catch(() => null);
+        }
       } else {
         setActionError(res.error || "تعذر تعديل مبلغ الإيصال");
       }

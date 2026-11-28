@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const { data: booking, error } = await supabase
       .from("bookings")
       .select(
-        "booking_reference, booker_id, booker_name, booking_date, start_time, total_price, deposit_paid, deposit_required, cash_remaining, status, courts(name, sport, slot_duration_minutes, venues(name, district, address, latitude, longitude))"
+        "booking_reference, booker_id, booker_name, booking_date, start_time, total_price, deposit_paid, deposit_required, cash_remaining, status, courts(name, sport, slot_duration_minutes, venue_id, venues(id, name, district, address, latitude, longitude, owner_id))"
       )
       .eq("booking_reference", bookingRef)
       .maybeSingle();
@@ -54,11 +54,61 @@ export async function POST(request: Request) {
       );
     }
 
-    // Only email the authenticated user who owns the booking (or if booker_id matches)
-    if (booking.booker_id && booking.booker_id !== user.id) {
+    const court = booking.courts as unknown as {
+      name: string;
+      sport: string;
+      slot_duration_minutes: number;
+      venues: {
+        id: string;
+        name: string;
+        district: string;
+        address: string;
+        latitude: number;
+        longitude: number;
+        owner_id: string;
+      } | null;
+    } | null;
+
+    const venue = court?.venues;
+
+    // Check authorization: caller can be booker, venue owner, or super admin
+    const isBooker = Boolean(booking.booker_id && booking.booker_id === user.id);
+    const isOwner = Boolean(venue?.owner_id && venue.owner_id === user.id);
+    
+    let isSuperAdmin = false;
+    if (!isBooker && !isOwner) {
+      const { data: callerProfile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      isSuperAdmin = callerProfile?.role === "super_admin";
+    }
+
+    if (!isBooker && !isOwner && !isSuperAdmin) {
       return NextResponse.json(
         { success: false, error: "FORBIDDEN" },
         { status: 403 }
+      );
+    }
+
+    // Determine target recipient email: if booking has a registered booker_id, fetch their profile email
+    let recipientEmail = user.email;
+    if (booking.booker_id) {
+      const { data: bookerProfile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", booking.booker_id)
+        .maybeSingle();
+      if (bookerProfile?.email) {
+        recipientEmail = bookerProfile.email;
+      }
+    }
+
+    if (!recipientEmail) {
+      return NextResponse.json(
+        { success: false, skipped: true, reason: "NO_RECIPIENT_EMAIL" },
+        { status: 200 }
       );
     }
 
@@ -74,20 +124,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const court = booking.courts as unknown as {
-      name: string;
-      sport: string;
-      slot_duration_minutes: number;
-      venues: {
-        name: string;
-        district: string;
-        address: string;
-        latitude: number;
-        longitude: number;
-      } | null;
-    } | null;
-
-    const venue = court?.venues;
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
     const ticketUrl = `${appUrl}/ticket/${encodeURIComponent(booking.booking_reference)}`;
@@ -168,7 +204,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         from: fromEmail,
-        to: [user.email],
+        to: [recipientEmail],
         subject: `تذكرة حجز باصيلي #${booking.booking_reference} — ${venue?.name || "ملعبك"}`,
         html,
       }),
