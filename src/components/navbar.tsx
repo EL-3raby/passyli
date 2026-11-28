@@ -173,7 +173,7 @@ export default function Navbar() {
           event: "*",
           schema: "public",
           table: "bookings",
-          filter: `user_id=eq.${user.id}`,
+          filter: `booker_id=eq.${user.id}`,
         },
         (payload) => {
           fetchNotifications();
